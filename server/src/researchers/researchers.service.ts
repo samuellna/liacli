@@ -36,4 +36,8 @@ export class ResearchersService {
     await this.researchersRepository.update(id, researcherDto);
     return this.researchersRepository.findOneBy({ id });
   }
+
+  async delete(id: number): Promise<void> {
+    await this.researchersRepository.delete(id);
+  }
 }

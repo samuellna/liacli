@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   HttpCode,
   HttpException,
@@ -80,6 +81,23 @@ export class ResearchersController {
   ) {
     try {
       return await this.researchersService.update(id, researcherDto);
+    } catch (error) {
+      throw new HttpException(
+        {
+          status: 404,
+          message: 'Researcher not found',
+        },
+        HttpStatus.NOT_FOUND,
+        { cause: error },
+      );
+    }
+  }
+
+  @Delete(':id')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  async delete(@Param('id') id: number) {
+    try {
+      await this.researchersService.delete(id);
     } catch (error) {
       throw new HttpException(
         {
