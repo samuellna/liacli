@@ -3,6 +3,9 @@ import { ConfigModule } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ResearchersModule } from './researchers/researchers.module';
 import { EmployeesModule } from './employees/employees.module';
+import { ExamTypesModule } from './exam_types/exam_types.module';
+import { SamplesModule } from './samples/samples.module';
+import { SampleResultsModule } from './sample_results/sample_results.module';
 
 @Module({
   imports: [
@@ -19,6 +22,9 @@ import { EmployeesModule } from './employees/employees.module';
     }),
     ResearchersModule,
     EmployeesModule,
+    ExamTypesModule,
+    SamplesModule,
+    SampleResultsModule,
   ],
 })
 export class AppModule {}

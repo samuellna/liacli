@@ -1,7 +1,9 @@
+import { Sample } from 'src/samples/samples.entity';
 import {
   Column,
   CreateDateColumn,
   Entity,
+  OneToMany,
   PrimaryGeneratedColumn,
 } from 'typeorm';
 
@@ -21,4 +23,7 @@ export class Researchers {
 
   @CreateDateColumn({ name: 'created_at' })
   createdAt: string;
+
+  @OneToMany(() => Sample, (sample) => sample.patientOrResearcher)
+  samples: Sample[];
 }
