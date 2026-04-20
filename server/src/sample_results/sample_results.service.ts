@@ -71,7 +71,12 @@ export class SampleResultsService {
     // Busca o resultado associado à amostra
     const result = await this.sampleResultRepository.findOne({
       where: { sample: { id: sample.id } },
-      relations: ['sample'],
+      relations: [
+        'sample',
+        'sample.examType',
+        'sample.patientOrResearcher',
+        'sample.approvedBy',
+      ],
     });
 
     if (!result) {
