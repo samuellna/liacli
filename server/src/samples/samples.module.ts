@@ -7,12 +7,15 @@ import { ResearchersModule } from 'src/researchers/researchers.module';
 import { ExamTypesModule } from 'src/exam_types/exam_types.module';
 import { Researchers } from 'src/researchers/researchers.entity';
 import { ExamType } from 'src/exam_types/exam_types.entity';
+import { Employees } from 'src/employees/employees.entity';
+import { EmployeesModule } from 'src/employees/employees.module';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Sample, Researchers, ExamType]),
+    TypeOrmModule.forFeature([Sample, Researchers, ExamType, Employees]),
     ResearchersModule,
     ExamTypesModule,
+    EmployeesModule,
   ],
   providers: [SamplesService],
   controllers: [SamplesController],
