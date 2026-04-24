@@ -15,7 +15,7 @@ type DashboardData = {
   solicitacoes: Solicitacao[];
 };
 
-// 🔌 MOCK (trocar depois pelo backend)
+// MOCK (trocar depois pelo backend)
 async function getDashboardData(): Promise<DashboardData> {
   return {
     cards: {

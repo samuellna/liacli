@@ -1,7 +1,6 @@
 "use client";
 
 import { useSearchParams, useRouter } from "next/navigation";
-import { ArrowLeft } from "lucide-react";
 
 export default function DashboardClient({ data }: any) {
   const params = useSearchParams();
@@ -13,10 +12,9 @@ export default function DashboardClient({ data }: any) {
     ? data.solicitacoes.filter((s: any) => s.status === statusFiltro)
     : data.solicitacoes;
 
-  // 🔁 toggle filtro
   function handleFilter(status: string) {
     if (statusFiltro === status) {
-      router.push("/dashboard");
+      router.push("/dashboard"); // remove filtro
     } else {
       router.push(`/dashboard?status=${status}`);
     }
@@ -25,26 +23,22 @@ export default function DashboardClient({ data }: any) {
   return (
     <div className="p-6 space-y-6 bg-white min-h-screen">
 
-      {/* VOLTAR + FILTRO ATIVO */}
+      {}
       {statusFiltro && (
-        <div className="flex items-center gap-4 mb-2">
-
-          <button
-            onClick={() => router.push("/dashboard")}
-            className="flex items-center gap-2 px-3 py-1 bg-blue-600 text-white rounded-lg text-sm hover:bg-blue-700 transition"
-          >
-            <ArrowLeft size={16} />
-            Voltar
-          </button>
-
+        <div className="flex items-center gap-4">
           <p className="text-sm text-gray-600">
             Filtro ativo: <strong>{statusFiltro}</strong>
           </p>
 
+          <button
+            onClick={() => router.push("/dashboard")}
+            className="px-3 py-1 bg-blue-600 text-white rounded-lg text-sm"
+          >
+            Limpar filtro
+          </button>
         </div>
       )}
 
-      {/* CARDS */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
 
         <Card title="Pendentes" value={data.cards.pendentes} />
@@ -54,10 +48,8 @@ export default function DashboardClient({ data }: any) {
 
       </div>
 
-      {/* TABELA + LATERAL */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
 
-        {/* TABELA */}
         <div className="lg:col-span-2 bg-white border border-blue-100 p-4 rounded-2xl shadow-sm">
 
           <h2 className="font-semibold mb-4 text-blue-900">
@@ -83,7 +75,6 @@ export default function DashboardClient({ data }: any) {
 
         </div>
 
-        {/* LATERAL */}
         <div className="bg-white border border-blue-100 p-4 rounded-2xl shadow-sm">
 
           <h2 className="font-semibold mb-4 text-blue-900">
@@ -101,7 +92,6 @@ export default function DashboardClient({ data }: any) {
   );
 }
 
-// 🧩 CARD
 function Card({ title, value }: any) {
   return (
     <div className="bg-white border border-blue-100 p-4 rounded-2xl shadow-sm hover:shadow-md transition">
@@ -111,7 +101,6 @@ function Card({ title, value }: any) {
   );
 }
 
-// 🧩 ROW
 function Row({ protocolo, pesquisador, tipo, status }: any) {
   return (
     <tr className="border-t text-gray-900 hover:bg-gray-50">
@@ -130,7 +119,6 @@ function Row({ protocolo, pesquisador, tipo, status }: any) {
   );
 }
 
-// 🧩 PROGRESS
 function Progress({ label, value, onClick, active }: any) {
   const isActive = active === label;
 
