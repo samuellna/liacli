@@ -9,6 +9,7 @@ import {
 } from '../samples/samples.entity';
 import { SampleResult } from '../sample_results/sample_results.entity';
 import { randomUUID } from 'crypto';
+import admin from '../auth/admin';
 
 export async function runSeed(dataSource: DataSource) {
   const examRepo = dataSource.getRepository(ExamType);
@@ -17,21 +18,31 @@ export async function runSeed(dataSource: DataSource) {
   const sampleRepo = dataSource.getRepository(Sample);
   const resultRepo = dataSource.getRepository(SampleResult);
 
-  const hasData = await examRepo.count();
-  if (hasData > 0) {
-    console.log('Seed já executado.');
-    return;
-  }
+  console.log('🌱 Iniciando seed...');
 
-  // Exam Types
-  const [hemograma, ecg, glicemia] = await examRepo.save([
+  // EXAM TYPES
+  const examTypesData = [
     { name: 'Hemograma', description: 'Exame de sangue completo' },
     { name: 'Eletrocardiograma', description: 'Exame do coração' },
     { name: 'Glicemia', description: 'Medição de glicose no sangue' },
-  ]);
+  ];
 
-  // Researchers
-  const [r1, r2, r3] = await researcherRepo.save([
+  const examTypes: ExamType[] = [];
+
+  for (const exam of examTypesData) {
+    let existing = await examRepo.findOne({ where: { name: exam.name } });
+
+    if (!existing) {
+      existing = await examRepo.save(exam);
+    }
+
+    examTypes.push(existing);
+  }
+
+  const [hemograma, ecg, glicemia] = examTypes;
+
+  // RESEARCHERS
+  const researchersData = [
     {
       name: 'Dr. João',
       email: 'joao@lab.com',
@@ -47,82 +58,138 @@ export async function runSeed(dataSource: DataSource) {
       email: 'carlos@externo.com',
       institution: 'Outra',
     },
-  ]);
+  ];
 
-  // Employees
-  const [e1, e2] = await employeeRepo.save([
+  const researchers: Researchers[] = [];
+
+  for (const r of researchersData) {
+    let existing = await researcherRepo.findOne({
+      where: { email: r.email },
+    });
+
+    if (!existing) {
+      existing = await researcherRepo.save(r);
+    }
+
+    researchers.push(existing);
+  }
+
+  const [r1, r2, r3] = researchers;
+
+  // EMPLOYEES
+  const employeesData = [
     {
       name: 'Maria',
       email: 'maria@lab.com',
+      password: '123456',
       role: 'ADMIN',
     },
     {
       name: 'Pedro',
       email: 'pedro@lab.com',
+      password: '123456',
       role: 'TECH',
     },
-  ]);
+  ];
 
-  // Samples
-  const samples = await sampleRepo.save([
-    // Aprovado com resultado
-    {
-      examType: hemograma,
-      patientOrResearcher: r1,
-      protocol: randomUUID(),
-      status: SampleStatus.DONE,
-      approvalStatus: ApprovalStatus.APPROVED,
-      approvedBy: e1,
-      approvedAt: new Date(),
-      scheduledAt: new Date(Date.now() + 86400000),
-    },
+  const employees: Employees[] = [];
 
-    // Rejeitado
-    {
-      examType: ecg,
-      patientOrResearcher: r3,
-      protocol: randomUUID(),
-      status: SampleStatus.REJECTED,
-      approvalStatus: ApprovalStatus.REJECTED,
-      approvedBy: e2,
-      approvedAt: new Date(),
-      scheduledAt: new Date(Date.now() + 86400000 * 2),
-    },
+  for (const emp of employeesData) {
+    let userRecord;
 
-    // Pendente
-    {
-      examType: glicemia,
-      patientOrResearcher: r2,
-      protocol: randomUUID(),
-      status: SampleStatus.PENDING,
-      approvalStatus: ApprovalStatus.PENDING,
-      scheduledAt: new Date(Date.now() + 86400000 * 3),
-    },
+    try {
+      userRecord = await admin.auth().getUserByEmail(emp.email);
+    } catch {
+      userRecord = await admin.auth().createUser({
+        email: emp.email,
+        password: emp.password,
+      });
+    }
 
-    // Em análise
-    {
-      examType: hemograma,
-      patientOrResearcher: r2,
-      protocol: randomUUID(),
-      status: SampleStatus.ANALYZING,
-      approvalStatus: ApprovalStatus.APPROVED,
-      approvedBy: e1,
-      approvedAt: new Date(),
-      scheduledAt: new Date(Date.now() + 86400000),
-    },
-  ]);
+    let employee = await employeeRepo.findOne({
+      where: { email: emp.email },
+    });
 
-  // Sample Results
-  await resultRepo.save([
-    {
-      sample: samples[0],
-      resultData: {
-        hemoglobina: 13.5,
-        leucocitos: 7000,
+    if (!employee) {
+      employee = await employeeRepo.save({
+        name: emp.name,
+        email: emp.email,
+        role: emp.role,
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
+        userId: userRecord.uid,
+      });
+    }
+
+    employees.push(employee);
+  }
+
+  const [e1, e2] = employees;
+
+  // SAMPLES
+  const sampleCount = await sampleRepo.count();
+
+  let samples: Sample[];
+
+  if (sampleCount === 0) {
+    samples = await sampleRepo.save([
+      {
+        examType: hemograma,
+        patientOrResearcher: r1,
+        protocol: randomUUID(),
+        status: SampleStatus.DONE,
+        approvalStatus: ApprovalStatus.APPROVED,
+        approvedBy: e1,
+        approvedAt: new Date(),
+        scheduledAt: new Date(Date.now() + 86400000),
       },
-      createdAt: new Date(),
-    },
-  ]);
+      {
+        examType: ecg,
+        patientOrResearcher: r3,
+        protocol: randomUUID(),
+        status: SampleStatus.REJECTED,
+        approvalStatus: ApprovalStatus.REJECTED,
+        approvedBy: e2,
+        approvedAt: new Date(),
+        scheduledAt: new Date(Date.now() + 86400000 * 2),
+      },
+      {
+        examType: glicemia,
+        patientOrResearcher: r2,
+        protocol: randomUUID(),
+        status: SampleStatus.PENDING,
+        approvalStatus: ApprovalStatus.PENDING,
+        scheduledAt: new Date(Date.now() + 86400000 * 3),
+      },
+      {
+        examType: hemograma,
+        patientOrResearcher: r2,
+        protocol: randomUUID(),
+        status: SampleStatus.ANALYZING,
+        approvalStatus: ApprovalStatus.APPROVED,
+        approvedBy: e1,
+        approvedAt: new Date(),
+        scheduledAt: new Date(Date.now() + 86400000),
+      },
+    ]);
+  } else {
+    samples = await sampleRepo.find();
+  }
 
-  console.log('🔥 Seed COMPLETO executado com sucesso!');
+  // SAMPLE RESULTS
+  const resultCount = await resultRepo.count();
+
+  if (resultCount === 0) {
+    await resultRepo.save([
+      {
+        sample: samples[0],
+        resultData: {
+          hemoglobina: 13.5,
+          leucocitos: 7000,
+        },
+        createdAt: new Date(),
+      },
+    ]);
+  }
+
+  console.log('🔥 Seed executado com sucesso!');
 }

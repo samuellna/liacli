@@ -8,10 +8,12 @@ import {
   Param,
   Patch,
   Post,
+  UseGuards,
 } from '@nestjs/common';
 import { ExamTypesService } from './exam_types.service';
 import { CreateExamTypeDto } from './dto/create-exam-type.dto';
 import { UpdateExamTypeDto } from './dto/update-exam-type.dto';
+import { AuthGuard } from 'src/auth/auth.guard';
 
 @Controller('exams')
 export class ExamTypesController {
@@ -30,6 +32,7 @@ export class ExamTypesController {
   }
 
   @Post()
+  @UseGuards(AuthGuard)
   @HttpCode(HttpStatus.CREATED)
   async create(@Body() createExamTypeDto: CreateExamTypeDto) {
     return await this.examTypesService.create(createExamTypeDto);
@@ -37,6 +40,7 @@ export class ExamTypesController {
 
   @Patch(':id')
   @HttpCode(HttpStatus.OK)
+  @UseGuards(AuthGuard)
   async update(
     @Param('id') id: number,
     @Body() updateExamTypeDto: UpdateExamTypeDto,
@@ -46,6 +50,7 @@ export class ExamTypesController {
 
   @Delete(':id')
   @HttpCode(HttpStatus.NO_CONTENT)
+  @UseGuards(AuthGuard)
   async delete(@Param('id') id: number) {
     await this.examTypesService.delete(id);
   }
