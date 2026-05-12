@@ -13,4 +13,7 @@ export class Employees {
 
   @Column('varchar', { length: 255 })
   role: string;
+
+  @Column({ unique: true })
+  userId: string;
 }

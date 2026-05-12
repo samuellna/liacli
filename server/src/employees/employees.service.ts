@@ -4,6 +4,7 @@ import { Employees } from './employees.entity';
 import { Repository } from 'typeorm';
 import { CreateEmployeeDto } from './dto/create-employee.dto';
 import { UpdateEmployeeDto } from './dto/update-employee.dto';
+import admin from 'src/auth/admin';
 
 @Injectable()
 export class EmployeesService {
@@ -24,7 +25,19 @@ export class EmployeesService {
     return employee;
   }
 
-  async create(employee: CreateEmployeeDto): Promise<Employees> {
+  async create(employeeDto: CreateEmployeeDto): Promise<Employees> {
+    const userRecord = await admin.auth().createUser({
+      email: employeeDto.email,
+      password: employeeDto.password,
+    });
+
+    const employee = this.employeesRepository.create({
+      name: employeeDto.name,
+      email: employeeDto.email,
+      role: employeeDto.role,
+      userId: userRecord.uid,
+    });
+
     return this.employeesRepository.save(employee);
   }
 
