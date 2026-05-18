@@ -7,7 +7,7 @@ export class CreateSampleDto {
 
   @IsNotEmpty()
   @IsNumber()
-  readonly patientOrResearcherId: number;
+  readonly researcherId: number;
 
   @IsDateString()
   scheduledAt: string; // ISO string
