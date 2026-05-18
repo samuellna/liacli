@@ -32,7 +32,7 @@ export class Sample {
   examType: ExamType;
 
   @ManyToOne(() => Researchers, (researcher) => researcher.samples)
-  patientOrResearcher: Researchers;
+  researcher: Researchers;
 
   @Column({ unique: true })
   protocol: string;

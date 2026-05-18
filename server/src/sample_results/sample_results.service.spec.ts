@@ -203,7 +203,7 @@ describe('SampleResultsService', () => {
         relations: [
           'sample',
           'sample.examType',
-          'sample.patientOrResearcher',
+          'sample.researcher',
           'sample.approvedBy',
         ],
       });

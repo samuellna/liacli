@@ -134,7 +134,7 @@ export async function runSeed(dataSource: DataSource) {
     samples = await sampleRepo.save([
       {
         examType: hemograma,
-        patientOrResearcher: r1,
+        researcher: r1,
         protocol: randomUUID(),
         status: SampleStatus.DONE,
         approvalStatus: ApprovalStatus.APPROVED,
@@ -144,7 +144,7 @@ export async function runSeed(dataSource: DataSource) {
       },
       {
         examType: ecg,
-        patientOrResearcher: r3,
+        researcher: r3,
         protocol: randomUUID(),
         status: SampleStatus.REJECTED,
         approvalStatus: ApprovalStatus.REJECTED,
@@ -154,7 +154,7 @@ export async function runSeed(dataSource: DataSource) {
       },
       {
         examType: glicemia,
-        patientOrResearcher: r2,
+        researcher: r2,
         protocol: randomUUID(),
         status: SampleStatus.PENDING,
         approvalStatus: ApprovalStatus.PENDING,
@@ -162,7 +162,7 @@ export async function runSeed(dataSource: DataSource) {
       },
       {
         examType: hemograma,
-        patientOrResearcher: r2,
+        researcher: r2,
         protocol: randomUUID(),
         status: SampleStatus.ANALYZING,
         approvalStatus: ApprovalStatus.APPROVED,

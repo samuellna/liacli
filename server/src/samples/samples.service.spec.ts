@@ -160,7 +160,7 @@ describe('SamplesService', () => {
     it('should create a sample', async () => {
       const dto = {
         examTypeId: 1,
-        patientOrResearcherId: 1,
+        researcherId: 1,
         scheduledAt: '2026-05-12T10:00:00.000Z',
       };
 
@@ -178,7 +178,7 @@ describe('SamplesService', () => {
         id: 1,
         protocol: 'PROTO-123',
         examType,
-        patientOrResearcher: researcher,
+        researcher: researcher,
       };
 
       examTypeRepository.findOne.mockResolvedValue(examType as ExamType);
@@ -199,7 +199,7 @@ describe('SamplesService', () => {
 
       expect(researcherRepository.findOne).toHaveBeenCalledWith({
         where: {
-          id: dto.patientOrResearcherId,
+          id: dto.researcherId,
         },
       });
 
@@ -214,7 +214,7 @@ describe('SamplesService', () => {
       await expect(
         service.create({
           examTypeId: 1,
-          patientOrResearcherId: 1,
+          researcherId: 1,
           scheduledAt: '2026-05-12T10:00:00.000Z',
         }),
       ).rejects.toThrow(NotFoundException);
@@ -230,7 +230,7 @@ describe('SamplesService', () => {
       await expect(
         service.create({
           examTypeId: 1,
-          patientOrResearcherId: 1,
+          researcherId: 1,
           scheduledAt: '2026-05-12T10:00:00.000Z',
         }),
       ).rejects.toThrow(NotFoundException);

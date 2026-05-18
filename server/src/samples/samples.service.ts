@@ -60,7 +60,7 @@ export class SamplesService {
 
     // Busca o Researcher para garantir que existe antes de criar a amostra
     const researcher = await this.researcherRepository.findOne({
-      where: { id: sample.patientOrResearcherId },
+      where: { id: sample.researcherId },
     });
     console.log('Researcher encontrado:', researcher);
 
@@ -70,7 +70,7 @@ export class SamplesService {
 
     const newSample = this.sampleRepository.create({
       examType,
-      patientOrResearcher: researcher,
+      researcher: researcher,
       protocol: generateProtocol(),
       status: SampleStatus.PENDING,
       scheduledAt: new Date(sample.scheduledAt),

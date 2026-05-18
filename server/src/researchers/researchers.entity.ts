@@ -24,6 +24,6 @@ export class Researchers {
   @CreateDateColumn({ name: 'created_at' })
   createdAt: string;
 
-  @OneToMany(() => Sample, (sample) => sample.patientOrResearcher)
+  @OneToMany(() => Sample, (sample) => sample.researcher)
   samples: Sample[];
 }
