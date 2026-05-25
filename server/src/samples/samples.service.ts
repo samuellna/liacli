@@ -11,6 +11,7 @@ import { ExamType } from 'src/exam_types/exam_types.entity';
 import { Researchers } from 'src/researchers/researchers.entity';
 import { generateProtocol } from 'src/utils/generate_protocol';
 import { Employees } from 'src/employees/employees.entity';
+import { EmailService } from 'src/email/email.service';
 
 @Injectable()
 export class SamplesService {
@@ -26,6 +27,8 @@ export class SamplesService {
 
     @InjectRepository(Employees)
     private readonly employeeRepository: Repository<Employees>,
+
+    private readonly emailService: EmailService,
   ) {}
 
   async findAll(): Promise<Sample[]> {
@@ -81,7 +84,12 @@ export class SamplesService {
   }
 
   // Método para aprovar ou rejeitar uma solitação de amostra
-  async approveSample(id: number, approved: boolean, employeeId: number) {
+  async approveSample(
+    id: number,
+    approved: boolean,
+    employeeId: number,
+    decisionReason?: string,
+  ): Promise<Sample> {
     const sample = await this.sampleRepository.findOneBy({ id });
 
     if (!sample) {
@@ -104,6 +112,22 @@ export class SamplesService {
       ? ApprovalStatus.APPROVED
       : ApprovalStatus.REJECTED;
 
+    if (sample.approvalStatus === ApprovalStatus.APPROVED) {
+      await this.emailService.sendApprovalEmail({
+        toEmail: employee.email,
+        pesquisadorNome: employee.name,
+        protocolo: sample.protocol,
+        dataAgendada: sample.scheduledAt,
+      });
+    } else if (sample.approvalStatus === ApprovalStatus.REJECTED) {
+      await this.emailService.sendRejectionEmail({
+        toEmail: employee.email,
+        pesquisadorNome: employee.name,
+        protocolo: sample.protocol,
+        motivoReprovacao:
+          decisionReason || 'Os dados enviados são inválidos ou insuficientes',
+      });
+    }
     sample.approvedBy = employee;
     sample.approvedAt = new Date();
 

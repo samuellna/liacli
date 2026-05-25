@@ -9,6 +9,7 @@ import { Researchers } from 'src/researchers/researchers.entity';
 import { ExamType } from 'src/exam_types/exam_types.entity';
 import { Employees } from 'src/employees/employees.entity';
 import { EmployeesModule } from 'src/employees/employees.module';
+import { EmailModule } from 'src/email/email.module';
 
 @Module({
   imports: [
@@ -16,6 +17,7 @@ import { EmployeesModule } from 'src/employees/employees.module';
     ResearchersModule,
     ExamTypesModule,
     EmployeesModule,
+    EmailModule,
   ],
   providers: [SamplesService],
   controllers: [SamplesController],

@@ -50,7 +50,8 @@ export class SamplesController {
   @Patch('approve/:id')
   approve(
     @Param('id') id: number,
-    @Body() body: { approved: boolean; employeeId: number },
+    @Body()
+    body: { approved: boolean; employeeId: number; decisionReason?: string },
   ) {
     return this.samplesService.approveSample(
       id,
