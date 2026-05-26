@@ -7,6 +7,7 @@ import { ExamTypesModule } from './exam_types/exam_types.module';
 import { SamplesModule } from './samples/samples.module';
 import { SampleResultsModule } from './sample_results/sample_results.module';
 import { EmailModule } from './email/email.module';
+import { ResearchProjectsModule } from './researcher_projects/researcher_projects.module';
 
 @Module({
   imports: [
@@ -27,6 +28,7 @@ import { EmailModule } from './email/email.module';
     SamplesModule,
     SampleResultsModule,
     EmailModule,
+    ResearchProjectsModule,
   ],
 })
 export class AppModule {}

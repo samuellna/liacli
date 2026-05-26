@@ -25,8 +25,16 @@ export class ResearchersService {
   }
 
   async create(researcherDto: CreateResearcherDto): Promise<Researchers> {
-    const researcher = this.researchersRepository.save(researcherDto);
-    return researcher;
+    const researcher = this.researchersRepository.create({
+      name: researcherDto.name,
+      email: researcherDto.email,
+      institution: researcherDto.institution,
+      phone: researcherDto.phone,
+      advisorName: researcherDto.advisorName,
+      level: researcherDto.level,
+    });
+
+    return this.researchersRepository.save(researcher);
   }
 
   async update(

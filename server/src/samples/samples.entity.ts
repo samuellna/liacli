@@ -1,5 +1,6 @@
 import { Employees } from 'src/employees/employees.entity';
 import { ExamType } from 'src/exam_types/exam_types.entity';
+import { ResearchProject } from 'src/researcher_projects/researcher_projects.entity';
 import { Researchers } from 'src/researchers/researchers.entity';
 import {
   Column,
@@ -25,7 +26,7 @@ export enum ApprovalStatus {
 
 @Entity({ name: 'samples' })
 export class Sample {
-  @PrimaryGeneratedColumn()
+  @PrimaryGeneratedColumn('increment')
   id: number;
 
   @ManyToOne(() => ExamType, (examType) => examType.samples)
@@ -49,6 +50,9 @@ export class Sample {
 
   @ManyToOne(() => Employees, { nullable: true })
   approvedBy: Employees;
+
+  @ManyToOne(() => ResearchProject, { nullable: true })
+  researchProject: ResearchProject;
 
   @Column({ type: 'timestamp', nullable: true })
   approvedAt: Date;
