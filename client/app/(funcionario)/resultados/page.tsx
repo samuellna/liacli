@@ -2,12 +2,13 @@
 
 import { useEffect, useMemo, useState } from "react";
 import {
+  Activity,
   ChevronDown,
-  ClipboardCheck,
-  FlaskConical,
+  FileSearch,
   ListFilter,
   Loader2,
   Search,
+  UploadCloud,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -42,64 +43,67 @@ import {
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
-type StatusAmostra = "Pendente" | "Em análise" | "Concluído";
+type StatusResultado = "Aguardando" | "Em processamento" | "Disponível";
 
-type Amostra = {
-  codigo: string;
+type Resultado = {
+  id: number;
+  amostra: string;
   exame: string;
   protocolo: string;
   pesquisador: string;
   data: string;
-  status: StatusAmostra;
+  status: StatusResultado;
 };
 
 // ─── Mock data ────────────────────────────────────────────────────────────────
 
-const amostrasMock: Amostra[] = [
+const resultadosMock: Resultado[] = [
   {
-    codigo: "AM001",
+    id: 1,
+    amostra: "AM001",
     exame: "Glicose",
     protocolo: "A1B2C3",
     pesquisador: "João Silva",
+    data: "2026-05-18",
+    status: "Em processamento",
+  },
+  {
+    id: 2,
+    amostra: "AM002",
+    exame: "Hemograma",
+    protocolo: "D4E5F6",
+    pesquisador: "Maria Souza",
+    data: "2026-05-15",
+    status: "Disponível",
+  },
+  {
+    id: 3,
+    amostra: "AM003",
+    exame: "Hemograma",
+    protocolo: "D4E5F6",
+    pesquisador: "Maria Souza",
+    data: "2026-05-12",
+    status: "Aguardando",
+  },
+  {
+    id: 4,
+    amostra: "AM004",
+    exame: "PCR Ultrassensível",
+    protocolo: "G7H8I9",
+    pesquisador: "Carlos Mendes",
     data: "2026-05-10",
-    status: "Em análise",
-  },
-  {
-    codigo: "AM002",
-    exame: "Hemograma",
-    protocolo: "D4E5F6",
-    pesquisador: "Maria Souza",
-    data: "2026-05-08",
-    status: "Concluído",
-  },
-  {
-    codigo: "AM003",
-    exame: "Hemograma",
-    protocolo: "D4E5F6",
-    pesquisador: "Maria Souza",
-    data: "2026-05-08",
-    status: "Pendente",
+    status: "Disponível",
   },
 ];
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
-const statusOptions: StatusAmostra[] = ["Pendente", "Em análise", "Concluído"];
+const statusOptions: StatusResultado[] = ["Aguardando", "Em processamento", "Disponível"];
 
-const statusVariant: Record<
-  StatusAmostra,
-  "secondary" | "outline" | "default"
-> = {
-  Pendente: "outline",
-  "Em análise": "secondary",
-  Concluído: "default",
-};
-
-const statusClass: Record<StatusAmostra, string> = {
-  Pendente:
-    "border-warning/40 bg-warning/15 text-warning-foreground dark:text-warning",
-  "Em análise": "border-info/40 bg-info/15 text-info dark:text-info",
-  Concluído: "border-success/40 bg-success/15 text-success dark:text-success",
+const statusClass: Record<StatusResultado, string> = {
+  Aguardando: "border-warning/40 bg-warning/15 text-warning-foreground dark:text-warning",
+  "Em processamento": "border-info/40 bg-info/15 text-info dark:text-info",
+  Disponível: "border-success/40 bg-success/15 text-success dark:text-success",
 };
 
 const dateFormatter = new Intl.DateTimeFormat("pt-BR", {
@@ -126,7 +130,7 @@ function TabelaSkeleton() {
             <Skeleton className="h-4 w-64" />
           </div>
           <div className="flex gap-2">
-            <Skeleton className="h-10 w-64" />
+            <Skeleton className="h-10 w-60" />
             <Skeleton className="h-10 w-28" />
           </div>
         </div>
@@ -139,8 +143,8 @@ function TabelaSkeleton() {
               <Skeleton className="h-4 w-28" />
               <Skeleton className="h-4 w-20" />
               <Skeleton className="h-4 w-32 flex-1" />
-              <Skeleton className="h-6 w-20 rounded-full" />
-              <Skeleton className="h-8 w-36 rounded-md" />
+              <Skeleton className="h-6 w-24 rounded-full" />
+              <Skeleton className="h-8 w-32 rounded-md" />
             </div>
           ))}
         </div>
@@ -151,36 +155,33 @@ function TabelaSkeleton() {
 
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
-export default function AmostrasPage() {
+export default function ResultadosPage() {
   const [busca, setBusca] = useState("");
   const [isLoading, setIsLoading] = useState(true);
-  const [pendingCodigo, setPendingCodigo] = useState<string | null>(null);
-  const [statusSelecionado, setStatusSelecionado] = useState<
-    Set<StatusAmostra>
-  >(new Set());
+  const [pendingId, setPendingId] = useState<number | null>(null);
+  const [statusSelecionado, setStatusSelecionado] = useState<Set<StatusResultado>>(new Set());
 
   useEffect(() => {
     const t = setTimeout(() => setIsLoading(false), 600);
     return () => clearTimeout(t);
   }, []);
 
-  const amostrasFiltradas = useMemo(() => {
+  const resultadosFiltrados = useMemo(() => {
     const termo = busca.trim().toLowerCase();
-    return amostrasMock.filter((amostra) => {
-      const passaStatus =
-        statusSelecionado.size === 0 || statusSelecionado.has(amostra.status);
+    return resultadosMock.filter((r) => {
+      const passaStatus = statusSelecionado.size === 0 || statusSelecionado.has(r.status);
       if (!passaStatus) return false;
       if (!termo) return true;
       return (
-        amostra.codigo.toLowerCase().includes(termo) ||
-        amostra.exame.toLowerCase().includes(termo) ||
-        amostra.protocolo.toLowerCase().includes(termo) ||
-        amostra.pesquisador.toLowerCase().includes(termo)
+        r.amostra.toLowerCase().includes(termo) ||
+        r.exame.toLowerCase().includes(termo) ||
+        r.protocolo.toLowerCase().includes(termo) ||
+        r.pesquisador.toLowerCase().includes(termo)
       );
     });
   }, [busca, statusSelecionado]);
 
-  function toggleStatus(status: StatusAmostra) {
+  function toggleStatus(status: StatusResultado) {
     setStatusSelecionado((prev) => {
       const next = new Set(prev);
       if (next.has(status)) next.delete(status);
@@ -189,20 +190,20 @@ export default function AmostrasPage() {
     });
   }
 
-  async function cadastrarResultado(codigo: string) {
-    setPendingCodigo(codigo);
+  async function publicarResultado(id: number, amostra: string) {
+    setPendingId(id);
     try {
       await new Promise((resolve) => setTimeout(resolve, 900));
-      toast.success(`Resultado da amostra ${codigo} cadastrado com sucesso.`);
+      toast.success(`Resultado da amostra ${amostra} publicado com sucesso.`);
     } catch {
-      toast.error("Não foi possível cadastrar o resultado. Tente novamente.");
+      toast.error("Não foi possível publicar o resultado. Tente novamente.");
     } finally {
-      setPendingCodigo(null);
+      setPendingId(null);
     }
   }
 
-  const totalFiltradas = amostrasFiltradas.length;
-  const total = amostrasMock.length;
+  const totalFiltrados = resultadosFiltrados.length;
+  const total = resultadosMock.length;
   const filtroAtivo = busca.trim().length > 0 || statusSelecionado.size > 0;
 
   if (isLoading) {
@@ -211,7 +212,7 @@ export default function AmostrasPage() {
         <header className="space-y-2">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div className="space-y-2">
-              <Skeleton className="h-7 w-28" />
+              <Skeleton className="h-7 w-32" />
               <Skeleton className="h-4 w-72" />
             </div>
             <Skeleton className="h-7 w-28 rounded-full" />
@@ -228,17 +229,17 @@ export default function AmostrasPage() {
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div className="space-y-1">
             <h1 className="text-2xl font-semibold tracking-tight text-foreground">
-              Amostras
+              Resultados
             </h1>
             <p className="text-sm text-muted-foreground">
-              Acompanhe os exames recebidos, seu status e cadastre resultados.
+              Gerencie e publique os resultados dos exames realizados.
             </p>
           </div>
           <Badge variant="secondary" className="h-7 gap-1.5 px-3 text-xs">
-            <FlaskConical className="size-3.5" aria-hidden />
+            <Activity className="size-3.5" aria-hidden />
             {filtroAtivo
-              ? `${totalFiltradas} de ${total} amostras`
-              : `${total} amostras`}
+              ? `${totalFiltrados} de ${total} resultados`
+              : `${total} resultados`}
           </Badge>
         </div>
       </header>
@@ -248,48 +249,41 @@ export default function AmostrasPage() {
           <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
             <div className="space-y-1">
               <CardTitle className="text-base font-semibold">
-                Registro de amostras
+                Registro de resultados
               </CardTitle>
               <CardDescription>
-                Use a busca ou filtros para localizar amostras rapidamente.
+                Acompanhe o andamento dos exames e publique resultados para os pesquisadores.
               </CardDescription>
             </div>
 
             <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
               <div className="relative">
-                <Label htmlFor="busca-amostras" className="sr-only">
-                  Buscar amostras
+                <Label htmlFor="busca-resultados" className="sr-only">
+                  Buscar resultados
                 </Label>
                 <Search
                   className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground"
                   aria-hidden
                 />
                 <Input
-                  id="busca-amostras"
+                  id="busca-resultados"
                   type="search"
                   inputMode="search"
-                  placeholder="Buscar por código, exame, protocolo..."
+                  placeholder="Buscar por amostra, exame, protocolo..."
                   value={busca}
-                  onChange={(event) => setBusca(event.target.value)}
+                  onChange={(e) => setBusca(e.target.value)}
                   className="h-10 w-full pl-9 text-sm sm:w-72"
                 />
               </div>
 
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button
-                    variant="outline"
-                    size="lg"
-                    className="h-10 justify-between gap-2"
-                  >
+                  <Button variant="outline" size="lg" className="h-10 justify-between gap-2">
                     <span className="flex items-center gap-2">
                       <ListFilter className="size-4" aria-hidden />
                       Status
                       {statusSelecionado.size > 0 && (
-                        <Badge
-                          variant="secondary"
-                          className="h-5 min-w-5 px-1.5 text-[10px]"
-                        >
+                        <Badge variant="secondary" className="h-5 min-w-5 px-1.5 text-[10px]">
                           {statusSelecionado.size}
                         </Badge>
                       )}
@@ -297,7 +291,7 @@ export default function AmostrasPage() {
                     <ChevronDown className="size-4" aria-hidden />
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-48">
+                <DropdownMenuContent align="end" className="w-52">
                   <DropdownMenuLabel>Filtrar por status</DropdownMenuLabel>
                   <DropdownMenuSeparator />
                   {statusOptions.map((status) => (
@@ -305,7 +299,7 @@ export default function AmostrasPage() {
                       key={status}
                       checked={statusSelecionado.has(status)}
                       onCheckedChange={() => toggleStatus(status)}
-                      onSelect={(event) => event.preventDefault()}
+                      onSelect={(e) => e.preventDefault()}
                     >
                       {status}
                     </DropdownMenuCheckboxItem>
@@ -332,41 +326,38 @@ export default function AmostrasPage() {
           <Table>
             <TableHeader>
               <TableRow className="bg-muted/40 hover:bg-muted/40">
-                <TableHead className="px-6 text-xs font-semibold tracking-wide text-muted-foreground uppercase">
-                  Código
+                <TableHead className="px-6 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                  Amostra
                 </TableHead>
-                <TableHead className="text-xs font-semibold tracking-wide text-muted-foreground uppercase">
+                <TableHead className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                   Exame
                 </TableHead>
-                <TableHead className="text-xs font-semibold tracking-wide text-muted-foreground uppercase">
+                <TableHead className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                   Protocolo
                 </TableHead>
-                <TableHead className="text-xs font-semibold tracking-wide text-muted-foreground uppercase">
+                <TableHead className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                   Pesquisador
                 </TableHead>
-                <TableHead className="text-xs font-semibold tracking-wide text-muted-foreground uppercase">
+                <TableHead className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                   Data
                 </TableHead>
-                <TableHead className="text-xs font-semibold tracking-wide text-muted-foreground uppercase">
+                <TableHead className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                   Status
                 </TableHead>
-                <TableHead className="px-6 text-right text-xs font-semibold tracking-wide text-muted-foreground uppercase">
+                <TableHead className="px-6 text-right text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                   Ação
                 </TableHead>
               </TableRow>
             </TableHeader>
 
             <TableBody>
-              {amostrasFiltradas.length === 0 ? (
+              {resultadosFiltrados.length === 0 ? (
                 <TableRow className="hover:bg-transparent">
                   <TableCell colSpan={7} className="py-16 text-center">
                     <div className="mx-auto flex max-w-sm flex-col items-center gap-3 text-muted-foreground">
-                      <FlaskConical
-                        className="size-10 text-muted-foreground/40"
-                        aria-hidden
-                      />
+                      <FileSearch className="size-10 text-muted-foreground/40" aria-hidden />
                       <p className="text-sm font-medium text-foreground">
-                        Nenhuma amostra encontrada
+                        Nenhum resultado encontrado
                       </p>
                       <p className="text-xs">
                         Ajuste a busca ou os filtros para ver mais resultados.
@@ -387,58 +378,47 @@ export default function AmostrasPage() {
                   </TableCell>
                 </TableRow>
               ) : (
-                amostrasFiltradas.map((amostra) => {
-                  const isPending = pendingCodigo === amostra.codigo;
+                resultadosFiltrados.map((r) => {
+                  const isPending = pendingId === r.id;
                   return (
-                    <TableRow key={amostra.codigo}>
+                    <TableRow key={r.id}>
                       <TableCell className="px-6 py-4 text-sm font-medium text-foreground">
-                        {amostra.codigo}
+                        {r.amostra}
                       </TableCell>
                       <TableCell className="py-4 text-sm text-foreground">
-                        {amostra.exame}
+                        {r.exame}
                       </TableCell>
                       <TableCell className="py-4 font-mono text-xs text-muted-foreground">
-                        {amostra.protocolo}
+                        {r.protocolo}
                       </TableCell>
                       <TableCell className="py-4 text-sm text-foreground">
-                        {amostra.pesquisador}
+                        {r.pesquisador}
                       </TableCell>
                       <TableCell className="py-4 text-sm text-muted-foreground">
-                        <time dateTime={amostra.data}>
-                          {formatarData(amostra.data)}
-                        </time>
+                        <time dateTime={r.data}>{formatarData(r.data)}</time>
                       </TableCell>
                       <TableCell className="py-4">
-                        <Badge
-                          variant={statusVariant[amostra.status]}
-                          className={statusClass[amostra.status]}
-                        >
-                          {amostra.status}
+                        <Badge variant="outline" className={statusClass[r.status]}>
+                          {r.status}
                         </Badge>
                       </TableCell>
                       <TableCell className="px-6 py-4 text-right">
                         <Button
-                          type="button"
                           size="sm"
-                          disabled={isPending || pendingCodigo !== null}
+                          variant="outline"
+                          disabled={isPending || pendingId !== null || r.status === "Disponível"}
                           aria-busy={isPending}
-                          onClick={() => cadastrarResultado(amostra.codigo)}
+                          onClick={() => publicarResultado(r.id, r.amostra)}
                         >
                           {isPending ? (
                             <>
-                              <Loader2
-                                className="size-3.5 animate-spin"
-                                aria-hidden
-                              />
-                              Cadastrando...
+                              <Loader2 className="size-3.5 animate-spin" aria-hidden />
+                              Publicando...
                             </>
                           ) : (
                             <>
-                              <ClipboardCheck
-                                className="size-3.5"
-                                aria-hidden
-                              />
-                              Cadastrar resultado
+                              <UploadCloud className="size-3.5" aria-hidden />
+                              {r.status === "Disponível" ? "Publicado" : "Publicar"}
                             </>
                           )}
                         </Button>

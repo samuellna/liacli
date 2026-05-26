@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   ChevronDown,
   FileText,
@@ -10,7 +10,9 @@ import {
   Clock,
   Eye,
   RefreshCw,
+  Loader2,
 } from "lucide-react";
+import { toast } from "sonner";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -40,6 +42,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
   Table,
   TableBody,
@@ -213,6 +216,37 @@ function ordenarPorAgendamento(lista: Solicitacao[]): Solicitacao[] {
   );
 }
 
+// ─── Skeleton de carregamento ─────────────────────────────────────────────────
+
+function TabelaSkeleton() {
+  return (
+    <Card>
+      <CardHeader className="border-b">
+        <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+          <div className="space-y-2">
+            <Skeleton className="h-5 w-48" />
+            <Skeleton className="h-4 w-72" />
+          </div>
+          <Skeleton className="h-10 w-36" />
+        </div>
+      </CardHeader>
+      <CardContent className="p-0">
+        <div className="divide-y divide-border">
+          {Array.from({ length: 5 }).map((_, i) => (
+            <div key={i} className="flex items-center gap-4 px-6 py-4">
+              <Skeleton className="h-4 w-40" />
+              <Skeleton className="h-4 w-32" />
+              <Skeleton className="h-4 w-48 flex-1" />
+              <Skeleton className="h-6 w-20 rounded-full" />
+              <Skeleton className="h-8 w-24 rounded-md" />
+            </div>
+          ))}
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
 // ─── Modal de Detalhes ────────────────────────────────────────────────────────
 
 function ModalDetalhes({
@@ -242,7 +276,6 @@ function ModalDetalhes({
         </DialogHeader>
 
         <div className="space-y-5 overflow-y-auto px-6 pb-2 max-h-[60vh]">
-          {/* Status */}
           <div className="flex items-center gap-2">
             <Badge
               variant={statusVariant[solicitacao.status]}
@@ -255,7 +288,6 @@ function ModalDetalhes({
 
           <Separator />
 
-          {/* Pesquisador */}
           <section className="space-y-3">
             <h3 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
               Pesquisador
@@ -272,7 +304,6 @@ function ModalDetalhes({
 
           <Separator />
 
-          {/* Exames */}
           <section className="space-y-3">
             <h3 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
               Exames Solicitados ({solicitacao.exames.length})
@@ -292,7 +323,6 @@ function ModalDetalhes({
 
           <Separator />
 
-          {/* Datas */}
           <section className="space-y-3">
             <h3 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
               Datas
@@ -313,7 +343,6 @@ function ModalDetalhes({
             </dl>
           </section>
 
-          {/* Avaliação (apenas se não estiver pendente) */}
           {solicitacao.status !== "PENDENTE" && (
             <>
               <Separator />
@@ -371,29 +400,35 @@ function ModalAtualizar({
   solicitacao: Solicitacao | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onConfirmar: (id: number, aprovado: boolean, observacao: string) => void;
+  onConfirmar: (id: number, aprovado: boolean, observacao: string) => Promise<void>;
 }) {
   const [decisao, setDecisao] = useState<"APROVAR" | "REPROVAR" | null>(null);
   const [observacao, setObservacao] = useState("");
+  const [isPending, setIsPending] = useState(false);
 
   function handleClose(value: boolean) {
-    if (!value) {
+    if (!value && !isPending) {
       setDecisao(null);
       setObservacao("");
     }
     onOpenChange(value);
   }
 
-  function handleConfirmar() {
+  async function handleConfirmar() {
     if (!solicitacao || decisao === null) return;
-    onConfirmar(solicitacao.id, decisao === "APROVAR", observacao);
-    setDecisao(null);
-    setObservacao("");
+    setIsPending(true);
+    try {
+      await onConfirmar(solicitacao.id, decisao === "APROVAR", observacao);
+      setDecisao(null);
+      setObservacao("");
+    } finally {
+      setIsPending(false);
+    }
   }
 
   if (!solicitacao) return null;
 
-  const podeConfirmar = decisao !== null;
+  const podeConfirmar = decisao !== null && !isPending;
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
@@ -410,15 +445,15 @@ function ModalAtualizar({
         </DialogHeader>
 
         <div className="space-y-5 px-6 pb-2">
-          {/* Decisão */}
           <div className="space-y-2">
             <Label className="text-sm font-medium">Decisão</Label>
             <div className="grid grid-cols-2 gap-2">
               <button
                 type="button"
                 onClick={() => setDecisao("APROVAR")}
+                disabled={isPending}
                 className={[
-                  "flex items-center justify-center gap-2 rounded-lg border-2 px-4 py-3 text-sm font-medium transition-colors",
+                  "flex items-center justify-center gap-2 rounded-lg border-2 px-4 py-3 text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed",
                   decisao === "APROVAR"
                     ? "border-success bg-success/10 text-success"
                     : "border-border bg-background text-muted-foreground hover:border-success/50 hover:bg-success/5 hover:text-success",
@@ -430,8 +465,9 @@ function ModalAtualizar({
               <button
                 type="button"
                 onClick={() => setDecisao("REPROVAR")}
+                disabled={isPending}
                 className={[
-                  "flex items-center justify-center gap-2 rounded-lg border-2 px-4 py-3 text-sm font-medium transition-colors",
+                  "flex items-center justify-center gap-2 rounded-lg border-2 px-4 py-3 text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed",
                   decisao === "REPROVAR"
                     ? "border-destructive bg-destructive/10 text-destructive"
                     : "border-border bg-background text-muted-foreground hover:border-destructive/50 hover:bg-destructive/5 hover:text-destructive",
@@ -443,7 +479,6 @@ function ModalAtualizar({
             </div>
           </div>
 
-          {/* Observação */}
           <div className="space-y-2">
             <Label htmlFor="observacao" className="text-sm font-medium">
               Observação / Justificativa
@@ -456,6 +491,7 @@ function ModalAtualizar({
               placeholder="Adicione uma observação ou justificativa para a decisão..."
               value={observacao}
               onChange={(e) => setObservacao(e.target.value)}
+              disabled={isPending}
               className="resize-none"
               rows={3}
             />
@@ -464,7 +500,9 @@ function ModalAtualizar({
 
         <DialogFooter>
           <DialogClose asChild>
-            <Button variant="outline">Cancelar</Button>
+            <Button variant="outline" disabled={isPending}>
+              Cancelar
+            </Button>
           </DialogClose>
           <Button
             onClick={handleConfirmar}
@@ -474,8 +512,16 @@ function ModalAtualizar({
                 ? "bg-destructive/10 text-destructive hover:bg-destructive/20 border-0"
                 : ""
             }
+            aria-busy={isPending}
           >
-            Confirmar
+            {isPending ? (
+              <>
+                <Loader2 className="size-4 animate-spin" aria-hidden />
+                Processando...
+              </>
+            ) : (
+              "Confirmar"
+            )}
           </Button>
         </DialogFooter>
       </DialogContent>
@@ -487,6 +533,7 @@ function ModalAtualizar({
 
 export default function SolicitacoesPage() {
   const [dados, setDados] = useState<Solicitacao[]>(solicitacoesMock);
+  const [isLoading, setIsLoading] = useState(true);
   const [statusSelecionados, setStatusSelecionados] = useState<Set<AprovacaoStatus>>(
     new Set(["PENDENTE"])
   );
@@ -500,6 +547,11 @@ export default function SolicitacoesPage() {
     aberto: boolean;
     solicitacao: Solicitacao | null;
   }>({ aberto: false, solicitacao: null });
+
+  useEffect(() => {
+    const t = setTimeout(() => setIsLoading(false), 600);
+    return () => clearTimeout(t);
+  }, []);
 
   const filtradas = useMemo(() => {
     const lista = dados.filter((s) => statusSelecionados.has(s.status));
@@ -523,25 +575,54 @@ export default function SolicitacoesPage() {
     setModalAtualizar({ aberto: true, solicitacao });
   }
 
-  function confirmarAtualizacao(id: number, aprovado: boolean, observacao: string) {
-    setDados((prev) =>
-      prev.map((s) =>
-        s.id === id
-          ? {
-              ...s,
-              status: aprovado ? "APROVADO" : "REPROVADO",
-              observacao: observacao || undefined,
-              avaliadoPor: "Funcionário Atual",
-              avaliadoEm: new Date().toISOString().split("T")[0],
-            }
-          : s
-      )
-    );
-    setModalAtualizar({ aberto: false, solicitacao: null });
+  async function confirmarAtualizacao(id: number, aprovado: boolean, observacao: string) {
+    await new Promise((resolve) => setTimeout(resolve, 800));
+
+    try {
+      setDados((prev) =>
+        prev.map((s) =>
+          s.id === id
+            ? {
+                ...s,
+                status: aprovado ? "APROVADO" : "REPROVADO",
+                observacao: observacao || undefined,
+                avaliadoPor: "Funcionário Atual",
+                avaliadoEm: new Date().toISOString().split("T")[0],
+              }
+            : s
+        )
+      );
+      setModalAtualizar({ aberto: false, solicitacao: null });
+
+      if (aprovado) {
+        toast.success("Solicitação aprovada com sucesso.");
+      } else {
+        toast.success("Solicitação reprovada e registrada.");
+      }
+    } catch {
+      toast.error("Não foi possível processar. Tente novamente.");
+    }
   }
 
   const total = dados.length;
   const totalFiltradas = filtradas.length;
+
+  if (isLoading) {
+    return (
+      <div className="space-y-6">
+        <header className="space-y-2">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div className="space-y-2">
+              <Skeleton className="h-7 w-36" />
+              <Skeleton className="h-4 w-64" />
+            </div>
+            <Skeleton className="h-7 w-32 rounded-full" />
+          </div>
+        </header>
+        <TabelaSkeleton />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
