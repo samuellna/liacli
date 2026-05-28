@@ -26,7 +26,14 @@ export class ResearchProjectsController {
     try {
       return await this.researchProjectsService.findAll();
     } catch (error) {
-      throw new HttpException(error.message, HttpStatus.INTERNAL_SERVER_ERROR);
+      throw new HttpException(
+        {
+          status: 500,
+          message: 'Error fetching researchers projects',
+        },
+        HttpStatus.INTERNAL_SERVER_ERROR,
+        { cause: error },
+      );
     }
   }
 
@@ -36,7 +43,14 @@ export class ResearchProjectsController {
     try {
       return await this.researchProjectsService.findByResearcher(researcherId);
     } catch (error) {
-      throw new HttpException(error.message, HttpStatus.INTERNAL_SERVER_ERROR);
+      throw new HttpException(
+        {
+          status: 404,
+          message: 'Researcher project not found by researcher ID',
+        },
+        HttpStatus.NOT_FOUND,
+        { cause: error },
+      );
     }
   }
 
@@ -47,8 +61,12 @@ export class ResearchProjectsController {
       return await this.researchProjectsService.findOne(id);
     } catch (error) {
       throw new HttpException(
-        error.message,
-        error.status ?? HttpStatus.INTERNAL_SERVER_ERROR,
+        {
+          status: 404,
+          message: 'Researcher project not found by ID',
+        },
+        HttpStatus.NOT_FOUND,
+        { cause: error },
       );
     }
   }
@@ -62,8 +80,12 @@ export class ResearchProjectsController {
       );
     } catch (error) {
       throw new HttpException(
-        error.message,
-        error.status ?? HttpStatus.INTERNAL_SERVER_ERROR,
+        {
+          status: 400,
+          message: 'Error creating researchers project',
+        },
+        HttpStatus.BAD_REQUEST,
+        { cause: error },
       );
     }
   }
@@ -81,8 +103,12 @@ export class ResearchProjectsController {
       );
     } catch (error) {
       throw new HttpException(
-        error.message,
-        error.status ?? HttpStatus.INTERNAL_SERVER_ERROR,
+        {
+          status: 500,
+          message: 'Error updating researchers project',
+        },
+        HttpStatus.INTERNAL_SERVER_ERROR,
+        { cause: error },
       );
     }
   }
@@ -93,7 +119,14 @@ export class ResearchProjectsController {
     try {
       await this.researchProjectsService.delete(id);
     } catch (error) {
-      throw new HttpException(error.message, HttpStatus.INTERNAL_SERVER_ERROR);
+      throw new HttpException(
+        {
+          status: 404,
+          message: 'Error deleting researchers project, not found by ID',
+        },
+        HttpStatus.NOT_FOUND,
+        { cause: error },
+      );
     }
   }
 }

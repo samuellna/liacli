@@ -1,6 +1,6 @@
 import { DataSource } from 'typeorm';
 import { ExamType } from '../exam_types/exam_types.entity';
-import { Researchers } from '../researchers/researchers.entity';
+import { Researchers, ResearchLevel } from '../researchers/researchers.entity';
 import { Employees } from '../employees/employees.entity';
 import {
   Sample,
@@ -8,8 +8,9 @@ import {
   ApprovalStatus,
 } from '../samples/samples.entity';
 import { SampleResult } from '../sample_results/sample_results.entity';
-import { randomUUID } from 'crypto';
+import { ResearchProject } from '../researcher_projects/researcher_projects.entity';
 import admin from '../auth/admin';
+import { generateProtocol } from 'src/utils/generate_protocol';
 
 export async function runSeed(dataSource: DataSource) {
   const examRepo = dataSource.getRepository(ExamType);
@@ -17,10 +18,12 @@ export async function runSeed(dataSource: DataSource) {
   const employeeRepo = dataSource.getRepository(Employees);
   const sampleRepo = dataSource.getRepository(Sample);
   const resultRepo = dataSource.getRepository(SampleResult);
+  const projectRepo = dataSource.getRepository(ResearchProject);
 
   console.log('🌱 Iniciando seed...');
 
-  // EXAM TYPES
+  // ─── EXAM TYPES ───────────────────────────────────────────────────────────
+
   const examTypesData = [
     { name: 'Hemograma', description: 'Exame de sangue completo' },
     { name: 'Eletrocardiograma', description: 'Exame do coração' },
@@ -41,22 +44,33 @@ export async function runSeed(dataSource: DataSource) {
 
   const [hemograma, ecg, glicemia] = examTypes;
 
-  // RESEARCHERS
+  // ─── RESEARCHERS ──────────────────────────────────────────────────────────
+  // Novos campos: phone, advisorName, level
+
   const researchersData = [
     {
       name: 'Dr. João',
       email: 'joao@lab.com',
       institution: 'UFPE',
+      phone: '81991110001',
+      advisorName: 'Prof. Dr. Marcelo Lima',
+      level: ResearchLevel.DOCTORATE,
     },
     {
       name: 'Dra. Ana',
       email: 'ana@lab.com',
       institution: 'UFRPE',
+      phone: '81991110002',
+      advisorName: 'Profa. Dra. Fernanda Costa',
+      level: ResearchLevel.MASTERS,
     },
     {
       name: 'Dr. Carlos',
       email: 'carlos@externo.com',
       institution: 'Outra',
+      phone: '81983244111',
+      advisorName: 'Prof. Kiev Gama',
+      level: ResearchLevel.SCIENTIFIC_INITIATION,
     },
   ];
 
@@ -76,7 +90,8 @@ export async function runSeed(dataSource: DataSource) {
 
   const [r1, r2, r3] = researchers;
 
-  // EMPLOYEES
+  // ─── EMPLOYEES ────────────────────────────────────────────────────────────
+
   const employeesData = [
     {
       name: 'Maria',
@@ -125,7 +140,61 @@ export async function runSeed(dataSource: DataSource) {
 
   const [e1, e2] = employees;
 
-  // SAMPLES
+  // ─── RESEARCH PROJECTS ────────────────────────────────────────────────────
+
+  const projectCount = await projectRepo.count();
+
+  let projects: ResearchProject[];
+
+  if (projectCount === 0) {
+    projects = await projectRepo.save([
+      {
+        title:
+          'Avaliação hematológica em ratos Wistar submetidos a dieta hiperlipídica',
+        course: 'Programa de Pós-graduação em Nutrição — UFPE',
+        researchLab: 'Laboratório de Fisiologia Animal — UFPE',
+        animalSpecies: 'Rattus norvegicus (Wistar)',
+        totalAnimals: 30,
+        expectedShipments: 3,
+        preferredDate: new Date(Date.now() + 86400000 * 10),
+        researcher: r1,
+        examTypes: [hemograma, glicemia],
+      },
+      {
+        title:
+          'Perfil bioquímico de coelhos em diferentes fases de crescimento',
+        course: 'Mestrado em Zootecnia — UFRPE',
+        researchLab: 'Laboratório de Produção Animal — UFRPE',
+        animalSpecies: 'Oryctolagus cuniculus',
+        totalAnimals: 20,
+        expectedShipments: 2,
+        preferredDate: new Date(Date.now() + 86400000 * 20),
+        researcher: r2,
+        examTypes: [glicemia, ecg],
+      },
+      {
+        title: 'Monitoramento cardíaco em cães de grande porte',
+        course: 'Iniciação Científica — Outra',
+        researchLab: 'Lab. de Clínica de Pequenos Animais',
+        animalSpecies: 'Canis lupus familiaris',
+        totalAnimals: 10,
+        expectedShipments: 1,
+        preferredDate: new Date(Date.now() + 86400000 * 15),
+        researcher: r3,
+        examTypes: [ecg],
+      },
+    ]);
+  } else {
+    projects = await projectRepo.find({
+      relations: ['researcher', 'examTypes'],
+    });
+  }
+
+  const [p1, p2, p3] = projects;
+
+  // ─── SAMPLES ──────────────────────────────────────────────────────────────
+  // Campo researchProject adicionado (nullable para retrocompatibilidade)
+
   const sampleCount = await sampleRepo.count();
 
   let samples: Sample[];
@@ -135,7 +204,8 @@ export async function runSeed(dataSource: DataSource) {
       {
         examType: hemograma,
         researcher: r1,
-        protocol: randomUUID(),
+        researchProject: p1,
+        protocol: generateProtocol(),
         status: SampleStatus.DONE,
         approvalStatus: ApprovalStatus.APPROVED,
         approvedBy: e1,
@@ -145,7 +215,8 @@ export async function runSeed(dataSource: DataSource) {
       {
         examType: ecg,
         researcher: r3,
-        protocol: randomUUID(),
+        researchProject: p3,
+        protocol: generateProtocol(),
         status: SampleStatus.REJECTED,
         approvalStatus: ApprovalStatus.REJECTED,
         approvedBy: e2,
@@ -155,7 +226,8 @@ export async function runSeed(dataSource: DataSource) {
       {
         examType: glicemia,
         researcher: r2,
-        protocol: randomUUID(),
+        researchProject: p2,
+        protocol: generateProtocol(),
         status: SampleStatus.PENDING,
         approvalStatus: ApprovalStatus.PENDING,
         scheduledAt: new Date(Date.now() + 86400000 * 3),
@@ -163,7 +235,8 @@ export async function runSeed(dataSource: DataSource) {
       {
         examType: hemograma,
         researcher: r2,
-        protocol: randomUUID(),
+        researchProject: p2,
+        protocol: generateProtocol(),
         status: SampleStatus.ANALYZING,
         approvalStatus: ApprovalStatus.APPROVED,
         approvedBy: e1,
@@ -175,7 +248,8 @@ export async function runSeed(dataSource: DataSource) {
     samples = await sampleRepo.find();
   }
 
-  // SAMPLE RESULTS
+  // ─── SAMPLE RESULTS ───────────────────────────────────────────────────────
+
   const resultCount = await resultRepo.count();
 
   if (resultCount === 0) {

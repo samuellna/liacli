@@ -29,13 +29,13 @@ export class Researchers {
   @Column('varchar', { length: 100, nullable: false })
   institution: string;
 
-  @Column('varchar', { length: 30, nullable: true })
+  @Column('varchar', { length: 30, nullable: false })
   phone: string;
 
-  @Column('varchar', { name: 'advisor_name', length: 255, nullable: true })
+  @Column('varchar', { name: 'advisor_name', length: 255, nullable: false })
   advisorName: string;
 
-  @Column({ type: 'enum', enum: ResearchLevel, nullable: true })
+  @Column({ type: 'enum', enum: ResearchLevel, nullable: false })
   level: ResearchLevel;
 
   @CreateDateColumn({ name: 'created_at' })

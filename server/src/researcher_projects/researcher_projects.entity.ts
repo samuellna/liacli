@@ -20,22 +20,22 @@ export class ResearchProject {
   @Column('varchar', { length: 255 })
   title: string;
 
-  @Column('varchar', { length: 255, nullable: true })
+  @Column('varchar', { length: 255, nullable: false })
   course: string;
 
-  @Column('varchar', { name: 'research_lab', length: 150, nullable: true })
+  @Column('varchar', { name: 'research_lab', length: 150, nullable: false })
   researchLab: string;
 
-  @Column('varchar', { name: 'animal_species', length: 100, nullable: true })
+  @Column('varchar', { name: 'animal_species', length: 100, nullable: false })
   animalSpecies: string;
 
-  @Column({ name: 'total_animals', type: 'int', nullable: true })
+  @Column({ name: 'total_animals', type: 'int', nullable: false })
   totalAnimals: number;
 
-  @Column({ name: 'expected_shipments', type: 'int', nullable: true })
+  @Column({ name: 'expected_shipments', type: 'int', nullable: false })
   expectedShipments: number;
 
-  @Column({ name: 'preferred_date', type: 'date', nullable: true })
+  @Column({ name: 'preferred_date', type: 'date', nullable: false })
   preferredDate: Date;
 
   @ManyToOne(() => Researchers, (r) => r.projects)
