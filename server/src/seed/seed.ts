@@ -9,7 +9,7 @@ import {
 } from '../samples/samples.entity';
 import { SampleResult } from '../sample_results/sample_results.entity';
 import { ResearchProject } from '../researcher_projects/researcher_projects.entity';
-import admin from '../auth/admin';
+import * as admin from 'firebase-admin';
 import { generateProtocol } from 'src/utils/generate_protocol';
 
 export async function runSeed(dataSource: DataSource) {

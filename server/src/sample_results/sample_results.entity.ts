@@ -12,7 +12,7 @@ export class SampleResult {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @OneToOne(() => Sample, { eager: true })
+  @OneToOne(() => Sample, { eager: true, onDelete: 'CASCADE' })
   @JoinColumn({ name: 'sampleId' })
   sample: Sample;
 
