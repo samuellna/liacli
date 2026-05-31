@@ -1,16 +1,17 @@
-import { Injectable } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Employees } from './employees.entity';
 import { Repository } from 'typeorm';
 import { CreateEmployeeDto } from './dto/create-employee.dto';
 import { UpdateEmployeeDto } from './dto/update-employee.dto';
-import admin from 'src/auth/admin';
+import * as admin from 'firebase-admin';
 
 @Injectable()
 export class EmployeesService {
   constructor(
     @InjectRepository(Employees)
     private readonly employeesRepository: Repository<Employees>,
+    @Inject('FIREBASE_ADMIN') private readonly firebase: typeof admin,
   ) {}
 
   async findAll(): Promise<Employees[]> {
