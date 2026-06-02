@@ -11,7 +11,7 @@ import {
   SidebarProvider,
   SidebarTrigger,
 } from "@/components/ui/sidebar";
-import { auth } from "@/lib/firebase";
+//import { auth } from "@/lib/firebase";
 
 const routeLabels: Record<string, string> = {
   "/dashboard": "Dashboard",
@@ -32,8 +32,18 @@ function BreadcrumbDinamico() {
   );
 }
 
+//function UserAvatar() {
+// const user = auth.currentUser;
+//  const displayName = user?.displayName ?? user?.email ?? "Funcionário";
+//  const initials = displayName.slice(0, 2).toUpperCase();
+
 function UserAvatar() {
-  const user = auth.currentUser;
+  // Comentamos a chamada do Firebase temporariamente
+  // const user = auth.currentUser;
+  
+  // Usuário mockado apenas para visualização da interface
+  const user = { displayName: "Funcionário Teste", email: "teste@liacli.com" };
+
   const displayName = user?.displayName ?? user?.email ?? "Funcionário";
   const initials = displayName.slice(0, 2).toUpperCase();
 
