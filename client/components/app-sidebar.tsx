@@ -24,7 +24,7 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
-import { auth } from "@/lib/firebase";
+//import { auth } from "@/lib/firebase";
 
 const mainItems = [
   { title: "Dashboard", url: "/dashboard", icon: LayoutDashboard },
@@ -38,8 +38,10 @@ export function AppSidebar() {
   const pathname = usePathname();
   const router = useRouter();
 
-  const user = auth.currentUser;
-  const displayName = user?.displayName ?? user?.email ?? "Funcionário";
+  // const user = auth.currentUser;
+  // const displayName = user?.displayName ?? user?.email ?? "Funcionário";
+  const user = { displayName: "Funcionário Teste", email: "teste@liacli.com" };
+  const displayName = user.displayName;
   const initials = displayName.slice(0, 2).toUpperCase();
   const cargo = "Analista de Laboratório";
 
