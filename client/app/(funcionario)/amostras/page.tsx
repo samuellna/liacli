@@ -9,7 +9,6 @@ import {
   Loader2,
   Search,
 } from "lucide-react";
-import { toast } from "sonner";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -39,6 +38,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { redirect } from "next/navigation";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -191,14 +191,7 @@ export default function AmostrasPage() {
 
   async function cadastrarResultado(codigo: string) {
     setPendingCodigo(codigo);
-    try {
-      await new Promise((resolve) => setTimeout(resolve, 900));
-      toast.success(`Resultado da amostra ${codigo} cadastrado com sucesso.`);
-    } catch {
-      toast.error("Não foi possível cadastrar o resultado. Tente novamente.");
-    } finally {
-      setPendingCodigo(null);
-    }
+    redirect(`/resultados/cadastro/${codigo}`);
   }
 
   const totalFiltradas = amostrasFiltradas.length;
