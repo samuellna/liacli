@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react"; 
+import { useState } from "react";
 import {
   FormProvider,
   useForm,
@@ -9,13 +9,7 @@ import {
 } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import {
-  ClipboardList,
-  FlaskConical,
-  Plus,
-  Trash2,
-  Save,
-} from "lucide-react";
+import { ClipboardList, FlaskConical, Plus, Trash2, Save } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 
@@ -24,22 +18,24 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 
-
 // ESQUEMAS DE VALIDAÇÃO
-const parametroSchema = z.object({ // Validação de cada parâmetro
+const parametroSchema = z.object({
+  // Validação de cada parâmetro
   nome: z.string().min(1, "Informe o nome do parâmetro."),
   unidade: z.string().optional(),
   referencia: z.string().optional(),
 });
 
-const grupoSchema = z.object({ // Validação de cada grupo de parâmetros
+const grupoSchema = z.object({
+  // Validação de cada grupo de parâmetros
   nomeGrupo: z.string().optional(),
   parametros: z
     .array(parametroSchema)
     .min(1, "Adicione pelo menos um parâmetro neste grupo."),
 });
 
-const formExameSchema = z.object({ // Validação geral do formulário de exame
+const formExameSchema = z.object({
+  // Validação geral do formulário de exame
   titulo: z.string().min(1, "O título do exame é obrigatório."),
   material: z.string().optional(),
   descricao: z.string().optional(),
@@ -47,11 +43,10 @@ const formExameSchema = z.object({ // Validação geral do formulário de exame
   grupos: z.array(grupoSchema).min(1, "Adicione pelo menos um grupo."),
 });
 
-type FormExame = z.infer<typeof formExameSchema>; 
+type FormExame = z.infer<typeof formExameSchema>;
 
-
-
-function FieldError({ message }: { message?: string }) { // Componente simples para exibir mensagens de erro de validação
+function FieldError({ message }: { message?: string }) {
+  // Componente simples para exibir mensagens de erro de validação
   if (!message) return null;
   return (
     <p role="alert" className="mt-1 text-xs text-destructive">
@@ -60,7 +55,8 @@ function FieldError({ message }: { message?: string }) { // Componente simples p
   );
 }
 
-type SectionProps = { // Propriedades para cada seção do formulário 
+type SectionProps = {
+  // Propriedades para cada seção do formulário
   step: number;
   icon: React.ElementType;
   title: string;
@@ -68,7 +64,8 @@ type SectionProps = { // Propriedades para cada seção do formulário
   children: React.ReactNode;
 };
 
-function Section({ // Componente para estruturar cada seção do formulário com título, ícone e descrição
+function Section({
+  // Componente para estruturar cada seção do formulário com título, ícone e descrição
   step,
   icon: Icon,
   title,
@@ -102,20 +99,20 @@ function Section({ // Componente para estruturar cada seção do formulário com
 
 // BLOCO 1: INFORMAÇÕES GERAIS
 
-function InformacoesGeraisSection() { 
+function InformacoesGeraisSection() {
   const {
     register,
     formState: { errors },
   } = useFormContext<FormExame>();
 
-  return ( 
+  return (
     <Section
       step={1}
       icon={ClipboardList}
       title="Informações gerais do exame"
       description="Dados de identificação e orientações gerais"
     >
-      <div className="grid gap-4 sm:grid-cols-2"> 
+      <div className="grid gap-4 sm:grid-cols-2">
         <div className="space-y-1.5 sm:col-span-2">
           <Label htmlFor="titulo">
             Título do exame{" "}
@@ -132,7 +129,7 @@ function InformacoesGeraisSection() {
           <FieldError message={errors.titulo?.message} />
         </div>
 
-        <div className="space-y-1.5 sm:col-span-2"> 
+        <div className="space-y-1.5 sm:col-span-2">
           <Label htmlFor="material">Material / Método</Label>
           <Input
             id="material"
@@ -141,7 +138,7 @@ function InformacoesGeraisSection() {
           />
         </div>
 
-        <div className="space-y-1.5 sm:col-span-2"> 
+        <div className="space-y-1.5 sm:col-span-2">
           <Label htmlFor="descricao">Descrição</Label>
           <Textarea
             id="descricao"
@@ -167,9 +164,10 @@ function InformacoesGeraisSection() {
   );
 }
 
-// BLOCO 2: GRUPOS E PARÂMETROS 
+// BLOCO 2: GRUPOS E PARÂMETROS
 
-function GrupoItem({ // Componente para cada grupo de parâmetros, permitindo adicionar/remover parâmetros e o próprio grupo
+function GrupoItem({
+  // Componente para cada grupo de parâmetros, permitindo adicionar/remover parâmetros e o próprio grupo
   groupIndex,
   onRemove,
   totalGrupos,
@@ -178,13 +176,13 @@ function GrupoItem({ // Componente para cada grupo de parâmetros, permitindo ad
   onRemove: () => void;
   totalGrupos: number;
 }) {
-  const { 
+  const {
     control,
     register,
     formState: { errors },
-  } = useFormContext<FormExame>(); 
+  } = useFormContext<FormExame>();
 
-  const { fields, append, remove } = useFieldArray({ 
+  const { fields, append, remove } = useFieldArray({
     control,
     name: `grupos.${groupIndex}.parametros`,
   });
@@ -227,31 +225,27 @@ function GrupoItem({ // Componente para cada grupo de parâmetros, permitindo ad
               <Input
                 placeholder="Nome do parâmetro (Ex.: Hemácias)"
                 {...register(
-                  `grupos.${groupIndex}.parametros.${paramIndex}.nome`
+                  `grupos.${groupIndex}.parametros.${paramIndex}.nome`,
                 )}
-                aria-invalid={
-                  !!grupoErrors?.parametros?.[paramIndex]?.nome
-                }
+                aria-invalid={!!grupoErrors?.parametros?.[paramIndex]?.nome}
               />
               <FieldError
-                message={
-                  grupoErrors?.parametros?.[paramIndex]?.nome?.message
-                }
+                message={grupoErrors?.parametros?.[paramIndex]?.nome?.message}
               />
             </div>
             <div className="flex-1 w-full space-y-1.5">
               <Input
                 placeholder="Unidade (Ex.: g/dL)"
                 {...register(
-                  `grupos.${groupIndex}.parametros.${paramIndex}.unidade`
+                  `grupos.${groupIndex}.parametros.${paramIndex}.unidade`,
                 )}
               />
             </div>
-            <div className="flex-1 w-full space-y-1.5"> 
+            <div className="flex-1 w-full space-y-1.5">
               <Input
                 placeholder="Referência (Ex.: 4,50 a 6,10)"
                 {...register(
-                  `grupos.${groupIndex}.parametros.${paramIndex}.referencia`
+                  `grupos.${groupIndex}.parametros.${paramIndex}.referencia`,
                 )}
               />
             </div>
@@ -274,7 +268,7 @@ function GrupoItem({ // Componente para cada grupo de parâmetros, permitindo ad
           <FieldError message={grupoErrors.parametros.root.message} />
         )}
 
-        <Button 
+        <Button
           type="button"
           variant="outline"
           size="sm"
@@ -295,7 +289,8 @@ function GrupoItem({ // Componente para cada grupo de parâmetros, permitindo ad
   );
 }
 
-function GruposSection() { // Componente para a seção de grupos de parâmetros, permitindo adicionar múltiplos grupos
+function GruposSection() {
+  // Componente para a seção de grupos de parâmetros, permitindo adicionar múltiplos grupos
   const { control } = useFormContext<FormExame>();
   const { fields, append, remove } = useFieldArray({
     control,
@@ -346,7 +341,7 @@ function GruposSection() { // Componente para a seção de grupos de parâmetros
   );
 }
 
-// PÁGINA PRINCIPAL 
+// PÁGINA PRINCIPAL
 
 export default function CadastroExamePage() {
   const router = useRouter();
@@ -376,10 +371,10 @@ export default function CadastroExamePage() {
 
   function onSubmit(data: FormExame) {
     setIsSubmitting(true);
-    
+
     // Log da estrutura JSON gerada pelo form conforme solicitado
     console.log("Dados do Exame (JSON):", JSON.stringify(data, null, 2));
-    
+
     // Simulação do salvamento
     setTimeout(() => {
       setIsSubmitting(false);
@@ -388,7 +383,7 @@ export default function CadastroExamePage() {
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen ">
       <div className="mx-auto w-full max-w-4xl px-4 py-10 sm:px-6">
         <div className="mb-8">
           <h1 className="text-2xl font-bold tracking-tight text-foreground">
