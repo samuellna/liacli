@@ -19,19 +19,16 @@ export const EXAM_OPTIONS = [
 ] as const;
 
 export const NIVEL_OPTIONS = [
-  { value: "ic", label: "Iniciação científica" },
-  { value: "mestrado", label: "Mestrado" },
-  { value: "doutorado", label: "Doutorado" },
-  { value: "pos_doutorado", label: "Pós-doutorado" },
-  { value: "outro", label: "Outro" },
+  { value: "SCIENTIFIC_INITIATION", label: "Iniciação científica" },
+  { value: "MASTERS", label: "Mestrado" },
+  { value: "DOCTORATE", label: "Doutorado" },
+  { value: "POST_DOCTORATE", label: "Pós-doutorado" },
+  { value: "OTHER", label: "Outro" },
 ] as const;
 
 export const sampleSchema = z.object({
   especieAnimal: z.string().min(1, "Informe a espécie animal"),
-  totalAnimais: z.coerce
-    .number()
-    .int()
-    .min(1, "Mínimo de 1 animal"),
+  totalAnimais: z.coerce.number().int().min(1, "Mínimo de 1 animal"),
   exames: z.array(z.string()).min(1, "Selecione pelo menos um exame"),
   outroExame: z.string().optional(),
   previsaoRemessas: z.string().min(1, "Informe a previsão de remessas"),
