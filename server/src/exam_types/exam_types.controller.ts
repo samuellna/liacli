@@ -8,6 +8,7 @@ import {
   Param,
   Patch,
   Post,
+  Query,
   // UseGuards,
 } from '@nestjs/common';
 import { ExamTypesService } from './exam_types.service';
@@ -23,6 +24,12 @@ export class ExamTypesController {
   @HttpCode(HttpStatus.OK)
   async findAll() {
     return await this.examTypesService.findAll();
+  }
+
+  @Get('search')
+  @HttpCode(HttpStatus.OK)
+  async findByName(@Query('name') name: string) {
+    return await this.examTypesService.findByName(name);
   }
 
   @Get(':id')

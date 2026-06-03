@@ -20,6 +20,10 @@ export class ExamTypesService {
     return this.examTypesRepository.findOneBy({ id });
   }
 
+  async findByName(name: string): Promise<ExamType | null> {
+    return await this.examTypesRepository.findOneBy({ name });
+  }
+
   async create(examTypeDto: CreateExamTypeDto): Promise<ExamType> {
     return this.examTypesRepository.save(examTypeDto);
   }
