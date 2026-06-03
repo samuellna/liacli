@@ -42,7 +42,13 @@ export class SamplesService {
   async findByProtocol(protocol: string) {
     const sample = await this.sampleRepository.findOne({
       where: { protocol },
-      relations: ['examType'],
+      relations: [
+        'examType',
+        'researcher',
+        'approvedBy',
+        'researchProject',
+        'researchProject.examTypes',
+      ],
     });
     if (!sample) {
       throw new NotFoundException('Sample not found');

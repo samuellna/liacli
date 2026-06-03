@@ -48,6 +48,9 @@ export class ResearchProject {
   @OneToMany(() => Sample, (s) => s.researchProject)
   samples: Sample[];
 
+  @Column('text', { nullable: true })
+  observations: string;
+
   @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;
 }

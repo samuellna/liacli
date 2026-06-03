@@ -1,14 +1,14 @@
 import { Body, Controller, Get, Param, Post, UseGuards } from '@nestjs/common';
 import { SampleResultsService } from './sample_results.service';
 import { CreateSampleResultDto } from './dto/create-sample-result.dto';
-import { AuthGuard } from 'src/auth/auth.guard';
+// import { AuthGuard } from 'src/auth/auth.guard';
 
 @Controller('results')
 export class SampleResultsController {
   constructor(private readonly resultService: SampleResultsService) {}
 
   @Post()
-  @UseGuards(AuthGuard)
+  // @UseGuards(AuthGuard)
   create(@Body() sampleResultDto: CreateSampleResultDto) {
     return this.resultService.create(
       sampleResultDto.sampleId,
