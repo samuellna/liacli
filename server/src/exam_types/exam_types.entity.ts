@@ -1,5 +1,11 @@
 import { Sample } from 'src/samples/samples.entity';
-import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
+import {
+  Column,
+  CreateDateColumn,
+  Entity,
+  OneToMany,
+  PrimaryGeneratedColumn,
+} from 'typeorm';
 
 @Entity({ name: 'exam_types' })
 export class ExamType {
@@ -14,4 +20,10 @@ export class ExamType {
 
   @OneToMany(() => Sample, (sample) => sample.examType)
   samples: Sample[];
+
+  @CreateDateColumn({ name: 'created_at' })
+  createdAt: Date;
+
+  @CreateDateColumn({ name: 'updated_at' })
+  updatedAt: Date;
 }

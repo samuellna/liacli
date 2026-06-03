@@ -136,6 +136,7 @@ export class SamplesService {
     }
     sample.approvedBy = employee;
     sample.approvedAt = new Date();
+    sample.updatedAt = new Date();
 
     return this.sampleRepository.save(sample);
   }
@@ -149,6 +150,7 @@ export class SamplesService {
       throw new BadRequestException('Sample not approved');
     }
     sample.status = status;
+    sample.updatedAt = new Date();
     return await this.sampleRepository.save(sample);
   }
 

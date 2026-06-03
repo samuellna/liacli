@@ -35,7 +35,10 @@ export class ExamTypesService {
     // Prevent updating if both name and description are missing
     if (!examTypeDto.name && !examTypeDto.description) return null;
 
-    await this.examTypesRepository.update(id, examTypeDto);
+    await this.examTypesRepository.update(id, {
+      ...examTypeDto,
+      updatedAt: new Date(),
+    });
     return this.examTypesRepository.findOneBy({ id });
   }
 }

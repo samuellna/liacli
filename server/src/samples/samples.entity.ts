@@ -62,4 +62,10 @@ export class Sample {
 
   @Column({ type: 'timestamp', nullable: true })
   scheduledAt: Date;
+
+  @CreateDateColumn({ name: 'created_at' })
+  createdAt: Date;
+
+  @CreateDateColumn({ name: 'updated_at' })
+  updatedAt: Date;
 }

@@ -106,6 +106,7 @@ export class ResearchProjectsService {
       project.examTypes = examTypes;
     }
 
+    project.updatedAt = new Date();
     return this.researchProjectRepository.save(project);
   }
 
