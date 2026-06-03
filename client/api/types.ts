@@ -38,6 +38,8 @@ export interface ExamType {
   name: string;
   description: string;
   samples: Sample[];
+  createdAt: Date;
+  updatedAt: Date;
 }
 
 export interface Sample {

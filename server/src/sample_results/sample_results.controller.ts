@@ -8,7 +8,7 @@ export class SampleResultsController {
   constructor(private readonly resultService: SampleResultsService) {}
 
   @Post()
-  @UseGuards(AuthGuard)
+  // @UseGuards(AuthGuard)
   create(@Body() sampleResultDto: CreateSampleResultDto) {
     return this.resultService.create(
       sampleResultDto.sampleId,
