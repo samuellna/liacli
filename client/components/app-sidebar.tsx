@@ -30,6 +30,7 @@ const mainItems = [
   { title: "Dashboard", url: "/dashboard", icon: LayoutDashboard },
   { title: "Solicitações", url: "/solicitacoes", icon: FileText },
   { title: "Amostras", url: "/amostras", icon: TestTube },
+  {title: "Exames", url: "/exames", icon: FlaskConical},
   { title: "Resultados", url: "/resultados", icon: Activity },
   { title: "Laudos", url: "/laudos", icon: FileCheck2 },
 ];
