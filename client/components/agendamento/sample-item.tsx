@@ -1,9 +1,6 @@
 "use client";
 
 import { useFormContext, Controller } from "react-hook-form";
-import { Trash2 } from "lucide-react";
-
-import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -13,8 +10,6 @@ import type { SchedulingFormData } from "../../app/(pesquisador)/agendamento/_li
 
 type SampleItemProps = {
   index: number;
-  total: number;
-  onRemove: () => void;
 };
 
 function FieldError({ message }: { message?: string }) {
@@ -26,7 +21,7 @@ function FieldError({ message }: { message?: string }) {
   );
 }
 
-export function SampleItem({ index, total, onRemove }: SampleItemProps) {
+export function SampleItem({ index }: SampleItemProps) {
   const {
     register,
     control,
@@ -39,31 +34,8 @@ export function SampleItem({ index, total, onRemove }: SampleItemProps) {
   const hasOutro = watchedExames.includes("outro");
 
   return (
-    <article className="rounded-2xl border border-border bg-card shadow-sm">
-      <header className="flex items-center justify-between rounded-t-2xl border-b border-border bg-muted/30 px-5 py-3">
-        <div className="flex items-center gap-2.5">
-          <span className="flex size-7 items-center justify-center rounded-full bg-primary text-xs font-bold text-primary-foreground">
-            {index + 1}
-          </span>
-          <h3 className="text-sm font-semibold text-foreground">
-            Amostra {index + 1}
-          </h3>
-        </div>
-        {total > 1 && (
-          <Button
-            type="button"
-            variant="ghost"
-            size="icon-sm"
-            onClick={onRemove}
-            aria-label={`Remover amostra ${index + 1}`}
-            className="text-muted-foreground hover:text-destructive"
-          >
-            <Trash2 className="size-4" aria-hidden />
-          </Button>
-        )}
-      </header>
-
-      <div className="space-y-5 p-5">
+    <article className="rounded-2xl bg-card">
+      <div className="space-y-5 ">
         <div className="grid gap-4 sm:grid-cols-2">
           <div className="space-y-1.5">
             <Label htmlFor={`especie-${index}`} className="text-sm font-medium">
@@ -125,7 +97,7 @@ export function SampleItem({ index, total, onRemove }: SampleItemProps) {
                     <label
                       key={exam.id}
                       htmlFor={`exam-${index}-${exam.id}`}
-                      className="flex cursor-pointer items-start gap-2.5 rounded-lg border border-transparent p-2 transition-colors hover:bg-muted/50 has-[:checked]:border-accent/30 has-[:checked]:bg-accent/5"
+                      className="flex cursor-pointer items-start gap-2.5 rounded-lg border border-transparent p-2 transition-colors hover:bg-muted/50 has-checked:border-accent/30 has-checked:bg-accent/5"
                     >
                       <Checkbox
                         id={`exam-${index}-${exam.id}`}

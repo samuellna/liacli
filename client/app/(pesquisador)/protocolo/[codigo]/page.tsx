@@ -3,7 +3,7 @@ import { ArrowLeft, FlaskConical, Search } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 
-import { lookupProtocol } from "./_lib/mock";
+// import { lookupProtocol } from "./_lib/mock";
 import {
   AgendamentoBadge,
   AnaliseBadge,
@@ -13,6 +13,8 @@ import {
   PendingNewView,
   StatusView,
 } from "../../../../components/protocolo/status-view";
+import { findSampleByProtocol } from "@/api/samples";
+import { ApprovalStatus, Sample, SampleStatus } from "@/api/types";
 
 type PageProps = {
   params: Promise<{ codigo: string }>;
@@ -28,46 +30,53 @@ export async function generateMetadata({ params }: PageProps) {
 
 export default async function ConsultStatusPage({ params }: PageProps) {
   const { codigo } = await params;
-  const result = lookupProtocol(codigo);
+  let result: Sample | null;
+  try {
+    result = await findSampleByProtocol(codigo);
+  } catch (error) {
+    result = null;
+  }
 
   return (
     <div className="flex min-h-screen flex-col bg-background text-foreground">
       <SiteHeader />
 
       <main className="flex-1">
-        {result.kind === "found" && (
+        {result?.approvalStatus === "APPROVED" && (
           <>
             <HeroSection
-              protocolo={result.data.protocolo}
-              agendamentoStatus={result.data.agendamentoStatus}
-              analiseStatus={result.data.analiseStatus}
-              ultimaAtualizacao={result.data.ultimaAtualizacao}
+              protocolo={result.protocol}
+              agendamentoStatus={result.approvalStatus}
+              analiseStatus={result.status}
+              ultimaAtualizacao={
+                result.approvedAt
+                  ? new Date(result.approvedAt).toLocaleString()
+                  : "Agora mesmo"
+              }
             />
-            <StatusView data={result.data} />
+            <StatusView data={result} />
           </>
         )}
 
-        {result.kind === "pending_new" && (
+        {result?.approvalStatus === "PENDING" && (
           <>
             <HeroSection
-              protocolo={result.protocolo}
-              agendamentoStatus="pendente"
-              analiseStatus="aguardando"
+              protocolo={result.protocol}
+              agendamentoStatus={result.approvalStatus}
+              analiseStatus={result.status}
               ultimaAtualizacao="Agora mesmo"
             />
-            <PendingNewView protocolo={result.protocolo} />
+            <PendingNewView protocolo={result.protocol} />
           </>
         )}
 
-        {result.kind === "not_found" && <NotFound protocol={codigo} />}
+        {!result && <NotFound protocol={codigo} />}
       </main>
 
       <SiteFooter />
     </div>
   );
 }
-
-/* ── Header ──────────────────────────────────────────────────────── */
 
 function SiteHeader() {
   return (
@@ -95,8 +104,6 @@ function SiteHeader() {
   );
 }
 
-/* ── Hero ─────────────────────────────────────────────────────────── */
-
 function HeroSection({
   protocolo,
   agendamentoStatus,
@@ -104,8 +111,8 @@ function HeroSection({
   ultimaAtualizacao,
 }: {
   protocolo: string;
-  agendamentoStatus: "pendente" | "aprovado" | "rejeitado";
-  analiseStatus: "aguardando" | "em_analise" | "concluido";
+  agendamentoStatus: ApprovalStatus;
+  analiseStatus: SampleStatus;
   ultimaAtualizacao: string;
 }) {
   return (
@@ -157,8 +164,6 @@ function HeroSection({
     </section>
   );
 }
-
-/* ── Footer ──────────────────────────────────────────────────────── */
 
 function SiteFooter() {
   return (

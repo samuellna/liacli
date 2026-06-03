@@ -15,7 +15,6 @@ import {
   ClipboardList,
   FlaskConical,
   Loader2,
-  Plus,
   Send,
   User,
   BookOpen,
@@ -39,12 +38,13 @@ import {
 import { getWeekById } from "../../app/(pesquisador)/agendamento/_lib/weeks";
 import { SampleItem } from "./sample-item";
 import { WeekPicker } from "./week-picker";
+import { randomUUID } from "crypto";
+import { CreateResearcherData, ResearchLevel } from "@/api/researchers";
 
 function generateProtocol(): string {
-  const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-  return Array.from({ length: 8 }, () =>
-    chars.charAt(Math.floor(Math.random() * chars.length)),
-  ).join("");
+  const date = new Date().toISOString().slice(0, 10).replace(/-/g, "");
+  const random = randomUUID().replace(/-/g, "").slice(0, 8).toUpperCase();
+  return `SAM-${date}-${random}`;
 }
 
 function FieldError({ message }: { message?: string }) {
@@ -112,7 +112,7 @@ function ResearcherSection() {
       <div className="grid gap-4 sm:grid-cols-2">
         <div className="space-y-1.5">
           <Label htmlFor="nome">
-            Nome completo{" "}
+            Nome completo
             <span aria-hidden className="text-destructive">
               *
             </span>
@@ -128,7 +128,7 @@ function ResearcherSection() {
 
         <div className="space-y-1.5">
           <Label htmlFor="email">
-            E-mail{" "}
+            E-mail
             <span aria-hidden className="text-destructive">
               *
             </span>
@@ -183,7 +183,7 @@ function StudySection() {
       <div className="space-y-5">
         <div className="space-y-2.5">
           <Label>
-            Nível acadêmico{" "}
+            Nível acadêmico
             <span aria-hidden className="text-destructive">
               *
             </span>
@@ -222,7 +222,7 @@ function StudySection() {
         <div className="grid gap-4 sm:grid-cols-2">
           <div className="space-y-1.5 sm:col-span-2">
             <Label htmlFor="titulo">
-              Título da pesquisa / Projeto{" "}
+              Título da pesquisa / Projeto
               <span aria-hidden className="text-destructive">
                 *
               </span>
@@ -264,7 +264,7 @@ function SamplesSection() {
     control,
     formState: { errors },
   } = useFormContext<SchedulingFormData>();
-  const { fields, append, remove } = useFieldArray({
+  const { fields } = useFieldArray({
     control,
     name: "amostras",
   });
@@ -274,40 +274,16 @@ function SamplesSection() {
       step={3}
       icon={FlaskConical}
       title="Amostras"
-      description="Adicione uma ou mais remessas de amostras ao agendamento"
+      description="Adicione as informações da amostra"
     >
       <div className="space-y-4">
         {fields.map((field, index) => (
-          <SampleItem
-            key={field.id}
-            index={index}
-            total={fields.length}
-            onRemove={() => remove(index)}
-          />
+          <SampleItem key={field.id} index={index} />
         ))}
 
         {typeof errors.amostras?.message === "string" && (
           <FieldError message={errors.amostras.message} />
         )}
-
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
-          className="w-full border-dashed"
-          onClick={() =>
-            append({
-              especieAnimal: "",
-              totalAnimais: 1,
-              exames: [],
-              outroExame: "",
-              previsaoRemessas: "",
-            })
-          }
-        >
-          <Plus className="size-4" aria-hidden />
-          Adicionar outra amostra
-        </Button>
       </div>
     </Section>
   );
@@ -488,6 +464,15 @@ export function SchedulingForm() {
   const watchedData = methods.watch();
 
   async function onSubmit(data: SchedulingFormData) {
+    const researcherData: CreateResearcherData = {
+      name: data.nome,
+      email: data.email,
+      institution: data.laboratorio || data.cursoPrograma || "Não informado",
+      phone: data.telefone,
+      advisorName: data.orientador,
+      level: data.nivel as ResearchLevel,
+    };
+
     setIsSubmitting(true);
     await new Promise((r) => setTimeout(r, 1200));
     setProtocol(generateProtocol());

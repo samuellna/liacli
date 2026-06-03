@@ -20,7 +20,22 @@ import { EXAM_LABELS } from "../../app/(pesquisador)/protocolo/[codigo]/_lib/moc
 import type { AppointmentData } from "../../app/(pesquisador)/protocolo/[codigo]/_lib/types";
 import { AgendamentoBadge, AnaliseBadge } from "./status-badge";
 import { Timeline } from "./timeline";
+import { Researcher, Sample } from "@/api/types";
 
+function convertAcademicLevel(level: string) {
+  switch (level) {
+    case "SCIENTIFIC_INITIATION":
+      return "Iniciação científica";
+    case "MASTERS":
+      return "Mestrado";
+    case "DOCTORATE":
+      return "Doutorado";
+    case "POST_DOCTORATE":
+      return "Pós-doutorado";
+    default:
+      return "Outro";
+  }
+}
 /* ── Section wrapper ─────────────────────────────────────────────── */
 
 function Section({
@@ -55,22 +70,27 @@ function Section({
 
 /* ── Status overview card ────────────────────────────────────────── */
 
-function StatusCard({ data }: { data: AppointmentData }) {
+function StatusCard({ data }: { data: Sample }) {
+  const createdAt = data.researchProject?.createdAt;
+  const createdAtLabel = createdAt
+    ? new Date(createdAt).toLocaleDateString("pt-BR")
+    : "—";
+
   const stats = [
     {
       label: "Agendamento",
-      value: <AgendamentoBadge status={data.agendamentoStatus} size="lg" />,
+      value: <AgendamentoBadge status={data.approvalStatus} size="lg" />,
     },
     {
       label: "Análise",
-      value: <AnaliseBadge status={data.analiseStatus} size="lg" />,
+      value: <AnaliseBadge status={data.status} size="lg" />,
     },
     {
       label: "Semana de envio",
       value: (
         <span className="flex items-center gap-1.5 text-sm font-medium">
           <CalendarClock className="size-4 text-muted-foreground" aria-hidden />
-          {data.semana}
+          {new Date(data.collectedAt).toLocaleDateString("pt-BR")}
         </span>
       ),
     },
@@ -78,9 +98,10 @@ function StatusCard({ data }: { data: AppointmentData }) {
       label: "Amostras",
       value: (
         <span className="text-sm font-medium">
-          {data.amostras.length} {data.amostras.length === 1 ? "lote" : "lotes"}
-          {" · "}
-          {data.amostras.reduce((s, a) => s + a.totalAnimais, 0)} animais
+          {data.researchProject?.expectedShipments ?? "—"} remessas
+          {data.researchProject?.totalAnimals
+            ? ` · ${data.researchProject.totalAnimals} animais`
+            : ""}
         </span>
       ),
     },
@@ -104,11 +125,11 @@ function StatusCard({ data }: { data: AppointmentData }) {
       <div className="flex items-center justify-between gap-3 text-xs text-muted-foreground">
         <span className="flex items-center gap-1.5">
           <Clock className="size-3.5" aria-hidden />
-          Enviado em {data.dataSubmissao}
+          Enviado em {createdAtLabel}
         </span>
         <span className="flex items-center gap-1.5">
           <Info className="size-3.5" aria-hidden />
-          Última atualização: {data.ultimaAtualizacao}
+          Última atualização: {createdAtLabel}
         </span>
       </div>
     </Section>
@@ -117,41 +138,47 @@ function StatusCard({ data }: { data: AppointmentData }) {
 
 /* ── Researcher info ─────────────────────────────────────────────── */
 
-function ResearcherInfo({
-  pesquisador,
-}: {
-  pesquisador: AppointmentData["pesquisador"];
-}) {
+function ResearcherInfo({ info }: { info: Sample }) {
   const fields = [
-    { icon: User, label: "Nome", value: pesquisador.nome },
-    { icon: Mail, label: "E-mail", value: pesquisador.email },
-    ...(pesquisador.telefone
-      ? [{ icon: Phone, label: "Telefone", value: pesquisador.telefone }]
+    { icon: User, label: "Nome", value: info.researcher.name },
+    { icon: Mail, label: "E-mail", value: info.researcher.email },
+    ...(info.researcher.phone
+      ? [{ icon: Phone, label: "Telefone", value: info.researcher.phone }]
       : []),
-    ...(pesquisador.orientador
-      ? [{ icon: User, label: "Orientador", value: pesquisador.orientador }]
+    ...(info.researcher.advisorName
+      ? [
+          {
+            icon: User,
+            label: "Orientador",
+            value: info.researcher.advisorName,
+          },
+        ]
       : []),
-    { icon: Info, label: "Nível acadêmico", value: pesquisador.nivel },
+    {
+      icon: Info,
+      label: "Nível acadêmico",
+      value: convertAcademicLevel(info.researcher.level),
+    },
     {
       icon: FileCheck2,
       label: "Título do projeto",
-      value: pesquisador.tituloProjeto,
+      value: info.researchProject?.title ?? "—",
     },
-    ...(pesquisador.cursoPrograma
+    ...(info.researchProject?.course
       ? [
           {
             icon: Info,
             label: "Curso / Programa",
-            value: pesquisador.cursoPrograma,
+            value: info.researchProject.course,
           },
         ]
       : []),
-    ...(pesquisador.laboratorio
+    ...(info.researchProject?.researchLab
       ? [
           {
             icon: FlaskConical,
             label: "Laboratório",
-            value: pesquisador.laboratorio,
+            value: info.researchProject.researchLab,
           },
         ]
       : []),
@@ -178,13 +205,7 @@ function ResearcherInfo({
 
 /* ── Samples ─────────────────────────────────────────────────────── */
 
-function SampleCard({
-  sample,
-  index,
-}: {
-  sample: AppointmentData["amostras"][number];
-  index: number;
-}) {
+function SampleCard({ sample, index }: { sample: Sample; index: number }) {
   return (
     <article className="rounded-xl border border-border bg-background p-4 space-y-3">
       <header className="flex items-center gap-2.5">
@@ -192,19 +213,21 @@ function SampleCard({
           {index + 1}
         </span>
         <h3 className="text-sm font-semibold text-foreground">
-          {sample.especieAnimal}
+          {sample.researchProject?.animalSpecies ?? "Amostra"}
         </h3>
       </header>
 
       <dl className="grid gap-2 text-xs sm:grid-cols-2">
         <div>
           <dt className="text-muted-foreground">Total de animais</dt>
-          <dd className="font-medium text-foreground">{sample.totalAnimais}</dd>
+          <dd className="font-medium text-foreground">
+            {sample.researchProject?.totalAnimals}
+          </dd>
         </div>
         <div>
           <dt className="text-muted-foreground">Previsão de remessas</dt>
           <dd className="font-medium text-foreground">
-            {sample.previsaoRemessas}
+            {sample.researchProject?.expectedShipments ?? "—"}
           </dd>
         </div>
       </dl>
@@ -214,37 +237,24 @@ function SampleCard({
           Exames solicitados
         </p>
         <div className="flex flex-wrap gap-1.5">
-          {sample.exames.map((id) => (
+          {sample.researchProject?.examTypes.map((e) => (
             <span
-              key={id}
+              key={e.id}
               className="inline-flex h-5 items-center rounded-full bg-primary/8 px-2 text-xs font-medium text-primary"
             >
-              {EXAM_LABELS[id] ?? id}
+              {e.name}
             </span>
           ))}
-          {sample.outroExame && (
-            <span className="inline-flex h-5 items-center rounded-full bg-muted px-2 text-xs font-medium text-muted-foreground">
-              {sample.outroExame}
-            </span>
-          )}
         </div>
       </div>
     </article>
   );
 }
 
-function SamplesSection({
-  amostras,
-}: {
-  amostras: AppointmentData["amostras"];
-}) {
+function SamplesSection({ amostras }: { amostras: Sample }) {
   return (
     <Section icon={FlaskConical} title="Amostras solicitadas">
-      <div className="space-y-3">
-        {amostras.map((s, i) => (
-          <SampleCard key={s.id} sample={s} index={i} />
-        ))}
-      </div>
+      <SampleCard sample={amostras} index={0} />
     </Section>
   );
 }
@@ -321,41 +331,41 @@ export function PendingNewView({ protocolo }: { protocolo: string }) {
 
 /* ── Main StatusView ─────────────────────────────────────────────── */
 
-export function StatusView({ data }: { data: AppointmentData }) {
+export function StatusView({ data }: { data: Sample }) {
   return (
     <div className="mx-auto w-full max-w-6xl px-4 py-10 sm:px-6">
-      {data.laudoUrl && <ReportSection laudoUrl={data.laudoUrl} />}
+      <ReportSection laudoUrl={"oii"} />
 
       <div
-        className={`grid gap-8 lg:grid-cols-[1fr_340px] ${data.laudoUrl ? "mt-6" : ""}`}
+        className={`grid gap-8 lg:grid-cols-[1fr_340px] ${data.status === "DONE" ? "mt-6" : ""}`}
       >
         {/* Left column */}
         <div className="space-y-6 min-w-0">
           <StatusCard data={data} />
-          <ResearcherInfo pesquisador={data.pesquisador} />
-          <SamplesSection amostras={data.amostras} />
+          <ResearcherInfo info={data} />
+          <SamplesSection amostras={data} />
 
-          {data.observacoes && (
+          {data.researchProject?.observations && (
             <Section icon={Info} title="Observações do pesquisador">
               <p className="text-sm leading-relaxed text-muted-foreground">
-                {data.observacoes}
+                {data.researchProject.observations}
               </p>
             </Section>
           )}
         </div>
 
         {/* Right sidebar — Timeline */}
-        <aside>
-          <div className="sticky top-24 rounded-2xl border border-border bg-card p-6 shadow-sm">
-            <div className="mb-5 flex items-center gap-2">
-              <Clock className="size-4 text-accent" aria-hidden />
-              <h2 className="text-sm font-semibold text-foreground">
-                Histórico de atualizações
-              </h2>
-            </div>
-            <Timeline events={data.timeline} />
+        {/* <aside>
+        <div className="sticky top-24 rounded-2xl border border-border bg-card p-6 shadow-sm">
+          <div className="mb-5 flex items-center gap-2">
+            <Clock className="size-4 text-accent" aria-hidden />
+            <h2 className="text-sm font-semibold text-foreground">
+              Histórico de atualizações
+            </h2>
           </div>
-        </aside>
+          <Timeline events={data.timeline} />
+        </div>
+      </aside> */}
       </div>
     </div>
   );

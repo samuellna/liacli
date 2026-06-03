@@ -5,13 +5,8 @@ import {
   Microscope,
   XCircle,
 } from "lucide-react";
-
 import { cn } from "@/lib/utils";
-
-import type {
-  AgendamentoStatus,
-  AnaliseStatus,
-} from "../../app/(pesquisador)/protocolo/[codigo]/_lib/types";
+import { ApprovalStatus, SampleStatus } from "@/api/types";
 
 type BadgeSize = "sm" | "md" | "lg";
 
@@ -56,24 +51,24 @@ export function AgendamentoBadge({
   status,
   size = "md",
 }: {
-  status: AgendamentoStatus;
+  status: ApprovalStatus;
   size?: BadgeSize;
 }) {
   const configs: Record<
-    AgendamentoStatus,
+    ApprovalStatus,
     { icon: React.ElementType; label: string; colorClass: string }
   > = {
-    aprovado: {
+    APPROVED: {
       icon: CheckCircle2,
       label: "Aprovado",
       colorClass: "bg-success/10 text-success",
     },
-    pendente: {
+    PENDING: {
       icon: Clock,
       label: "Pendente",
       colorClass: "bg-warning/10 text-warning-foreground",
     },
-    rejeitado: {
+    REJECTED: {
       icon: XCircle,
       label: "Rejeitado",
       colorClass: "bg-destructive/10 text-destructive",
@@ -90,27 +85,37 @@ export function AnaliseBadge({
   status,
   size = "md",
 }: {
-  status: AnaliseStatus;
+  status: SampleStatus;
   size?: BadgeSize;
 }) {
   const configs: Record<
-    AnaliseStatus,
+    SampleStatus,
     { icon: React.ElementType; label: string; colorClass: string }
   > = {
-    aguardando: {
+    PENDING: {
       icon: Clock,
       label: "Aguardando",
       colorClass: "bg-muted text-muted-foreground",
     },
-    em_analise: {
+    COLLECTED: {
+      icon: Clock,
+      label: "Coletado",
+      colorClass: "bg-muted text-muted-foreground",
+    },
+    ANALYZING: {
       icon: Microscope,
       label: "Em análise",
       colorClass: "bg-info/10 text-info",
     },
-    concluido: {
+    DONE: {
       icon: FlaskConical,
       label: "Concluído",
       colorClass: "bg-success/10 text-success",
+    },
+    REJECTED: {
+      icon: XCircle,
+      label: "Rejeitado",
+      colorClass: "bg-destructive/10 text-destructive",
     },
   };
 
