@@ -18,6 +18,11 @@ export async function findExamTypeById(id: number): Promise<ExamType> {
   return response.data;
 }
 
+export async function findExamTypeByName(name: string): Promise<ExamType> {
+  const response = await api.get<ExamType>(`/exams/search?name=${name}`);
+  return response.data;
+}
+
 export async function createExamType(
   data: CreateExamTypeData,
 ): Promise<ExamType> {

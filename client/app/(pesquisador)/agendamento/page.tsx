@@ -21,15 +21,12 @@ export default function SchedulingPage() {
   return (
     <div className="flex min-h-screen flex-col bg-background text-foreground">
       <SiteHeader />
-
       <main className="flex-1">
         <HeroSection />
-
         <section aria-label="Formulário de agendamento">
           <SchedulingForm />
         </section>
       </main>
-
       <SiteFooter />
     </div>
   );

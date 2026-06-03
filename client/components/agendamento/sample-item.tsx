@@ -29,8 +29,8 @@ export function SampleItem({ index }: SampleItemProps) {
     formState: { errors },
   } = useFormContext<SchedulingFormData>();
 
-  const sampleErrors = errors.amostras?.[index];
-  const watchedExames = watch(`amostras.${index}.exames`) ?? [];
+  const sampleErrors = errors.sample?.[index];
+  const watchedExames = watch(`sample.${index}.samples`) ?? [];
   const hasOutro = watchedExames.includes("outro");
 
   return (
@@ -39,7 +39,7 @@ export function SampleItem({ index }: SampleItemProps) {
         <div className="grid gap-4 sm:grid-cols-2">
           <div className="space-y-1.5">
             <Label htmlFor={`especie-${index}`} className="text-sm font-medium">
-              Espécie animal{" "}
+              Espécie animal
               <span aria-hidden className="text-destructive">
                 *
               </span>
@@ -47,18 +47,18 @@ export function SampleItem({ index }: SampleItemProps) {
             <Input
               id={`especie-${index}`}
               placeholder="Ex.: Rattus norvegicus"
-              {...register(`amostras.${index}.especieAnimal`)}
-              aria-invalid={!!sampleErrors?.especieAnimal}
+              {...register(`sample.${index}.animalSpecies`)}
+              aria-invalid={!!sampleErrors?.animalSpecies}
               aria-describedby={
-                sampleErrors?.especieAnimal ? `especie-err-${index}` : undefined
+                sampleErrors?.animalSpecies ? `especie-err-${index}` : undefined
               }
             />
-            <FieldError message={sampleErrors?.especieAnimal?.message} />
+            <FieldError message={sampleErrors?.animalSpecies?.message} />
           </div>
 
           <div className="space-y-1.5">
             <Label htmlFor={`animais-${index}`} className="text-sm font-medium">
-              Total de animais{" "}
+              Total de animais
               <span aria-hidden className="text-destructive">
                 *
               </span>
@@ -68,23 +68,23 @@ export function SampleItem({ index }: SampleItemProps) {
               type="number"
               min={1}
               placeholder="Ex.: 12"
-              {...register(`amostras.${index}.totalAnimais`)}
-              aria-invalid={!!sampleErrors?.totalAnimais}
+              {...register(`sample.${index}.totalAnimals`)}
+              aria-invalid={!!sampleErrors?.totalAnimals}
             />
-            <FieldError message={sampleErrors?.totalAnimais?.message} />
+            <FieldError message={sampleErrors?.totalAnimals?.message} />
           </div>
         </div>
 
         <div className="space-y-2.5">
           <Label className="text-sm font-medium">
-            Exames desejados{" "}
+            Exames desejados
             <span aria-hidden className="text-destructive">
               *
             </span>
           </Label>
           <Controller
             control={control}
-            name={`amostras.${index}.exames`}
+            name={`sample.${index}.samples`}
             render={({ field }) => (
               <div
                 role="group"
@@ -119,7 +119,7 @@ export function SampleItem({ index }: SampleItemProps) {
               </div>
             )}
           />
-          <FieldError message={sampleErrors?.exames?.message} />
+          <FieldError message={sampleErrors?.samples?.message} />
         </div>
 
         {hasOutro && (
@@ -130,14 +130,14 @@ export function SampleItem({ index }: SampleItemProps) {
             <Input
               id={`outro-${index}`}
               placeholder="Descreva o exame solicitado"
-              {...register(`amostras.${index}.outroExame`)}
+              {...register(`sample.${index}.samples`)}
             />
           </div>
         )}
 
         <div className="space-y-1.5">
           <Label htmlFor={`remessas-${index}`} className="text-sm font-medium">
-            Previsão de remessas{" "}
+            Previsão de remessas
             <span aria-hidden className="text-destructive">
               *
             </span>
@@ -145,13 +145,13 @@ export function SampleItem({ index }: SampleItemProps) {
           <Input
             id={`remessas-${index}`}
             placeholder="Ex.: 4 remessas ao longo de 3 meses"
-            {...register(`amostras.${index}.previsaoRemessas`)}
-            aria-invalid={!!sampleErrors?.previsaoRemessas}
+            {...register(`sample.${index}.expectedShipments`)}
+            aria-invalid={!!sampleErrors?.expectedShipments}
           />
           <p className="text-xs text-muted-foreground">
             Estimativa de quantas remessas serão enviadas durante a pesquisa.
           </p>
-          <FieldError message={sampleErrors?.previsaoRemessas?.message} />
+          <FieldError message={sampleErrors?.expectedShipments?.message} />
         </div>
       </div>
     </article>

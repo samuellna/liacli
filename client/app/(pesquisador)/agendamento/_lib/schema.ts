@@ -27,25 +27,24 @@ export const NIVEL_OPTIONS = [
 ] as const;
 
 export const sampleSchema = z.object({
-  especieAnimal: z.string().min(1, "Informe a espécie animal"),
-  totalAnimais: z.coerce.number().int().min(1, "Mínimo de 1 animal"),
-  exames: z.array(z.string()).min(1, "Selecione pelo menos um exame"),
-  outroExame: z.string().optional(),
-  previsaoRemessas: z.string().min(1, "Informe a previsão de remessas"),
+  animalSpecies: z.string().min(1, "Informe a espécie animal"),
+  totalAnimals: z.coerce.number().int().min(1, "Mínimo de 1 animal"),
+  samples: z.array(z.string()).min(1, "Selecione pelo menos um exame"),
+  expectedShipments: z.coerce.number().min(1, "Informe a previsão de remessas"),
 });
 
 export const schedulingSchema = z.object({
   email: z.string().min(1, "E-mail é obrigatório").email("E-mail inválido"),
-  nome: z.string().min(1, "Nome é obrigatório"),
-  telefone: z.string().optional(),
-  orientador: z.string().optional(),
-  nivel: z.string().min(1, "Selecione o nível acadêmico"),
-  tituloProjeto: z.string().min(1, "Título da pesquisa é obrigatório"),
-  cursoPrograma: z.string().optional(),
-  laboratorio: z.string().optional(),
-  semana: z.string().min(1, "Selecione uma semana disponível"),
-  amostras: z.array(sampleSchema).min(1, "Adicione pelo menos uma amostra"),
-  observacoes: z.string().optional(),
+  name: z.string().min(1, "Nome é obrigatório"),
+  phone: z.string().optional(),
+  advisorName: z.string().optional(),
+  level: z.string().min(1, "Selecione o nível acadêmico"),
+  title: z.string().min(1, "Título da pesquisa é obrigatório"),
+  course: z.string().optional(),
+  researchLab: z.string().optional(),
+  preferredDate: z.string().min(1, "Selecione uma semana disponível"),
+  sample: z.array(sampleSchema).min(1, "Adicione as informações da amostra"),
+  observations: z.string().optional(),
 });
 
 export type SchedulingFormData = z.infer<typeof schedulingSchema>;

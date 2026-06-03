@@ -126,7 +126,7 @@ export function WeekPicker() {
 
       <Controller
         control={control}
-        name="semana"
+        name="preferredDate"
         render={({ field }) => (
           <div
             role="radiogroup"
@@ -148,9 +148,9 @@ export function WeekPicker() {
         )}
       />
 
-      {errors.semana && (
+      {errors.preferredDate && (
         <p role="alert" className="text-xs text-destructive">
-          {errors.semana.message}
+          {errors.preferredDate.message}
         </p>
       )}
     </div>

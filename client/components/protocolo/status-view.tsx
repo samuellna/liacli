@@ -76,6 +76,11 @@ function StatusCard({ data }: { data: Sample }) {
     ? new Date(createdAt).toLocaleDateString("pt-BR")
     : "—";
 
+  const updatedAt = data.researchProject?.updatedAt;
+  const updatedAtLabel = updatedAt
+    ? new Date(updatedAt).toLocaleDateString("pt-BR")
+    : "—";
+
   const stats = [
     {
       label: "Agendamento",
@@ -129,7 +134,7 @@ function StatusCard({ data }: { data: Sample }) {
         </span>
         <span className="flex items-center gap-1.5">
           <Info className="size-3.5" aria-hidden />
-          Última atualização: {createdAtLabel}
+          Última atualização: {updatedAtLabel}
         </span>
       </div>
     </Section>

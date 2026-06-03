@@ -52,6 +52,8 @@ export interface Sample {
   collectedAt: Date;
   scheduledAt: Date | null;
   researchProject: ResearchProject | null;
+  createdAt: Date;
+  updatedAt: Date;
 }
 
 export interface SampleResult {
@@ -75,4 +77,5 @@ export interface ResearchProject {
   samples: Sample[];
   observations: string;
   createdAt: Date;
+  updatedAt: Date;
 }

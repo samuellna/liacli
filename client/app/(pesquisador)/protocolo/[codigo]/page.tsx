@@ -2,17 +2,12 @@ import Link from "next/link";
 import { ArrowLeft, FlaskConical, Search } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
-
-// import { lookupProtocol } from "./_lib/mock";
 import {
   AgendamentoBadge,
   AnaliseBadge,
-} from "../../../../components/protocolo/status-badge";
-import { NotFound } from "../../../../components/protocolo/not-found";
-import {
-  PendingNewView,
-  StatusView,
-} from "../../../../components/protocolo/status-view";
+} from "@/components/protocolo/status-badge";
+import { NotFound } from "@/components/protocolo/not-found";
+import { PendingNewView, StatusView } from "@/components/protocolo/status-view";
 import { findSampleByProtocol } from "@/api/samples";
 import { ApprovalStatus, Sample, SampleStatus } from "@/api/types";
 
@@ -34,6 +29,7 @@ export default async function ConsultStatusPage({ params }: PageProps) {
   try {
     result = await findSampleByProtocol(codigo);
   } catch (error) {
+    console.error("Error fetching sample by protocol:", error);
     result = null;
   }
 
@@ -50,7 +46,7 @@ export default async function ConsultStatusPage({ params }: PageProps) {
               analiseStatus={result.status}
               ultimaAtualizacao={
                 result.approvedAt
-                  ? new Date(result.approvedAt).toLocaleString()
+                  ? new Date(result.updatedAt).toLocaleString("pt-BR")
                   : "Agora mesmo"
               }
             />
