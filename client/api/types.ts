@@ -73,5 +73,6 @@ export interface ResearchProject {
   researcher: Researcher;
   examTypes: ExamType[];
   samples: Sample[];
+  observations: string;
   createdAt: Date;
 }

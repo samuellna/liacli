@@ -22,7 +22,9 @@ export async function findSampleById(id: number): Promise<Sample> {
   return response.data;
 }
 
-export async function findSampleByProtocol(protocol: string): Promise<Sample> {
+export async function findSampleByProtocol(
+  protocol: string,
+): Promise<Sample | null> {
   const response = await api.get<Sample>(`/samples/protocol/${protocol}`);
   return response.data;
 }

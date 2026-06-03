@@ -1,10 +1,21 @@
 import api from "./axios";
 import type { Researcher } from "./types";
 
+export enum ResearchLevel {
+  SCIENTIFIC_INITIATION = "SCIENTIFIC_INITIATION",
+  MASTERS = "MASTERS",
+  DOCTORATE = "DOCTORATE",
+  POST_DOCTORATE = "POST_DOCTORATE",
+  OTHER = "OTHER",
+}
+
 export interface CreateResearcherData {
   name: string;
   email: string;
   institution: string;
+  phone?: string;
+  advisorName?: string;
+  level?: ResearchLevel;
 }
 
 export type UpdateResearcherData = Partial<CreateResearcherData>;
