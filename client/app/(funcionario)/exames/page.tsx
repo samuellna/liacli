@@ -8,7 +8,9 @@ import {
   ChevronRight,
   AlertCircle,
   Calendar,
+  Plus,
 } from "lucide-react";
+import Link from "next/link";
 
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
@@ -131,15 +133,23 @@ export default function ExamesPage() {
           </div>
         </div>
 
-        {!isLoading && !error && (
-          <Badge
-            variant="secondary"
-            className="self-start sm:self-auto shrink-0 gap-1.5 px-3 py-1.5 text-xs font-medium"
-          >
-            <FlaskConical className="size-3.5" />
-            {exames.length} exames cadastrados
-          </Badge>
-        )}
+        <div className="flex items-center gap-3 self-start sm:self-auto">
+          {!isLoading && !error && (
+            <Badge
+              variant="secondary"
+              className="shrink-0 gap-1.5 px-3 py-1.5 text-xs font-medium"
+            >
+              <FlaskConical className="size-3.5" />
+              {exames.length} exames cadastrados
+            </Badge>
+          )}
+          <Button asChild size="sm" className="shrink-0 gap-1.5">
+            <Link href="/exames/cadastro">
+              <Plus className="size-4" />
+              Novo exame
+            </Link>
+          </Button>
+        </div>
       </div>
 
       {/* Loading */}
