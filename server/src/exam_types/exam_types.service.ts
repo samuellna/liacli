@@ -32,8 +32,8 @@ export class ExamTypesService {
     id: number,
     examTypeDto: UpdateExamTypeDto,
   ): Promise<ExamType | null> {
-    // Prevent updating if both name and description are missing
-    if (!examTypeDto.name && !examTypeDto.description) return null;
+    const hasUpdates = Object.values(examTypeDto).some((v) => v !== undefined);
+    if (!hasUpdates) return null;
 
     await this.examTypesRepository.update(id, examTypeDto);
     return this.examTypesRepository.findOneBy({ id });

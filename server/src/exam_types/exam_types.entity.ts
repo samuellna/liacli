@@ -8,6 +8,17 @@ import {
   UpdateDateColumn,
 } from 'typeorm';
 
+export type ParametroExame = {
+  nome: string;
+  unidade?: string;
+  referencia?: string;
+};
+
+export type GrupoParametros = {
+  nomeGrupo?: string;
+  parametros: ParametroExame[];
+};
+
 @Entity({ name: 'exam_types' })
 export class ExamType {
   @PrimaryGeneratedColumn('increment')
@@ -18,6 +29,15 @@ export class ExamType {
 
   @Column('text')
   description: string;
+
+  @Column('varchar', { length: 255, nullable: true })
+  material: string | null;
+
+  @Column('text', { nullable: true })
+  observacoes: string | null;
+
+  @Column('jsonb', { nullable: true })
+  grupos: GrupoParametros[] | null;
 
   @OneToMany(() => Sample, (sample) => sample.examType)
   samples: Sample[];

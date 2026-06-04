@@ -12,6 +12,7 @@ import * as z from "zod";
 import { ClipboardList, FlaskConical, Plus, Trash2, Save } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { createExamType } from "@/api/exams";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -369,17 +370,20 @@ export default function CadastroExamePage() {
     },
   });
 
-  function onSubmit(data: FormExame) {
+  async function onSubmit(data: FormExame) {
     setIsSubmitting(true);
-
-    // Log da estrutura JSON gerada pelo form conforme solicitado
-    console.log("Dados do Exame (JSON):", JSON.stringify(data, null, 2));
-
-    // Simulação do salvamento
-    setTimeout(() => {
+    try {
+      await createExamType({
+        name: data.titulo,
+        description: data.descricao ?? "",
+        material: data.material || undefined,
+        observacoes: data.observacoes || undefined,
+        grupos: data.grupos,
+      });
+      router.push("/exames");
+    } finally {
       setIsSubmitting(false);
-      // Aqui entraria a chamada real à API
-    }, 500);
+    }
   }
 
   return (

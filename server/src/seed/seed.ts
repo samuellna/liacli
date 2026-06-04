@@ -25,9 +25,69 @@ export async function runSeed(dataSource: DataSource) {
   // ─── EXAM TYPES ───────────────────────────────────────────────────────────
 
   const examTypesData = [
-    { name: 'Hemograma', description: 'Exame de sangue completo' },
-    { name: 'Eletrocardiograma', description: 'Exame do coração' },
-    { name: 'Glicemia', description: 'Medição de glicose no sangue' },
+    {
+      name: 'Hemograma',
+      description: 'Exame de sangue completo',
+      grupos: [
+        {
+          nomeGrupo: 'Eritrograma',
+          parametros: [
+            { nome: 'Hemácias', unidade: 'Milhões/mm³', referencia: 'Homens: 4,50–6,10 | Mulheres: 4,00–5,40' },
+            { nome: 'Hemoglobina', unidade: 'g/dL', referencia: 'Homens: 13,0–16,5 | Mulheres: 12,0–15,8' },
+            { nome: 'Hematócrito', unidade: '%', referencia: 'Homens: 36,0–54,0 | Mulheres: 33,0–47,8' },
+            { nome: 'VCM', unidade: 'fL', referencia: '80,0–98,0' },
+            { nome: 'HCM', unidade: 'pg', referencia: '26,8–32,9' },
+            { nome: 'CHCM', unidade: 'g/dL', referencia: '30,0–36,5' },
+          ],
+        },
+        {
+          nomeGrupo: 'Leucograma',
+          parametros: [
+            { nome: 'Leucócitos', unidade: '/mm³', referencia: '3.600–11.000' },
+            { nome: 'Bastonetes', unidade: '/mm³', referencia: '0–550' },
+            { nome: 'Segmentados', unidade: '/mm³', referencia: '1.480–7.700' },
+            { nome: 'Eosinófilos', unidade: '/mm³', referencia: '0–550' },
+            { nome: 'Basófilos', unidade: '/mm³', referencia: '0–220' },
+            { nome: 'Linfócitos Típicos', unidade: '/mm³', referencia: '740–5.500' },
+            { nome: 'Monócitos', unidade: '/mm³', referencia: '37–1.100' },
+          ],
+        },
+        {
+          nomeGrupo: 'Série Plaquetária',
+          parametros: [
+            { nome: 'Plaquetas', unidade: '/mm³', referencia: '150.000–450.000' },
+          ],
+        },
+      ],
+    },
+    {
+      name: 'Eletrocardiograma',
+      description: 'Exame do coração',
+      grupos: [
+        {
+          nomeGrupo: 'ECG',
+          parametros: [
+            { nome: 'Frequência Cardíaca', unidade: 'bpm', referencia: '60–100' },
+            { nome: 'Ritmo', unidade: '—', referencia: '' },
+            { nome: 'Intervalo PR', unidade: 'ms', referencia: '120–200' },
+            { nome: 'QRS', unidade: 'ms', referencia: '< 120' },
+            { nome: 'Intervalo QT', unidade: 'ms', referencia: '< 440' },
+          ],
+        },
+      ],
+    },
+    {
+      name: 'Glicemia',
+      description: 'Medição de glicose no sangue',
+      grupos: [
+        {
+          nomeGrupo: 'Glicemia',
+          parametros: [
+            { nome: 'Glicose', unidade: 'mg/dL', referencia: 'Jejum: 70–99 | 2h pós-prandial: < 140' },
+          ],
+        },
+      ],
+    },
   ];
 
   const examTypes: ExamType[] = [];
@@ -37,6 +97,9 @@ export async function runSeed(dataSource: DataSource) {
 
     if (!existing) {
       existing = await examRepo.save(exam);
+    } else if (!existing.grupos) {
+      await examRepo.update(existing.id, { grupos: exam.grupos });
+      existing = { ...existing, grupos: exam.grupos };
     }
 
     examTypes.push(existing);

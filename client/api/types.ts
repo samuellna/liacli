@@ -33,10 +33,24 @@ export interface Researcher {
   projects: ResearchProject[];
 }
 
+export interface ParametroExame {
+  nome: string;
+  unidade?: string;
+  referencia?: string;
+}
+
+export interface GrupoParametros {
+  nomeGrupo?: string;
+  parametros: ParametroExame[];
+}
+
 export interface ExamType {
   id: number;
   name: string;
   description: string;
+  material: string | null;
+  observacoes: string | null;
+  grupos: GrupoParametros[] | null;
   samples: Sample[];
   createdAt: Date;
   updatedAt: Date;
