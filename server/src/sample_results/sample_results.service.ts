@@ -96,6 +96,18 @@ export class SampleResultsService {
     return savedResult;
   }
 
+  async findAll(): Promise<SampleResult[]> {
+    return this.sampleResultRepository.find({
+      relations: [
+        'examType',
+        'sample',
+        'sample.researchProject',
+        'sample.researchProject.researcher',
+        'sample.approvedBy',
+      ],
+    });
+  }
+
   async findByProtocol(protocol: string): Promise<SampleResult[]> {
     const sample = await this.sampleRepository.findOne({
       where: { protocol },
@@ -121,5 +133,19 @@ export class SampleResultsService {
     }
 
     return results;
+  }
+
+  async validateResult(id: number): Promise<SampleResult> {
+    const result = await this.sampleResultRepository.findOne({
+      where: { id },
+      relations: ['sample'],
+    });
+
+    if (!result) {
+      throw new NotFoundException('Result not found');
+    }
+
+    result.validated = true;
+    return this.sampleResultRepository.save(result);
   }
 }

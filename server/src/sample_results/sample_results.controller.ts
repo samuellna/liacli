@@ -1,4 +1,12 @@
-import { Body, Controller, Get, Param, Post, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Param,
+  Patch,
+  Post,
+  UseGuards,
+} from '@nestjs/common';
 import { SampleResultsService } from './sample_results.service';
 import { CreateSampleResultDto } from './dto/create-sample-result.dto';
 import { AuthGuard } from 'src/auth/auth.guard';
@@ -17,8 +25,18 @@ export class SampleResultsController {
     );
   }
 
+  @Get()
+  findAll() {
+    return this.resultService.findAll();
+  }
+
   @Get(':protocol')
   find(@Param('protocol') protocol: string) {
     return this.resultService.findByProtocol(protocol);
+  }
+
+  @Patch(':id')
+  validate(@Param('id') id: number) {
+    return this.resultService.validateResult(id);
   }
 }

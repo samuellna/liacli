@@ -22,6 +22,9 @@ export class SampleResult {
   @ManyToOne(() => ExamType, { nullable: false })
   examType: ExamType;
 
+  @Column({ type: 'boolean', default: false })
+  validated: boolean;
+
   @CreateDateColumn({ name: 'created_at', type: 'timestamp' })
   createdAt: Date;
 }
