@@ -14,9 +14,18 @@ export async function createSampleResult(
   return response.data;
 }
 
-export async function findResultByProtocol(
+export async function findResultsByProtocol(
   protocol: string,
-): Promise<SampleResult> {
-  const response = await api.get<SampleResult>(`/results/${protocol}`);
+): Promise<SampleResult[]> {
+  const response = await api.get<SampleResult[]>(`/results/${protocol}`);
   return response.data;
+}
+
+export async function findAllResults(): Promise<SampleResult[]> {
+  const response = await api.get<SampleResult[]>(`/results`);
+  return response.data;
+}
+
+export async function validateResult(id: number): Promise<void> {
+  await api.patch(`/results/${id}`);
 }
