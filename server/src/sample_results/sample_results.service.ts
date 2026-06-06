@@ -11,22 +11,35 @@ import {
 import { Repository } from 'typeorm';
 import { SampleResult } from './sample_results.entity';
 import { InjectRepository } from '@nestjs/typeorm';
+import { ExamType } from 'src/exam_types/exam_types.entity';
 
 @Injectable()
 export class SampleResultsService {
   constructor(
     @InjectRepository(Sample)
     private readonly sampleRepository: Repository<Sample>,
+
     @InjectRepository(SampleResult)
     private readonly sampleResultRepository: Repository<SampleResult>,
+
+    @InjectRepository(ExamType)
+    private readonly examTypeRepository: Repository<ExamType>,
   ) {}
 
   async create(
     sampleId: number,
+    examTypeId: number,
     resultData: Record<string, any>,
   ): Promise<SampleResult> {
-    // Verifica se a amostra existe
-    const sample = await this.sampleRepository.findOneBy({ id: sampleId });
+    const sample = await this.sampleRepository.findOne({
+      where: { id: sampleId },
+      relations: [
+        'researchProject',
+        'researchProject.examTypes',
+        'results',
+        'results.examType',
+      ],
+    });
 
     if (!sample) {
       throw new NotFoundException('Sample not found');
@@ -36,30 +49,54 @@ export class SampleResultsService {
       throw new BadRequestException('Sample not approved');
     }
 
-    // Verifica se já existe um resultado para essa amostra
-    const existing = await this.sampleResultRepository.findOne({
-      where: { sample: { id: sampleId } },
+    const examType = await this.examTypeRepository.findOneBy({
+      id: examTypeId,
     });
 
-    if (existing) {
-      throw new BadRequestException('Result already exists');
+    if (!examType) {
+      throw new NotFoundException('ExamType not found');
     }
 
-    // Cria o resultado e atualiza o status da amostra
+    const examTypeBelongsToProject = sample.researchProject.examTypes.some(
+      (et) => et.id === examTypeId,
+    );
+
+    if (!examTypeBelongsToProject) {
+      throw new BadRequestException(
+        'ExamType does not belong to this sample project',
+      );
+    }
+
+    const alreadyHasResult = sample.results.some(
+      (r) => r.examType.id === examTypeId,
+    );
+
+    if (alreadyHasResult) {
+      throw new BadRequestException(
+        'Result for this exam type already exists on this sample',
+      );
+    }
+
     const result = this.sampleResultRepository.create({
       sample,
+      examType,
       resultData,
-      createdAt: new Date(),
     });
-    sample.status = SampleStatus.DONE;
 
-    // Atualiza o status da amostra e salva o resultado
-    await this.sampleRepository.save(sample);
-    return this.sampleResultRepository.save(result);
+    const savedResult = await this.sampleResultRepository.save(result);
+
+    const totalExamTypes = sample.researchProject.examTypes.length;
+    const totalResults = sample.results.length + 1;
+
+    if (totalResults === totalExamTypes) {
+      sample.status = SampleStatus.DONE;
+      await this.sampleRepository.save(sample);
+    }
+
+    return savedResult;
   }
 
-  async findByProtocol(protocol: string): Promise<SampleResult> {
-    // Busca a amostra pelo protocolo
+  async findByProtocol(protocol: string): Promise<SampleResult[]> {
     const sample = await this.sampleRepository.findOne({
       where: { protocol },
     });
@@ -68,21 +105,21 @@ export class SampleResultsService {
       throw new NotFoundException('Sample not found');
     }
 
-    // Busca o resultado associado à amostra
-    const result = await this.sampleResultRepository.findOne({
+    const results = await this.sampleResultRepository.find({
       where: { sample: { id: sample.id } },
       relations: [
+        'examType',
         'sample',
-        'sample.examType',
-        'sample.researcher',
+        'sample.researchProject',
+        'sample.researchProject.researcher',
         'sample.approvedBy',
       ],
     });
 
-    if (!result) {
-      throw new NotFoundException('Result not found for this sample');
+    if (!results.length) {
+      throw new NotFoundException('No results found for this sample');
     }
 
-    return result;
+    return results;
   }
 }

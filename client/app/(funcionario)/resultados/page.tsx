@@ -98,10 +98,15 @@ const resultadosMock: Resultado[] = [
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
-const statusOptions: StatusResultado[] = ["Aguardando", "Em processamento", "Disponível"];
+const statusOptions: StatusResultado[] = [
+  "Aguardando",
+  "Em processamento",
+  "Disponível",
+];
 
 const statusClass: Record<StatusResultado, string> = {
-  Aguardando: "border-warning/40 bg-warning/15 text-warning-foreground dark:text-warning",
+  Aguardando:
+    "border-warning/40 bg-warning/15 text-warning-foreground dark:text-warning",
   "Em processamento": "border-info/40 bg-info/15 text-info dark:text-info",
   Disponível: "border-success/40 bg-success/15 text-success dark:text-success",
 };
@@ -159,7 +164,9 @@ export default function ResultadosPage() {
   const [busca, setBusca] = useState("");
   const [isLoading, setIsLoading] = useState(true);
   const [pendingId, setPendingId] = useState<number | null>(null);
-  const [statusSelecionado, setStatusSelecionado] = useState<Set<StatusResultado>>(new Set());
+  const [statusSelecionado, setStatusSelecionado] = useState<
+    Set<StatusResultado>
+  >(new Set());
 
   useEffect(() => {
     const t = setTimeout(() => setIsLoading(false), 600);
@@ -169,7 +176,8 @@ export default function ResultadosPage() {
   const resultadosFiltrados = useMemo(() => {
     const termo = busca.trim().toLowerCase();
     return resultadosMock.filter((r) => {
-      const passaStatus = statusSelecionado.size === 0 || statusSelecionado.has(r.status);
+      const passaStatus =
+        statusSelecionado.size === 0 || statusSelecionado.has(r.status);
       if (!passaStatus) return false;
       if (!termo) return true;
       return (
@@ -252,7 +260,8 @@ export default function ResultadosPage() {
                 Registro de resultados
               </CardTitle>
               <CardDescription>
-                Acompanhe o andamento dos exames e publique resultados para os pesquisadores.
+                Acompanhe o andamento dos exames e publique resultados para os
+                pesquisadores.
               </CardDescription>
             </div>
 
@@ -278,12 +287,19 @@ export default function ResultadosPage() {
 
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="outline" size="lg" className="h-10 justify-between gap-2">
+                  <Button
+                    variant="outline"
+                    size="lg"
+                    className="h-10 justify-between gap-2"
+                  >
                     <span className="flex items-center gap-2">
                       <ListFilter className="size-4" aria-hidden />
                       Status
                       {statusSelecionado.size > 0 && (
-                        <Badge variant="secondary" className="h-5 min-w-5 px-1.5 text-[10px]">
+                        <Badge
+                          variant="secondary"
+                          className="h-5 min-w-5 px-1.5 text-[10px]"
+                        >
                           {statusSelecionado.size}
                         </Badge>
                       )}
@@ -355,7 +371,10 @@ export default function ResultadosPage() {
                 <TableRow className="hover:bg-transparent">
                   <TableCell colSpan={7} className="py-16 text-center">
                     <div className="mx-auto flex max-w-sm flex-col items-center gap-3 text-muted-foreground">
-                      <FileSearch className="size-10 text-muted-foreground/40" aria-hidden />
+                      <FileSearch
+                        className="size-10 text-muted-foreground/40"
+                        aria-hidden
+                      />
                       <p className="text-sm font-medium text-foreground">
                         Nenhum resultado encontrado
                       </p>
@@ -398,7 +417,10 @@ export default function ResultadosPage() {
                         <time dateTime={r.data}>{formatarData(r.data)}</time>
                       </TableCell>
                       <TableCell className="py-4">
-                        <Badge variant="outline" className={statusClass[r.status]}>
+                        <Badge
+                          variant="outline"
+                          className={statusClass[r.status]}
+                        >
                           {r.status}
                         </Badge>
                       </TableCell>
@@ -406,19 +428,28 @@ export default function ResultadosPage() {
                         <Button
                           size="sm"
                           variant="outline"
-                          disabled={isPending || pendingId !== null || r.status === "Disponível"}
+                          disabled={
+                            isPending ||
+                            pendingId !== null ||
+                            r.status === "Disponível"
+                          }
                           aria-busy={isPending}
                           onClick={() => publicarResultado(r.id, r.amostra)}
                         >
                           {isPending ? (
                             <>
-                              <Loader2 className="size-3.5 animate-spin" aria-hidden />
+                              <Loader2
+                                className="size-3.5 animate-spin"
+                                aria-hidden
+                              />
                               Publicando...
                             </>
                           ) : (
                             <>
                               <UploadCloud className="size-3.5" aria-hidden />
-                              {r.status === "Disponível" ? "Publicado" : "Publicar"}
+                              {r.status === "Disponível"
+                                ? "Publicado"
+                                : "Publicar"}
                             </>
                           )}
                         </Button>

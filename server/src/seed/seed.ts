@@ -108,7 +108,6 @@ export async function runSeed(dataSource: DataSource) {
   const [hemograma, ecg, glicemia] = examTypes;
 
   // ─── RESEARCHERS ──────────────────────────────────────────────────────────
-  // Novos campos: phone, advisorName, level
 
   const researchersData = [
     {
@@ -140,9 +139,7 @@ export async function runSeed(dataSource: DataSource) {
   const researchers: Researchers[] = [];
 
   for (const r of researchersData) {
-    let existing = await researcherRepo.findOne({
-      where: { email: r.email },
-    });
+    let existing = await researcherRepo.findOne({ where: { email: r.email } });
 
     if (!existing) {
       existing = await researcherRepo.save(r);
@@ -156,18 +153,8 @@ export async function runSeed(dataSource: DataSource) {
   // ─── EMPLOYEES ────────────────────────────────────────────────────────────
 
   const employeesData = [
-    {
-      name: 'Maria',
-      email: 'maria@lab.com',
-      password: '123456',
-      role: 'ADMIN',
-    },
-    {
-      name: 'Pedro',
-      email: 'pedro@lab.com',
-      password: '123456',
-      role: 'TECH',
-    },
+    { name: 'Maria', email: 'maria@lab.com', password: '123456', role: 'ADMIN' },
+    { name: 'Pedro', email: 'pedro@lab.com', password: '123456', role: 'TECH' },
   ];
 
   const employees: Employees[] = [];
@@ -184,9 +171,7 @@ export async function runSeed(dataSource: DataSource) {
       });
     }
 
-    let employee = await employeeRepo.findOne({
-      where: { email: emp.email },
-    });
+    let employee = await employeeRepo.findOne({ where: { email: emp.email } });
 
     if (!employee) {
       employee = await employeeRepo.save({
@@ -212,8 +197,7 @@ export async function runSeed(dataSource: DataSource) {
   if (projectCount === 0) {
     projects = await projectRepo.save([
       {
-        title:
-          'Avaliação hematológica em ratos Wistar submetidos a dieta hiperlipídica',
+        title: 'Avaliação hematológica em ratos Wistar submetidos a dieta hiperlipídica',
         course: 'Programa de Pós-graduação em Nutrição — UFPE',
         researchLab: 'Laboratório de Fisiologia Animal — UFPE',
         animalSpecies: 'Rattus norvegicus (Wistar)',
@@ -224,8 +208,7 @@ export async function runSeed(dataSource: DataSource) {
         examTypes: [hemograma, glicemia],
       },
       {
-        title:
-          'Perfil bioquímico de coelhos em diferentes fases de crescimento',
+        title: 'Perfil bioquímico de coelhos em diferentes fases de crescimento',
         course: 'Mestrado em Zootecnia — UFRPE',
         researchLab: 'Laboratório de Produção Animal — UFRPE',
         animalSpecies: 'Oryctolagus cuniculus',
@@ -256,7 +239,6 @@ export async function runSeed(dataSource: DataSource) {
   const [p1, p2, p3] = projects;
 
   // ─── SAMPLES ──────────────────────────────────────────────────────────────
-  // Campo researchProject adicionado (nullable para retrocompatibilidade)
 
   const sampleCount = await sampleRepo.count();
 
@@ -265,9 +247,9 @@ export async function runSeed(dataSource: DataSource) {
   if (sampleCount === 0) {
     samples = await sampleRepo.save([
       {
-        examType: hemograma,
-        researcher: r1,
+        // p1: hemograma + glicemia — DONE (todos os exames com resultado)
         researchProject: p1,
+        animalsInThisShipment: 10,
         protocol: generateProtocol(),
         status: SampleStatus.DONE,
         approvalStatus: ApprovalStatus.APPROVED,
@@ -276,9 +258,29 @@ export async function runSeed(dataSource: DataSource) {
         scheduledAt: new Date(Date.now() + 86400000),
       },
       {
-        examType: ecg,
-        researcher: r3,
+        // p1: hemograma + glicemia — ANALYZING (aprovada, sem resultado ainda)
+        researchProject: p1,
+        animalsInThisShipment: 8,
+        protocol: generateProtocol(),
+        status: SampleStatus.ANALYZING,
+        approvalStatus: ApprovalStatus.APPROVED,
+        approvedBy: e1,
+        approvedAt: new Date(),
+        scheduledAt: new Date(Date.now() + 86400000 * 5),
+      },
+      {
+        // p2: glicemia + ecg — PENDING (aguardando aprovação)
+        researchProject: p2,
+        animalsInThisShipment: 5,
+        protocol: generateProtocol(),
+        status: SampleStatus.PENDING,
+        approvalStatus: ApprovalStatus.PENDING,
+        scheduledAt: new Date(Date.now() + 86400000 * 3),
+      },
+      {
+        // p3: ecg — REJECTED
         researchProject: p3,
+        animalsInThisShipment: 3,
         protocol: generateProtocol(),
         status: SampleStatus.REJECTED,
         approvalStatus: ApprovalStatus.REJECTED,
@@ -286,44 +288,54 @@ export async function runSeed(dataSource: DataSource) {
         approvedAt: new Date(),
         scheduledAt: new Date(Date.now() + 86400000 * 2),
       },
-      {
-        examType: glicemia,
-        researcher: r2,
-        researchProject: p2,
-        protocol: generateProtocol(),
-        status: SampleStatus.PENDING,
-        approvalStatus: ApprovalStatus.PENDING,
-        scheduledAt: new Date(Date.now() + 86400000 * 3),
-      },
-      {
-        examType: hemograma,
-        researcher: r2,
-        researchProject: p2,
-        protocol: generateProtocol(),
-        status: SampleStatus.ANALYZING,
-        approvalStatus: ApprovalStatus.APPROVED,
-        approvedBy: e1,
-        approvedAt: new Date(),
-        scheduledAt: new Date(Date.now() + 86400000),
-      },
     ]);
   } else {
-    samples = await sampleRepo.find();
+    samples = await sampleRepo.find({ relations: ['researchProject', 'researchProject.examTypes'] });
   }
 
+  const [s1] = samples;
+
   // ─── SAMPLE RESULTS ───────────────────────────────────────────────────────
+  // Apenas para s1 (DONE) — um resultado por examType do projeto p1 (hemograma + glicemia)
 
   const resultCount = await resultRepo.count();
 
   if (resultCount === 0) {
     await resultRepo.save([
       {
-        sample: samples[0],
+        sample: s1,
+        examType: hemograma,
         resultData: {
-          hemoglobina: 13.5,
-          leucocitos: 7000,
+          Eritrograma: {
+            'Hemácias': '5,2',
+            'Hemoglobina': '14,1',
+            'Hematócrito': '42,0',
+            'VCM': '88,0',
+            'HCM': '29,5',
+            'CHCM': '33,5',
+          },
+          Leucograma: {
+            'Leucócitos': '7.200',
+            'Bastonetes': '180',
+            'Segmentados': '4.500',
+            'Eosinófilos': '220',
+            'Basófilos': '50',
+            'Linfócitos Típicos': '1.800',
+            'Monócitos': '450',
+          },
+          'Série Plaquetária': {
+            'Plaquetas': '280.000',
+          },
         },
-        createdAt: new Date(),
+      },
+      {
+        sample: s1,
+        examType: glicemia,
+        resultData: {
+          Glicemia: {
+            'Glicose': '92',
+          },
+        },
       },
     ]);
   }

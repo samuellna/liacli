@@ -1,9 +1,7 @@
-import { Sample } from 'src/samples/samples.entity';
 import {
   Column,
   CreateDateColumn,
   Entity,
-  OneToMany,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
@@ -38,9 +36,6 @@ export class ExamType {
 
   @Column('jsonb', { nullable: true })
   grupos: GrupoParametros[] | null;
-
-  @OneToMany(() => Sample, (sample) => sample.examType)
-  samples: Sample[];
 
   @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;

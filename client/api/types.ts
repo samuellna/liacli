@@ -61,18 +61,20 @@ export interface Sample {
   protocol: string;
   status: SampleStatus;
   approvalStatus: ApprovalStatus;
-  examType: ExamType;
-  researcher: Researcher;
   approvedBy: Employee | null;
   approvedAt: Date | null;
-  collectedAt: Date;
   scheduledAt: Date | null;
-  researchProject: ResearchProject | null;
+  animalsInThisShipment: number;
+  researchProject: ResearchProject;
+  results?: SampleResult[];
+  createdAt: Date;
+  updatedAt: Date;
 }
 
 export interface SampleResult {
   id: number;
   sample: Sample;
+  examType: ExamType;
   resultData: Record<string, unknown>;
   createdAt: Date;
 }

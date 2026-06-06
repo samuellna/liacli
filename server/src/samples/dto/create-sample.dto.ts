@@ -1,14 +1,15 @@
-import { IsDateString, IsNotEmpty, IsNumber } from 'class-validator';
+import { IsDateString, IsInt, IsNotEmpty, IsPositive } from 'class-validator';
 
 export class CreateSampleDto {
   @IsNotEmpty()
-  @IsNumber()
-  readonly examTypeId: number;
+  @IsInt()
+  readonly researchProjectId: number;
 
   @IsNotEmpty()
-  @IsNumber()
-  readonly researcherId: number;
+  @IsInt()
+  @IsPositive()
+  readonly animalsInThisShipment: number;
 
   @IsDateString()
-  scheduledAt: string; // ISO string
+  scheduledAt: string;
 }

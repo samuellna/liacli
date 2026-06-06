@@ -2,8 +2,8 @@ import api from "./axios";
 import type { Sample, SampleStatus } from "./types";
 
 export interface CreateSampleData {
-  examTypeId: number;
-  researcherId: number;
+  researchProjectId: number;
+  animalsInThisShipment: number;
   scheduledAt: string;
 }
 

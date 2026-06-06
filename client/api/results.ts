@@ -3,6 +3,7 @@ import type { SampleResult } from "./types";
 
 export interface CreateSampleResultData {
   sampleId: number;
+  examTypeId: number;
   resultData: Record<string, unknown>;
 }
 

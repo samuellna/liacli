@@ -12,6 +12,7 @@ export class SampleResultsController {
   create(@Body() sampleResultDto: CreateSampleResultDto) {
     return this.resultService.create(
       sampleResultDto.sampleId,
+      sampleResultDto.examTypeId,
       sampleResultDto.resultData,
     );
   }

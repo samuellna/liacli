@@ -3,21 +3,18 @@ import { SamplesService } from './samples.service';
 import { SamplesController } from './samples.controller';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { Sample } from './samples.entity';
-import { ResearchersModule } from 'src/researchers/researchers.module';
-import { ExamTypesModule } from 'src/exam_types/exam_types.module';
-import { Researchers } from 'src/researchers/researchers.entity';
-import { ExamType } from 'src/exam_types/exam_types.entity';
 import { Employees } from 'src/employees/employees.entity';
 import { EmployeesModule } from 'src/employees/employees.module';
 import { EmailModule } from 'src/email/email.module';
+import { ResearchProject } from 'src/researcher_projects/researcher_projects.entity';
+import { ResearchProjectsModule } from 'src/researcher_projects/researcher_projects.module';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Sample, Researchers, ExamType, Employees]),
-    ResearchersModule,
-    ExamTypesModule,
+    TypeOrmModule.forFeature([Sample, Employees, ResearchProject]),
     EmployeesModule,
     EmailModule,
+    ResearchProjectsModule,
   ],
   providers: [SamplesService],
   controllers: [SamplesController],

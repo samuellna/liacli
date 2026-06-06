@@ -7,8 +7,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { ApprovalStatus, Sample, SampleStatus } from './samples.entity';
 import { CreateSampleDto } from './dto/create-sample.dto';
-import { ExamType } from 'src/exam_types/exam_types.entity';
-import { Researchers } from 'src/researchers/researchers.entity';
+import { ResearchProject } from 'src/researcher_projects/researcher_projects.entity';
 import { generateProtocol } from 'src/utils/generate_protocol';
 import { Employees } from 'src/employees/employees.entity';
 import { EmailService } from 'src/email/email.service';
@@ -19,11 +18,8 @@ export class SamplesService {
     @InjectRepository(Sample)
     private readonly sampleRepository: Repository<Sample>,
 
-    @InjectRepository(ExamType)
-    private readonly examTypeRepository: Repository<ExamType>,
-
-    @InjectRepository(Researchers)
-    private readonly researcherRepository: Repository<Researchers>,
+    @InjectRepository(ResearchProject)
+    private readonly researchProjectRepository: Repository<ResearchProject>,
 
     @InjectRepository(Employees)
     private readonly employeeRepository: Repository<Employees>,
@@ -32,17 +28,22 @@ export class SamplesService {
   ) {}
 
   async findAll(): Promise<Sample[]> {
-    return await this.sampleRepository.find();
+    return this.sampleRepository.find({
+      relations: ['researchProject', 'researchProject.researcher', 'researchProject.examTypes', 'approvedBy'],
+    });
   }
 
   async findOne(id: number): Promise<Sample | null> {
-    return await this.sampleRepository.findOne({ where: { id } });
+    return this.sampleRepository.findOne({
+      where: { id },
+      relations: ['researchProject', 'researchProject.researcher', 'researchProject.examTypes', 'approvedBy'],
+    });
   }
 
-  async findByProtocol(protocol: string) {
+  async findByProtocol(protocol: string): Promise<Sample> {
     const sample = await this.sampleRepository.findOne({
       where: { protocol },
-      relations: ['examType'],
+      relations: ['researchProject', 'researchProject.researcher', 'researchProject.examTypes', 'approvedBy'],
     });
     if (!sample) {
       throw new NotFoundException('Sample not found');
@@ -50,47 +51,38 @@ export class SamplesService {
     return sample;
   }
 
-  async create(sample: CreateSampleDto): Promise<Sample> {
-    // Busca o ExamType e o Researcher para garantir que existem antes de criar a amostra
-    const examType = await this.examTypeRepository.findOne({
-      where: { id: sample.examTypeId },
+  async create(dto: CreateSampleDto): Promise<Sample> {
+    const researchProject = await this.researchProjectRepository.findOne({
+      where: { id: dto.researchProjectId },
+      relations: ['researcher'],
     });
 
-    if (!examType) {
-      throw new NotFoundException('ExamType not found');
-    }
-    console.log('ExamType encontrado:', examType);
-
-    // Busca o Researcher para garantir que existe antes de criar a amostra
-    const researcher = await this.researcherRepository.findOne({
-      where: { id: sample.researcherId },
-    });
-    console.log('Researcher encontrado:', researcher);
-
-    if (!researcher) {
-      throw new NotFoundException('Researcher not found');
+    if (!researchProject) {
+      throw new NotFoundException('ResearchProject not found');
     }
 
     const newSample = this.sampleRepository.create({
-      examType,
-      researcher: researcher,
+      researchProject,
+      animalsInThisShipment: dto.animalsInThisShipment,
       protocol: generateProtocol(),
       status: SampleStatus.PENDING,
-      scheduledAt: new Date(sample.scheduledAt),
+      scheduledAt: new Date(dto.scheduledAt),
       approvalStatus: ApprovalStatus.PENDING,
     });
 
-    return await this.sampleRepository.save(newSample);
+    return this.sampleRepository.save(newSample);
   }
 
-  // Método para aprovar ou rejeitar uma solitação de amostra
   async approveSample(
     id: number,
     approved: boolean,
     employeeId: number,
     decisionReason?: string,
   ): Promise<Sample> {
-    const sample = await this.sampleRepository.findOneBy({ id });
+    const sample = await this.sampleRepository.findOne({
+      where: { id },
+      relations: ['researchProject', 'researchProject.researcher'],
+    });
 
     if (!sample) {
       throw new NotFoundException('Sample not found');
@@ -100,9 +92,7 @@ export class SamplesService {
       throw new BadRequestException('Sample already evaluated');
     }
 
-    const employee = await this.employeeRepository.findOneBy({
-      id: employeeId,
-    });
+    const employee = await this.employeeRepository.findOneBy({ id: employeeId });
 
     if (!employee) {
       throw new NotFoundException('Employee not found');
@@ -112,29 +102,32 @@ export class SamplesService {
       ? ApprovalStatus.APPROVED
       : ApprovalStatus.REJECTED;
 
+    const researcher = sample.researchProject.researcher;
+
     if (sample.approvalStatus === ApprovalStatus.APPROVED) {
       await this.emailService.sendApprovalEmail({
-        toEmail: employee.email,
-        pesquisadorNome: employee.name,
+        toEmail: researcher.email,
+        pesquisadorNome: researcher.name,
         protocolo: sample.protocol,
         dataAgendada: sample.scheduledAt,
       });
-    } else if (sample.approvalStatus === ApprovalStatus.REJECTED) {
+    } else {
       await this.emailService.sendRejectionEmail({
-        toEmail: employee.email,
-        pesquisadorNome: employee.name,
+        toEmail: researcher.email,
+        pesquisadorNome: researcher.name,
         protocolo: sample.protocol,
         motivoReprovacao:
           decisionReason || 'Os dados enviados são inválidos ou insuficientes',
       });
     }
+
     sample.approvedBy = employee;
     sample.approvedAt = new Date();
 
     return this.sampleRepository.save(sample);
   }
 
-  async updateStatus(id: number, status: SampleStatus): Promise<Sample | null> {
+  async updateStatus(id: number, status: SampleStatus): Promise<Sample> {
     const sample = await this.sampleRepository.findOne({ where: { id } });
     if (!sample) {
       throw new NotFoundException('Sample not found');
@@ -143,7 +136,7 @@ export class SamplesService {
       throw new BadRequestException('Sample not approved');
     }
     sample.status = status;
-    return await this.sampleRepository.save(sample);
+    return this.sampleRepository.save(sample);
   }
 
   async delete(id: number): Promise<void> {

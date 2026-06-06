@@ -1,9 +1,13 @@
-import { IsNotEmpty, IsNumber, IsObject } from 'class-validator';
+import { IsInt, IsNotEmpty, IsObject } from 'class-validator';
 
 export class CreateSampleResultDto {
-  @IsNumber()
+  @IsInt()
   @IsNotEmpty()
   sampleId: number;
+
+  @IsInt()
+  @IsNotEmpty()
+  examTypeId: number;
 
   @IsObject()
   @IsNotEmpty()

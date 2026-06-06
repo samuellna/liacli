@@ -1,9 +1,10 @@
+import { ExamType } from 'src/exam_types/exam_types.entity';
 import { Sample } from 'src/samples/samples.entity';
 import {
   Column,
+  CreateDateColumn,
   Entity,
-  JoinColumn,
-  OneToOne,
+  ManyToOne,
   PrimaryGeneratedColumn,
 } from 'typeorm';
 
@@ -12,13 +13,15 @@ export class SampleResult {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @OneToOne(() => Sample, { eager: true, onDelete: 'CASCADE' })
-  @JoinColumn({ name: 'sampleId' })
-  sample: Sample;
-
-  @Column({ type: 'json' })
+  @Column({ type: 'jsonb' })
   resultData: Record<string, any>;
 
-  @Column({ type: 'timestamp' })
+  @ManyToOne(() => Sample, (sample) => sample.results, { onDelete: 'CASCADE' })
+  sample: Sample;
+
+  @ManyToOne(() => ExamType, { nullable: false })
+  examType: ExamType;
+
+  @CreateDateColumn({ name: 'created_at', type: 'timestamp' })
   createdAt: Date;
 }
