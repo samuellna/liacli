@@ -10,6 +10,7 @@ export interface CreateSampleData {
 export interface ApproveSampleData {
   approved: boolean;
   employeeId: number;
+  decisionReason?: string;
 }
 
 export async function findAllSamples(): Promise<Sample[]> {
