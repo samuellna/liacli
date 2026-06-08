@@ -11,6 +11,7 @@ import { ResearchProject } from 'src/researcher_projects/researcher_projects.ent
 import { generateProtocol } from 'src/utils/generate_protocol';
 import { Employees } from 'src/employees/employees.entity';
 import { EmailService } from 'src/email/email.service';
+import { Researchers } from 'src/researchers/researchers.entity';
 
 @Injectable()
 export class SamplesService {
@@ -24,26 +25,44 @@ export class SamplesService {
     @InjectRepository(Employees)
     private readonly employeeRepository: Repository<Employees>,
 
+    @InjectRepository(Researchers)
+    private readonly researcherRepository: Repository<Researchers>,
+
     private readonly emailService: EmailService,
   ) {}
 
   async findAll(): Promise<Sample[]> {
     return this.sampleRepository.find({
-      relations: ['researchProject', 'researchProject.researcher', 'researchProject.examTypes', 'approvedBy'],
+      relations: [
+        'researchProject',
+        'researchProject.researcher',
+        'researchProject.examTypes',
+        'approvedBy',
+      ],
     });
   }
 
   async findOne(id: number): Promise<Sample | null> {
     return this.sampleRepository.findOne({
       where: { id },
-      relations: ['researchProject', 'researchProject.researcher', 'researchProject.examTypes', 'approvedBy'],
+      relations: [
+        'researchProject',
+        'researchProject.researcher',
+        'researchProject.examTypes',
+        'approvedBy',
+      ],
     });
   }
 
   async findByProtocol(protocol: string): Promise<Sample> {
     const sample = await this.sampleRepository.findOne({
       where: { protocol },
-      relations: ['researchProject', 'researchProject.researcher', 'researchProject.examTypes', 'approvedBy'],
+      relations: [
+        'researchProject',
+        'researchProject.researcher',
+        'researchProject.examTypes',
+        'approvedBy',
+      ],
     });
     if (!sample) {
       throw new NotFoundException('Sample not found');
@@ -92,7 +111,9 @@ export class SamplesService {
       throw new BadRequestException('Sample already evaluated');
     }
 
-    const employee = await this.employeeRepository.findOneBy({ id: employeeId });
+    const employee = await this.employeeRepository.findOneBy({
+      id: employeeId,
+    });
 
     if (!employee) {
       throw new NotFoundException('Employee not found');
@@ -125,6 +146,71 @@ export class SamplesService {
     sample.approvedAt = new Date();
 
     return this.sampleRepository.save(sample);
+  }
+
+  // Retorna a quantidade de amostras que estão com status ANALYZING para exibir no dashboard
+  async findAmountInAnalysis(): Promise<number> {
+    const samplesInAnalysis = await this.sampleRepository.find({
+      where: { status: SampleStatus.ANALYZING },
+    });
+    return samplesInAnalysis.length;
+  }
+
+  async findAmountPendingApproval(): Promise<number> {
+    const pendingApprovalSamples = await this.sampleRepository.find({
+      where: { approvalStatus: ApprovalStatus.PENDING },
+    });
+    return pendingApprovalSamples.length;
+  }
+
+  async findPendingApprovalSamples(): Promise<
+    {
+      protocol: string;
+      researcher: string;
+      date: Date;
+      firstTime: boolean;
+    }[]
+  > {
+    const pendingApprovalSamples = await this.sampleRepository.find({
+      where: { approvalStatus: ApprovalStatus.PENDING },
+      relations: ['researchProject', 'researchProject.researcher'],
+    });
+
+    const emails = pendingApprovalSamples.map(
+      (s) => s.researchProject.researcher.email,
+    );
+
+    const firstTimeResearchers = await Promise.all(
+      emails.map((email) =>
+        this.researcherRepository
+          .findBy({ email })
+          .then((researchers) => researchers.length === 1),
+      ),
+    );
+
+    const response = pendingApprovalSamples
+      .map((sample) => ({
+        protocol: sample.protocol,
+        researcher: sample.researchProject.researcher.name,
+        date: sample.researchProject.preferredDate,
+        firstTime:
+          firstTimeResearchers[
+            emails.indexOf(sample.researchProject.researcher.email)
+          ],
+      }))
+      .sort((a, b) => a.date.getTime() - b.date.getTime()); // Ordena por data
+
+    return response.slice(0, 5); // Retorna apenas os 5 primeiros resultados
+  }
+
+  async findAmountApprovedPendingCollection(): Promise<number> {
+    const approvedPendingCollectionSamples = await this.sampleRepository.find({
+      where: {
+        approvalStatus: ApprovalStatus.APPROVED,
+        status: SampleStatus.PENDING,
+      },
+    });
+    return approvedPendingCollectionSamples.length;
   }
 
   async updateStatus(id: number, status: SampleStatus): Promise<Sample> {

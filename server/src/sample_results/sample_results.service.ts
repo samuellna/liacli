@@ -99,13 +99,26 @@ export class SampleResultsService {
   async findAll(): Promise<SampleResult[]> {
     return this.sampleResultRepository.find({
       relations: [
-        'examType',
         'sample',
         'sample.researchProject',
         'sample.researchProject.researcher',
-        'sample.approvedBy',
+        'sample.researchProject.examTypes',
       ],
     });
+  }
+
+  // Retorna a quantidade de resultados cadastrados nesse mês para ser exibido na dashboard
+  async findAmountResults(): Promise<number> {
+    const results = await this.sampleResultRepository.find();
+    const createdThisMonth = results.filter((result) => {
+      const now = new Date();
+      const createdAt = new Date(result.createdAt);
+      return (
+        createdAt.getMonth() === now.getMonth() &&
+        createdAt.getFullYear() === now.getFullYear()
+      );
+    });
+    return createdThisMonth.length;
   }
 
   async findByProtocol(protocol: string): Promise<SampleResult[]> {

@@ -16,5 +16,6 @@ import { ExamTypesModule } from 'src/exam_types/exam_types.module';
   ],
   providers: [SampleResultsService],
   controllers: [SampleResultsController],
+  exports: [SampleResultsService],
 })
 export class SampleResultsModule {}
