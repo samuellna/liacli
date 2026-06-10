@@ -14,4 +14,5 @@ export type AmostraRow = {
   exames: string[];
   status: StatusAmostra;
   podeRegistrar: boolean;
+  podeAtualizarStatus: boolean;
 };

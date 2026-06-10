@@ -8,6 +8,7 @@ import {
   FlaskConical,
   ListFilter,
   Loader2,
+  RefreshCw,
   Search,
 } from "lucide-react";
 
@@ -39,6 +40,8 @@ import {
   TableRow,
 } from "@/components/ui/table";
 
+import { updateSampleStatus } from "@/api/samples";
+import { SampleStatus } from "@/api/types";
 import { statusClass, statusOptions, statusVariant } from "../_lib/helpers";
 import type { AmostraRow, StatusAmostra } from "../_lib/types";
 import { ExameBadges } from "./exame-badges";
@@ -47,6 +50,7 @@ export function AmostrasTabela({ amostras }: { amostras: AmostraRow[] }) {
   const router = useRouter();
   const [busca, setBusca] = useState("");
   const [pendingId, setPendingId] = useState<number | null>(null);
+  const [updatingId, setUpdatingId] = useState<number | null>(null);
   const [statusSelecionado, setStatusSelecionado] = useState<
     Set<StatusAmostra>
   >(new Set());
@@ -78,6 +82,20 @@ export function AmostrasTabela({ amostras }: { amostras: AmostraRow[] }) {
   function limparFiltros() {
     setBusca("");
     setStatusSelecionado(new Set());
+  }
+
+  async function atualizarStatus(amostra: AmostraRow) {
+    const nextStatus =
+      amostra.status === "Pendente"
+        ? SampleStatus.COLLECTED
+        : SampleStatus.ANALYZING;
+    setUpdatingId(amostra.id);
+    try {
+      await updateSampleStatus(amostra.id, nextStatus);
+      router.refresh();
+    } finally {
+      setUpdatingId(null);
+    }
   }
 
   function cadastrarResultado(id: number) {
@@ -258,32 +276,62 @@ export function AmostrasTabela({ amostras }: { amostras: AmostraRow[] }) {
                       </Badge>
                     </TableCell>
                     <TableCell className="px-6 py-5 text-right">
-                      <Button
-                        type="button"
-                        size="sm"
-                        disabled={
-                          isPending ||
-                          pendingId !== null ||
-                          !amostra.podeRegistrar
-                        }
-                        aria-busy={isPending}
-                        onClick={() => cadastrarResultado(amostra.id)}
-                      >
-                        {isPending ? (
-                          <>
-                            <Loader2
-                              className="size-3.5 animate-spin"
-                              aria-hidden
-                            />
-                            Abrindo...
-                          </>
-                        ) : (
-                          <>
-                            <ClipboardCheck className="size-3.5" aria-hidden />
-                            Cadastrar resultado
-                          </>
-                        )}
-                      </Button>
+                      {amostra.podeAtualizarStatus ? (
+                        <Button
+                          type="button"
+                          size="sm"
+                          variant="outline"
+                          disabled={updatingId !== null || pendingId !== null}
+                          aria-busy={updatingId === amostra.id}
+                          onClick={() => atualizarStatus(amostra)}
+                        >
+                          {updatingId === amostra.id ? (
+                            <>
+                              <Loader2
+                                className="size-3.5 animate-spin"
+                                aria-hidden
+                              />
+                              Atualizando...
+                            </>
+                          ) : (
+                            <>
+                              <RefreshCw className="size-3.5" aria-hidden />
+                              Atualizar status
+                            </>
+                          )}
+                        </Button>
+                      ) : (
+                        <Button
+                          type="button"
+                          size="sm"
+                          disabled={
+                            isPending ||
+                            pendingId !== null ||
+                            updatingId !== null ||
+                            !amostra.podeRegistrar
+                          }
+                          aria-busy={isPending}
+                          onClick={() => cadastrarResultado(amostra.id)}
+                        >
+                          {isPending ? (
+                            <>
+                              <Loader2
+                                className="size-3.5 animate-spin"
+                                aria-hidden
+                              />
+                              Abrindo...
+                            </>
+                          ) : (
+                            <>
+                              <ClipboardCheck
+                                className="size-3.5"
+                                aria-hidden
+                              />
+                              Cadastrar resultado
+                            </>
+                          )}
+                        </Button>
+                      )}
                     </TableCell>
                   </TableRow>
                 );

@@ -47,7 +47,7 @@ function resolveStatus(sample: Sample): StatusAmostra {
     case SampleStatus.COLLECTED:
       return "Coletada";
     default:
-      return "Aprovada";
+      return "Pendente";
   }
 }
 
@@ -61,6 +61,10 @@ export function toAmostraRow(sample: Sample): AmostraRow {
     status: resolveStatus(sample),
     podeRegistrar:
       sample.approvalStatus === ApprovalStatus.APPROVED &&
-      sample.status !== SampleStatus.DONE,
+      sample.status === SampleStatus.ANALYZING,
+    podeAtualizarStatus:
+      sample.approvalStatus === ApprovalStatus.APPROVED &&
+      (sample.status === SampleStatus.PENDING ||
+        sample.status === SampleStatus.COLLECTED),
   };
 }
