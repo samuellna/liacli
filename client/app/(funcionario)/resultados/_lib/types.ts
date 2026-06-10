@@ -1,8 +1,4 @@
-export type StatusResultado =
-  | "Aguardando"
-  | "Coletada"
-  | "Em validação"
-  | "Validado";
+export type StatusResultado = "Em validação" | "Validado";
 
 export type ResultadoRow = {
   id: number;

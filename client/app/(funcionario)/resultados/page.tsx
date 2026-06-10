@@ -8,11 +8,12 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 
-import { findAllSamples, updateSampleStatus } from "@/api/samples";
-import { ApprovalStatus, SampleStatus } from "@/api/types";
+import { updateSampleStatus } from "@/api/samples";
+import { SampleStatus } from "@/api/types";
 import { toResultadoRow } from "./_lib/helpers";
 import type { ResultadoRow } from "./_lib/types";
 import { ResultadosTabela } from "./_components/resultados-tabela";
+import { findAllResults } from "@/api/results";
 
 function PageHeader({ total }: { total: number }) {
   return (
@@ -87,11 +88,9 @@ export default function ResultadosPage() {
     if (showLoading) setIsLoading(true);
     setError(null);
     try {
-      const data = await findAllSamples();
-      const aprovadas = data.filter(
-        (s) => s.approvalStatus === ApprovalStatus.APPROVED,
-      );
-      setResultados(aprovadas.map(toResultadoRow));
+      const data = await findAllResults();
+      const resultados = data.map((result) => toResultadoRow(result));
+      setResultados(resultados);
     } catch {
       if (showLoading) setError("Não foi possível carregar os resultados.");
     } finally {
