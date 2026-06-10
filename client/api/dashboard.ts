@@ -1,4 +1,4 @@
-const API_URL = process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:3001";
+import api from "./axios";
 
 export interface BackendDashboardData {
   samples: {
@@ -16,7 +16,11 @@ export interface BackendDashboardData {
 }
 
 export async function fetchDashboard(): Promise<BackendDashboardData> {
-  const res = await fetch(`${API_URL}/`, { cache: "no-store" });
-  if (!res.ok) throw new Error("Failed to fetch dashboard data");
-  return res.json() as Promise<BackendDashboardData>;
+  try {
+    const data = await api.get<BackendDashboardData>("/");
+    return data.data;
+  } catch (error) {
+    console.error("Error fetching dashboard data:", error);
+    throw error;
+  }
 }

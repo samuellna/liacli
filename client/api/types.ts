@@ -1,3 +1,10 @@
+export enum ResearchLevel {
+  SCIENTIFIC_INITIATION = "SCIENTIFIC_INITIATION",
+  MASTERS = "MASTERS",
+  DOCTORATE = "DOCTORATE",
+  POST_DOCTORATE = "POST_DOCTORATE",
+}
+
 export enum SampleStatus {
   PENDING = "PENDING",
   COLLECTED = "COLLECTED",
@@ -27,9 +34,8 @@ export interface Researcher {
   institution: string;
   phone: string;
   advisorName: string;
-  level: string;
+  level: ResearchLevel;
   createdAt: string;
-  samples: Sample[];
   projects: ResearchProject[];
 }
 
@@ -51,7 +57,6 @@ export interface ExamType {
   material: string | null;
   observacoes: string | null;
   grupos: GrupoParametros[] | null;
-  samples: Sample[];
   createdAt: Date;
   updatedAt: Date;
 }
@@ -76,6 +81,7 @@ export interface SampleResult {
   sample: Sample;
   examType: ExamType;
   resultData: Record<string, unknown>;
+  validated: boolean;
   createdAt: Date;
 }
 
