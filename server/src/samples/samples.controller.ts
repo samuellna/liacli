@@ -11,7 +11,7 @@ import {
 } from '@nestjs/common';
 import { SamplesService } from './samples.service';
 import { CreateSampleDto } from './dto/create-sample.dto';
-import { SampleStatus } from './samples.entity';
+import { UpdateSampleStatusDto } from './dto/update-sample.dto';
 
 @Controller('samples')
 export class SamplesController {
@@ -41,10 +41,9 @@ export class SamplesController {
     return await this.samplesService.create(createSampleDto);
   }
 
-  @Patch(':id')
-  @HttpCode(HttpStatus.OK)
-  async update(@Param('id') id: number, @Body() status: SampleStatus) {
-    return await this.samplesService.updateStatus(id, status);
+  @Patch(':id/status')
+  update(@Param('id') id: number, @Body() dto: UpdateSampleStatusDto) {
+    return this.samplesService.updateStatus(id, dto.status);
   }
 
   @Patch('approve/:id')
