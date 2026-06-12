@@ -7,12 +7,14 @@ import { Sample } from 'src/samples/samples.entity';
 import { SamplesModule } from 'src/samples/samples.module';
 import { ExamType } from 'src/exam_types/exam_types.entity';
 import { ExamTypesModule } from 'src/exam_types/exam_types.module';
+import { PdfModule } from 'src/pdf/pdf.module';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([SampleResult, Sample, ExamType]),
     SamplesModule,
     ExamTypesModule,
+    PdfModule,
   ],
   providers: [SampleResultsService],
   controllers: [SampleResultsController],
