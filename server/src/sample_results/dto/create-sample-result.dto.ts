@@ -12,4 +12,6 @@ export class CreateSampleResultDto {
   @IsObject()
   @IsNotEmpty()
   resultData: Record<string, any>;
+
+  observations?: string;
 }

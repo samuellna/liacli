@@ -16,6 +16,9 @@ export class SampleResult {
   @Column({ type: 'jsonb' })
   resultData: Record<string, any>;
 
+  @Column({ type: 'text', nullable: true })
+  observations: string | null;
+
   @ManyToOne(() => Sample, (sample) => sample.results, { onDelete: 'CASCADE' })
   sample: Sample;
 

@@ -30,6 +30,7 @@ export class SampleResultsService {
     sampleId: number,
     examTypeId: number,
     resultData: Record<string, any>,
+    observations?: string,
   ): Promise<SampleResult> {
     const sample = await this.sampleRepository.findOne({
       where: { id: sampleId },
@@ -81,6 +82,7 @@ export class SampleResultsService {
       sample,
       examType,
       resultData,
+      observations: observations || null,
     });
 
     const savedResult = await this.sampleResultRepository.save(result);

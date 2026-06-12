@@ -27,6 +27,7 @@ export class SampleResultsController {
       sampleResultDto.sampleId,
       sampleResultDto.examTypeId,
       sampleResultDto.resultData,
+      sampleResultDto.observations,
     );
   }
 
