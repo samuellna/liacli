@@ -88,7 +88,7 @@ export class PdfService {
         examTypeName: result.examType.name,
         validated: result.validated,
         grupos,
-        observacoes: result.examType.observacoes ?? '',
+        observacoes: result.observations ?? '',
       };
     });
 
