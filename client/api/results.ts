@@ -22,10 +22,27 @@ export async function findResultsByProtocol(
 }
 
 export async function findAllResults(): Promise<SampleResult[]> {
-  const response = await api.get<SampleResult[]>(`/results`);
+  const response = await api.get<SampleResult[]>(`/results?unique=true`);
   return response.data;
 }
 
 export async function validateResult(id: number): Promise<void> {
   await api.patch(`/results/${id}`);
+}
+
+export async function findResultsBySampleId(
+  sampleId: number,
+): Promise<SampleResult[]> {
+  const response = await api.get<SampleResult[]>(`/results/sample/${sampleId}`);
+  return response.data;
+}
+
+export async function validateAllResultsBySample(
+  sampleId: number,
+): Promise<void> {
+  await api.patch(`/results/validate-sample/${sampleId}`);
+}
+
+export async function rejectSampleResults(sampleId: number): Promise<void> {
+  await api.patch(`/results/reject-sample/${sampleId}`);
 }

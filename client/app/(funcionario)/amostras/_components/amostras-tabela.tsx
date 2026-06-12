@@ -45,6 +45,7 @@ import { SampleStatus } from "@/api/types";
 import { statusClass, statusOptions, statusVariant } from "../_lib/helpers";
 import type { AmostraRow, StatusAmostra } from "../_lib/types";
 import { ExameBadges } from "./exame-badges";
+import { toast } from "sonner";
 
 export function AmostrasTabela({ amostras }: { amostras: AmostraRow[] }) {
   const router = useRouter();
@@ -92,6 +93,9 @@ export function AmostrasTabela({ amostras }: { amostras: AmostraRow[] }) {
     setUpdatingId(amostra.id);
     try {
       await updateSampleStatus(amostra.id, nextStatus);
+      toast.success(
+        `Status atualizado para ${nextStatus.toString() === "COLLECTED" ? "COLETADO" : "EM ANÁLISE"} com sucesso!`,
+      );
       router.refresh();
     } finally {
       setUpdatingId(null);

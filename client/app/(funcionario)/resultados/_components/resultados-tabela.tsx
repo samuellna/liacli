@@ -5,12 +5,11 @@ import {
   ChevronDown,
   FileSearch,
   ListFilter,
-  Loader2,
   Search,
   ShieldCheck,
   UploadCloud,
 } from "lucide-react";
-import { toast } from "sonner";
+import { useRouter } from "next/navigation";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -73,15 +72,11 @@ function ExameBadges({ exames }: { exames: string[] }) {
 
 interface ResultadosTabelaProps {
   resultados: ResultadoRow[];
-  onValidar: (id: number) => Promise<void>;
 }
 
-export function ResultadosTabela({
-  resultados,
-  onValidar,
-}: ResultadosTabelaProps) {
+export function ResultadosTabela({ resultados }: ResultadosTabelaProps) {
+  const router = useRouter();
   const [busca, setBusca] = useState("");
-  const [pendingId, setPendingId] = useState<number | null>(null);
   const [statusSelecionado, setStatusSelecionado] = useState<
     Set<StatusResultado>
   >(new Set());
@@ -113,18 +108,6 @@ export function ResultadosTabela({
   function limparFiltros() {
     setBusca("");
     setStatusSelecionado(new Set());
-  }
-
-  async function handleValidar(id: number) {
-    setPendingId(id);
-    try {
-      await onValidar(id);
-      toast.success("Amostra validada com sucesso.");
-    } catch {
-      toast.error("Não foi possível validar a amostra. Tente novamente.");
-    } finally {
-      setPendingId(null);
-    }
   }
 
   const filtroAtivo = busca.trim().length > 0 || statusSelecionado.size > 0;
@@ -270,74 +253,61 @@ export function ResultadosTabela({
                 </TableCell>
               </TableRow>
             ) : (
-              filtrados.map((resultado) => {
-                const isPending = pendingId === resultado.id;
-                return (
-                  <TableRow
-                    key={resultado.id}
-                    className="align-top transition-colors"
-                  >
-                    <TableCell className="px-6 py-5 font-mono text-xs text-muted-foreground">
-                      {resultado.protocolo}
-                    </TableCell>
-                    <TableCell className="py-5">
-                      <ExameBadges exames={resultado.exames} />
-                    </TableCell>
-                    <TableCell className="py-5 text-sm text-foreground">
-                      {resultado.pesquisador}
-                    </TableCell>
-                    <TableCell className="py-5">
-                      <p className="text-sm font-medium leading-snug text-foreground">
-                        {resultado.projeto}
-                      </p>
-                    </TableCell>
-                    <TableCell className="py-5">
-                      <Badge
-                        variant={statusVariant[resultado.status]}
-                        className={statusClass[resultado.status]}
+              filtrados.map((resultado) => (
+                <TableRow
+                  key={resultado.id}
+                  className="align-top transition-colors"
+                >
+                  <TableCell className="px-6 py-5 font-mono text-xs text-muted-foreground">
+                    {resultado.protocolo}
+                  </TableCell>
+                  <TableCell className="py-5">
+                    <ExameBadges exames={resultado.exames} />
+                  </TableCell>
+                  <TableCell className="py-5 text-sm text-foreground">
+                    {resultado.pesquisador}
+                  </TableCell>
+                  <TableCell className="py-5">
+                    <p className="text-sm font-medium leading-snug text-foreground">
+                      {resultado.projeto}
+                    </p>
+                  </TableCell>
+                  <TableCell className="py-5">
+                    <Badge
+                      variant={statusVariant[resultado.status]}
+                      className={statusClass[resultado.status]}
+                    >
+                      {resultado.status}
+                    </Badge>
+                  </TableCell>
+                  <TableCell className="px-6 py-5 text-right">
+                    {resultado.podeValidar ? (
+                      <Button
+                        type="button"
+                        size="sm"
+                        onClick={() =>
+                          router.push(
+                            `/resultados/validar/${resultado.sampleId}`,
+                          )
+                        }
                       >
-                        {resultado.status}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="px-6 py-5 text-right">
-                      {resultado.podeValidar ? (
-                        <Button
-                          type="button"
-                          size="sm"
-                          disabled={isPending || pendingId !== null}
-                          aria-busy={isPending}
-                          onClick={() => handleValidar(resultado.id)}
-                        >
-                          {isPending ? (
-                            <>
-                              <Loader2
-                                className="size-3.5 animate-spin"
-                                aria-hidden
-                              />
-                              Validando...
-                            </>
-                          ) : (
-                            <>
-                              <ShieldCheck className="size-3.5" aria-hidden />
-                              Validar
-                            </>
-                          )}
-                        </Button>
-                      ) : resultado.status === "Validado" ? (
-                        <Button
-                          type="button"
-                          size="sm"
-                          variant="outline"
-                          disabled
-                        >
-                          <UploadCloud className="size-3.5" aria-hidden />
-                          Publicar
-                        </Button>
-                      ) : null}
-                    </TableCell>
-                  </TableRow>
-                );
-              })
+                        <ShieldCheck className="size-3.5" aria-hidden />
+                        Validar resultado
+                      </Button>
+                    ) : resultado.status === "Validado" ? (
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="outline"
+                        disabled
+                      >
+                        <UploadCloud className="size-3.5" aria-hidden />
+                        Publicar
+                      </Button>
+                    ) : null}
+                  </TableCell>
+                </TableRow>
+              ))
             )}
           </TableBody>
         </Table>

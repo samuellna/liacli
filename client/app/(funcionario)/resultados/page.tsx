@@ -8,8 +8,6 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 
-import { updateSampleStatus } from "@/api/samples";
-import { SampleStatus } from "@/api/types";
 import { toResultadoRow } from "./_lib/helpers";
 import type { ResultadoRow } from "./_lib/types";
 import { ResultadosTabela } from "./_components/resultados-tabela";
@@ -98,11 +96,6 @@ export default function ResultadosPage() {
     }
   }
 
-  async function handleValidar(id: number) {
-    await updateSampleStatus(id, SampleStatus.DONE);
-    load(false);
-  }
-
   useEffect(() => {
     load();
   }, []);
@@ -129,7 +122,7 @@ export default function ResultadosPage() {
   return (
     <div className="space-y-6">
       <PageHeader total={resultados.length} />
-      <ResultadosTabela resultados={resultados} onValidar={handleValidar} />
+      <ResultadosTabela resultados={resultados} />
     </div>
   );
 }

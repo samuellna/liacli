@@ -258,11 +258,15 @@ function DistribuicaoStatus({ cards }: { cards: DashboardData["cards"] }) {
 
 export default function DashboardClient({ data }: { data: DashboardData }) {
   return (
-    <div className="p-6 space-y-6">
-      <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
-        visão geral
-      </p>
-
+    <div className="space-y-6">
+      <div className="space-y-1">
+        <h1 className="text-2xl font-semibold tracking-tight text-foreground">
+          Visão geral
+        </h1>
+        <p className="text-sm text-muted-foreground">
+          Tenha uma visão geral das amostras do sistema.
+        </p>
+      </div>
       <MetricCards cards={data.cards} />
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">

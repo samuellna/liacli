@@ -27,6 +27,7 @@ function resolveStatus(result: SampleResult): StatusResultado {
 export function toResultadoRow(result: SampleResult): ResultadoRow {
   return {
     id: result.id,
+    sampleId: result.sample.id,
     protocolo: result.sample.protocol,
     exames: result.sample.researchProject.examTypes.map((et) => et.name),
     pesquisador: result.sample.researchProject.researcher.name,
