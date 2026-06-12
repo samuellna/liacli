@@ -70,6 +70,20 @@ export class SamplesService {
     return sample;
   }
 
+  private async generateUniqueProtocol(): Promise<string> {
+    while (true) {
+      const protocol = generateProtocol();
+
+      const exists = await this.sampleRepository.exists({
+        where: { protocol },
+      });
+
+      if (!exists) {
+        return protocol;
+      }
+    }
+  }
+
   async create(dto: CreateSampleDto): Promise<Sample> {
     const researchProject = await this.researchProjectRepository.findOne({
       where: { id: dto.researchProjectId },
@@ -83,7 +97,7 @@ export class SamplesService {
     const newSample = this.sampleRepository.create({
       researchProject,
       animalsInThisShipment: dto.animalsInThisShipment,
-      protocol: generateProtocol(),
+      protocol: await this.generateUniqueProtocol(),
       status: SampleStatus.PENDING,
       scheduledAt: new Date(dto.scheduledAt),
       approvalStatus: ApprovalStatus.PENDING,

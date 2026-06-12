@@ -32,9 +32,21 @@ export async function runSeed(dataSource: DataSource) {
         {
           nomeGrupo: 'Eritrograma',
           parametros: [
-            { nome: 'Hemácias', unidade: 'Milhões/mm³', referencia: 'Homens: 4,50–6,10 | Mulheres: 4,00–5,40' },
-            { nome: 'Hemoglobina', unidade: 'g/dL', referencia: 'Homens: 13,0–16,5 | Mulheres: 12,0–15,8' },
-            { nome: 'Hematócrito', unidade: '%', referencia: 'Homens: 36,0–54,0 | Mulheres: 33,0–47,8' },
+            {
+              nome: 'Hemácias',
+              unidade: 'Milhões/mm³',
+              referencia: 'Homens: 4,50–6,10 | Mulheres: 4,00–5,40',
+            },
+            {
+              nome: 'Hemoglobina',
+              unidade: 'g/dL',
+              referencia: 'Homens: 13,0–16,5 | Mulheres: 12,0–15,8',
+            },
+            {
+              nome: 'Hematócrito',
+              unidade: '%',
+              referencia: 'Homens: 36,0–54,0 | Mulheres: 33,0–47,8',
+            },
             { nome: 'VCM', unidade: 'fL', referencia: '80,0–98,0' },
             { nome: 'HCM', unidade: 'pg', referencia: '26,8–32,9' },
             { nome: 'CHCM', unidade: 'g/dL', referencia: '30,0–36,5' },
@@ -48,14 +60,22 @@ export async function runSeed(dataSource: DataSource) {
             { nome: 'Segmentados', unidade: '/mm³', referencia: '1.480–7.700' },
             { nome: 'Eosinófilos', unidade: '/mm³', referencia: '0–550' },
             { nome: 'Basófilos', unidade: '/mm³', referencia: '0–220' },
-            { nome: 'Linfócitos Típicos', unidade: '/mm³', referencia: '740–5.500' },
+            {
+              nome: 'Linfócitos Típicos',
+              unidade: '/mm³',
+              referencia: '740–5.500',
+            },
             { nome: 'Monócitos', unidade: '/mm³', referencia: '37–1.100' },
           ],
         },
         {
           nomeGrupo: 'Série Plaquetária',
           parametros: [
-            { nome: 'Plaquetas', unidade: '/mm³', referencia: '150.000–450.000' },
+            {
+              nome: 'Plaquetas',
+              unidade: '/mm³',
+              referencia: '150.000–450.000',
+            },
           ],
         },
       ],
@@ -67,7 +87,11 @@ export async function runSeed(dataSource: DataSource) {
         {
           nomeGrupo: 'ECG',
           parametros: [
-            { nome: 'Frequência Cardíaca', unidade: 'bpm', referencia: '60–100' },
+            {
+              nome: 'Frequência Cardíaca',
+              unidade: 'bpm',
+              referencia: '60–100',
+            },
             { nome: 'Ritmo', unidade: '—', referencia: '' },
             { nome: 'Intervalo PR', unidade: 'ms', referencia: '120–200' },
             { nome: 'QRS', unidade: 'ms', referencia: '< 120' },
@@ -83,7 +107,11 @@ export async function runSeed(dataSource: DataSource) {
         {
           nomeGrupo: 'Glicemia',
           parametros: [
-            { nome: 'Glicose', unidade: 'mg/dL', referencia: 'Jejum: 70–99 | 2h pós-prandial: < 140' },
+            {
+              nome: 'Glicose',
+              unidade: 'mg/dL',
+              referencia: 'Jejum: 70–99 | 2h pós-prandial: < 140',
+            },
           ],
         },
       ],
@@ -153,7 +181,12 @@ export async function runSeed(dataSource: DataSource) {
   // ─── EMPLOYEES ────────────────────────────────────────────────────────────
 
   const employeesData = [
-    { name: 'Maria', email: 'maria@lab.com', password: '123456', role: 'ADMIN' },
+    {
+      name: 'Maria',
+      email: 'maria@lab.com',
+      password: '123456',
+      role: 'ADMIN',
+    },
     { name: 'Pedro', email: 'pedro@lab.com', password: '123456', role: 'TECH' },
   ];
 
@@ -197,7 +230,8 @@ export async function runSeed(dataSource: DataSource) {
   if (projectCount === 0) {
     projects = await projectRepo.save([
       {
-        title: 'Avaliação hematológica em ratos Wistar submetidos a dieta hiperlipídica',
+        title:
+          'Avaliação hematológica em ratos Wistar submetidos a dieta hiperlipídica',
         course: 'Programa de Pós-graduação em Nutrição — UFPE',
         researchLab: 'Laboratório de Fisiologia Animal — UFPE',
         animalSpecies: 'Rattus norvegicus (Wistar)',
@@ -208,7 +242,8 @@ export async function runSeed(dataSource: DataSource) {
         examTypes: [hemograma, glicemia],
       },
       {
-        title: 'Perfil bioquímico de coelhos em diferentes fases de crescimento',
+        title:
+          'Perfil bioquímico de coelhos em diferentes fases de crescimento',
         course: 'Mestrado em Zootecnia — UFRPE',
         researchLab: 'Laboratório de Produção Animal — UFRPE',
         animalSpecies: 'Oryctolagus cuniculus',
@@ -290,7 +325,9 @@ export async function runSeed(dataSource: DataSource) {
       },
     ]);
   } else {
-    samples = await sampleRepo.find({ relations: ['researchProject', 'researchProject.examTypes'] });
+    samples = await sampleRepo.find({
+      relations: ['researchProject', 'researchProject.examTypes'],
+    });
   }
 
   const [s1] = samples;
@@ -305,35 +342,39 @@ export async function runSeed(dataSource: DataSource) {
       {
         sample: s1,
         examType: hemograma,
+        observations:
+          'Amostra levemente hemolisada; valores do eritrograma podem estar discretamente subestimados. Leucograma sem alterações significativas.',
         resultData: {
           Eritrograma: {
-            'Hemácias': '5,2',
-            'Hemoglobina': '14,1',
-            'Hematócrito': '42,0',
-            'VCM': '88,0',
-            'HCM': '29,5',
-            'CHCM': '33,5',
+            Hemácias: '5,2',
+            Hemoglobina: '14,1',
+            Hematócrito: '42,0',
+            VCM: '88,0',
+            HCM: '29,5',
+            CHCM: '33,5',
           },
           Leucograma: {
-            'Leucócitos': '7.200',
-            'Bastonetes': '180',
-            'Segmentados': '4.500',
-            'Eosinófilos': '220',
-            'Basófilos': '50',
+            Leucócitos: '7.200',
+            Bastonetes: '180',
+            Segmentados: '4.500',
+            Eosinófilos: '220',
+            Basófilos: '50',
             'Linfócitos Típicos': '1.800',
-            'Monócitos': '450',
+            Monócitos: '450',
           },
           'Série Plaquetária': {
-            'Plaquetas': '280.000',
+            Plaquetas: '280.000',
           },
         },
       },
       {
         sample: s1,
         examType: glicemia,
+        observacoes:
+          'Animal em jejum de 12h confirmado antes da coleta. Glicose dentro do intervalo de referência para a espécie.',
         resultData: {
           Glicemia: {
-            'Glicose': '92',
+            Glicose: '92',
           },
         },
       },
