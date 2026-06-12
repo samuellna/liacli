@@ -5,6 +5,7 @@ import {
   Param,
   Patch,
   Post,
+  Query,
   UseGuards,
 } from '@nestjs/common';
 import { SampleResultsService } from './sample_results.service';
@@ -26,13 +27,28 @@ export class SampleResultsController {
   }
 
   @Get()
-  findAll() {
-    return this.resultService.findAll();
+  findAll(@Query('unique') unique?: string) {
+    return this.resultService.findAll(unique === 'true');
+  }
+
+  @Get('sample/:sampleId')
+  findBySampleId(@Param('sampleId') sampleId: number) {
+    return this.resultService.findBySampleId(sampleId);
   }
 
   @Get(':protocol')
   find(@Param('protocol') protocol: string) {
     return this.resultService.findByProtocol(protocol);
+  }
+
+  @Patch('validate-sample/:sampleId')
+  validateAllBySample(@Param('sampleId') sampleId: number) {
+    return this.resultService.validateAllResultsBySample(sampleId);
+  }
+
+  @Patch('reject-sample/:sampleId')
+  rejectBySample(@Param('sampleId') sampleId: number) {
+    return this.resultService.rejectSampleResults(sampleId);
   }
 
   @Patch(':id')
