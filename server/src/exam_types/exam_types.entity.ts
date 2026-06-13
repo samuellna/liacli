@@ -6,15 +6,15 @@ import {
   UpdateDateColumn,
 } from 'typeorm';
 
-export type ParametroExame = {
-  nome: string;
-  unidade?: string;
-  referencia?: string;
+export type ExamParameter = {
+  name: string;
+  unit?: string;
+  reference?: string;
 };
 
-export type GrupoParametros = {
-  nomeGrupo?: string;
-  parametros: ParametroExame[];
+export type ParameterGroups = {
+  groupName?: string;
+  parameters: ExamParameter[];
 };
 
 @Entity({ name: 'exam_types' })
@@ -32,10 +32,10 @@ export class ExamType {
   material: string | null;
 
   @Column('text', { nullable: true })
-  observacoes: string | null;
+  observations: string | null;
 
   @Column('jsonb', { nullable: true })
-  grupos: GrupoParametros[] | null;
+  groups: ParameterGroups[] | null;
 
   @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;

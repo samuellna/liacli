@@ -1,9 +1,9 @@
-import { GrupoParametros } from '../exam_types.entity';
+import { ParameterGroups } from '../exam_types.entity';
 
 export class CreateExamTypeDto {
   readonly name: string;
   readonly description: string;
   readonly material?: string;
-  readonly observacoes?: string;
-  readonly grupos?: GrupoParametros[];
+  readonly observations?: string;
+  readonly groups?: ParameterGroups[];
 }

@@ -1,9 +1,9 @@
-import { GrupoParametros } from '../exam_types.entity';
+import { ParameterGroups } from '../exam_types.entity';
 
 export class UpdateExamTypeDto {
   name?: string;
   description?: string;
   material?: string;
-  observacoes?: string;
-  grupos?: GrupoParametros[];
+  observations?: string;
+  groups?: ParameterGroups[];
 }
