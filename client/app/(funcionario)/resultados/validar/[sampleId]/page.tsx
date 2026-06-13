@@ -13,12 +13,7 @@ import { toast } from "sonner";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
 
@@ -27,7 +22,7 @@ import {
   rejectSampleResults,
   validateAllResultsBySample,
 } from "@/api/results";
-import type { ExamType, GrupoParametros, SampleResult } from "@/api/types";
+import type { ParameterGroups, SampleResult } from "@/api/types";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -55,41 +50,41 @@ function InfoField({
   );
 }
 
-function GrupoDisplay({
-  grupo,
-  valores,
+function GroupDisplay({
+  group,
+  values,
 }: {
-  grupo: GrupoParametros;
-  valores: Record<string, string>;
+  group: ParameterGroups;
+  values: Record<string, string>;
 }) {
   return (
     <div className="rounded-md border">
-      {grupo.nomeGrupo && (
+      {group.groupName && (
         <div className="border-b bg-muted/40 px-4 py-2.5">
-          <p className="text-sm font-semibold">{grupo.nomeGrupo}</p>
+          <p className="text-sm font-semibold">{group.groupName}</p>
         </div>
       )}
       <div className="divide-y">
-        {grupo.parametros.map((param) => (
+        {group.parameters.map((param) => (
           <div
-            key={param.nome}
+            key={param.name}
             className="grid grid-cols-[1fr_auto] items-center gap-4 px-4 py-3 sm:grid-cols-[1fr_auto_auto]"
           >
             <div>
-              <p className="text-sm font-medium">{param.nome}</p>
-              {param.referencia && (
+              <p className="text-sm font-medium">{param.name}</p>
+              {param.reference && (
                 <p className="text-xs text-muted-foreground">
-                  Ref: {param.referencia}
+                  Ref: {param.reference}
                 </p>
               )}
             </div>
             <div className="flex items-center gap-2">
               <span className="font-mono text-sm font-semibold">
-                {valores[param.nome] || "—"}
+                {values[param.name] || "—"}
               </span>
-              {param.unidade && param.unidade !== "—" && (
+              {param.unit && param.unit !== "—" && (
                 <span className="text-xs text-muted-foreground">
-                  {param.unidade}
+                  {param.unit}
                 </span>
               )}
             </div>
@@ -104,7 +99,7 @@ function ResultCard({ result }: { result: SampleResult }) {
   const { examType, resultData } = result;
   const data = resultData as Record<string, unknown>;
   const observacoes = data.observacoes as string | undefined;
-  const hasGrupos = examType.grupos && examType.grupos.length > 0;
+  const hasGroups = examType.groups && examType.groups.length > 0;
 
   return (
     <Card>
@@ -112,14 +107,12 @@ function ResultCard({ result }: { result: SampleResult }) {
         <CardTitle className="text-base">{examType.name}</CardTitle>
       </CardHeader>
       <CardContent className="space-y-4 pt-4">
-        {hasGrupos ? (
+        {hasGroups ? (
           <>
-            {(examType.grupos as GrupoParametros[]).map((grupo) => {
-              const key = grupo.nomeGrupo ?? "";
-              const valores = (data[key] ?? {}) as Record<string, string>;
-              return (
-                <GrupoDisplay key={key} grupo={grupo} valores={valores} />
-              );
+            {(examType.groups as ParameterGroups[]).map((group) => {
+              const key = group.groupName ?? "";
+              const values = (data[key] ?? {}) as Record<string, string>;
+              return <GroupDisplay key={key} group={group} values={values} />;
             })}
           </>
         ) : (
@@ -358,12 +351,9 @@ export default function ValidarResultadoPage() {
       {/* Exam results */}
       <section className="space-y-4">
         <div className="flex items-center justify-between">
-          <h2 className="text-base font-semibold">
-            Resultados dos Exames
-          </h2>
+          <h2 className="text-base font-semibold">Resultados dos Exames</h2>
           <Badge variant="secondary">
-            {results.length}{" "}
-            {results.length === 1 ? "exame" : "exames"}
+            {results.length} {results.length === 1 ? "exame" : "exames"}
           </Badge>
         </div>
 

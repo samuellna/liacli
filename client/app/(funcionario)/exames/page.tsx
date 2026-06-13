@@ -40,8 +40,8 @@ function ExameCardSkeleton() {
 }
 
 function totalParametros(exame: ExamType): number {
-  if (!exame.grupos) return 0;
-  return exame.grupos.reduce((acc, g) => acc + g.parametros.length, 0);
+  if (!exame.groups) return 0;
+  return exame.groups.reduce((acc, g) => acc + g.parameters.length, 0);
 }
 
 export default function ExamesPage() {
@@ -155,11 +155,15 @@ export default function ExamesPage() {
       {!isLoading && !error && currentExames.length > 0 && (
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {currentExames.map((exame) => {
-            const nGrupos = exame.grupos?.length ?? 0;
+            const nGrupos = exame.groups?.length ?? 0;
             const nParams = totalParametros(exame);
 
             return (
-              <Link key={exame.id} href={`/exames/${exame.id}`} className="group block outline-none focus-visible:ring-2 focus-visible:ring-accent rounded-2xl">
+              <Link
+                key={exame.id}
+                href={`/exames/${exame.id}`}
+                className="group block outline-none focus-visible:ring-2 focus-visible:ring-accent rounded-2xl"
+              >
                 <Card className="flex flex-col h-full overflow-hidden rounded-2xl border border-border bg-card shadow-sm transition-all duration-200 group-hover:-translate-y-0.5 group-hover:border-accent/40 group-hover:shadow-md group-focus-visible:border-accent/40">
                   <CardContent className="flex h-full flex-col gap-3 p-5">
                     {/* Nome */}
@@ -191,14 +195,19 @@ export default function ExamesPage() {
                     <div className="mt-auto flex items-center justify-between border-t border-border pt-3">
                       <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
                         <Calendar className="size-3.5 shrink-0" />
-                        <span>{new Date(exame.createdAt).toLocaleDateString("pt-BR")}</span>
+                        <span>
+                          {new Date(exame.createdAt).toLocaleDateString(
+                            "pt-BR",
+                          )}
+                        </span>
                       </div>
 
                       {nGrupos > 0 && (
                         <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
                           <Layers className="size-3.5 shrink-0" />
                           <span>
-                            {nGrupos} {nGrupos === 1 ? "grupo" : "grupos"} · {nParams}{" "}
+                            {nGrupos} {nGrupos === 1 ? "grupo" : "grupos"} ·{" "}
+                            {nParams}{" "}
                             {nParams === 1 ? "parâmetro" : "parâmetros"}
                           </span>
                         </div>

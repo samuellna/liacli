@@ -27,16 +27,16 @@ import { Textarea } from "@/components/ui/textarea";
 import { findSampleById } from "@/api/samples";
 import { createSampleResult } from "@/api/results";
 import { ApprovalStatus, SampleStatus } from "@/api/types";
-import type { ExamType, GrupoParametros, Sample } from "@/api/types";
+import type { ExamType, ParameterGroups, Sample } from "@/api/types";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
-type GrupoForm = Record<string, string>; // paramNome → value
+type GroupForm = Record<string, string>; // paramNome → value
 
 type ExameFormState = {
-  parametros: Record<string, GrupoForm>; // nomeGrupo → paramNome → value
-  observacoes: string;
-  valorGenerico: string;
+  parameters: Record<string, GroupForm>; // nomeGrupo → paramNome → value
+  observations: string;
+  genericValue: string;
 };
 
 type FormState = Record<number, ExameFormState>; // examTypeId → state
@@ -46,17 +46,17 @@ type FormState = Record<number, ExameFormState>; // examTypeId → state
 function buildInitialState(examTypes: ExamType[]): FormState {
   const state: FormState = {};
   for (const et of examTypes) {
-    const parametros: Record<string, GrupoForm> = {};
-    if (et.grupos) {
-      for (const grupo of et.grupos) {
-        const key = grupo.nomeGrupo ?? "";
-        parametros[key] = {};
-        for (const param of grupo.parametros) {
-          parametros[key][param.nome] = "";
+    const parameters: Record<string, GroupForm> = {};
+    if (et.groups) {
+      for (const grupo of et.groups) {
+        const key = grupo.groupName ?? "";
+        parameters[key] = {};
+        for (const param of grupo.parameters) {
+          parameters[key][param.name] = "";
         }
       }
     }
-    state[et.id] = { parametros, observacoes: "", valorGenerico: "" };
+    state[et.id] = { parameters, observations: "", genericValue: "" };
   }
   return state;
 }
@@ -67,17 +67,17 @@ function buildResultData(
 ): Record<string, unknown> {
   const data: Record<string, unknown> = {};
 
-  if (et.grupos && et.grupos.length > 0) {
-    for (const grupo of et.grupos) {
-      const key = grupo.nomeGrupo ?? "";
-      data[key] = { ...etForm.parametros[key] };
+  if (et.groups && et.groups.length > 0) {
+    for (const grupo of et.groups) {
+      const key = grupo.groupName ?? "";
+      data[key] = { ...etForm.parameters[key] };
     }
   } else {
-    data.resultado = etForm.valorGenerico;
+    data.resultado = etForm.genericValue;
   }
 
-  if (etForm.observacoes.trim()) {
-    data.observacoes = etForm.observacoes.trim();
+  if (etForm.observations.trim()) {
+    data.observations = etForm.observations.trim();
   }
 
   return data;
@@ -113,41 +113,41 @@ function GrupoSection({
   valores,
   onChangeParam,
 }: {
-  grupo: GrupoParametros;
-  valores: GrupoForm;
+  grupo: ParameterGroups;
+  valores: GroupForm;
   onChangeParam: (paramNome: string, value: string) => void;
 }) {
   return (
     <div className="rounded-md border">
       <div className="border-b bg-muted/40 px-4 py-2.5">
         <p className="text-sm font-semibold">
-          {grupo.nomeGrupo || "Parâmetros"}
+          {grupo.groupName || "Parâmetros"}
         </p>
       </div>
       <div className="divide-y">
-        {grupo.parametros.map((param) => (
+        {grupo.parameters.map((param) => (
           <div
-            key={param.nome}
+            key={param.name}
             className="grid grid-cols-1 items-start gap-2 px-4 py-3 sm:grid-cols-[1fr_auto_auto]"
           >
             <div>
-              <p className="text-sm font-medium">{param.nome}</p>
-              {param.referencia && (
+              <p className="text-sm font-medium">{param.name}</p>
+              {param.reference && (
                 <p className="text-xs text-muted-foreground">
-                  Ref: {param.referencia}
+                  Ref: {param.reference}
                 </p>
               )}
             </div>
             <div className="flex items-center gap-2">
               <Input
                 placeholder="—"
-                value={valores[param.nome] ?? ""}
-                onChange={(e) => onChangeParam(param.nome, e.target.value)}
+                value={valores[param.name] ?? ""}
+                onChange={(e) => onChangeParam(param.name, e.target.value)}
                 className="w-36"
               />
-              {param.unidade && param.unidade !== "—" && (
+              {param.unit && param.unit !== "—" && (
                 <span className="shrink-0 text-sm text-muted-foreground">
-                  {param.unidade}
+                  {param.unit}
                 </span>
               )}
             </div>
@@ -321,10 +321,10 @@ export default function CadastroResultadoPage() {
       ...prev,
       [examTypeId]: {
         ...prev[examTypeId],
-        parametros: {
-          ...prev[examTypeId].parametros,
+        parameters: {
+          ...prev[examTypeId].parameters,
           [nomeGrupo]: {
-            ...prev[examTypeId].parametros[nomeGrupo],
+            ...prev[examTypeId].parameters[nomeGrupo],
             [paramNome]: value,
           },
         },
@@ -334,7 +334,7 @@ export default function CadastroResultadoPage() {
 
   function handleFieldChange(
     examTypeId: number,
-    field: "valorGenerico" | "observacoes",
+    field: "genericValue" | "observations",
     value: string,
   ) {
     setForm((prev) => ({
@@ -345,6 +345,11 @@ export default function CadastroResultadoPage() {
 
   async function salvarResultados() {
     setIsSaving(true);
+    if (loadError || !sample) {
+      toast.error("Amostra inválida. Impossível salvar resultados.");
+      setIsSaving(false);
+      return;
+    }
     try {
       const examTypes = sample.researchProject.examTypes;
       for (const et of examTypes) {
@@ -442,17 +447,17 @@ export default function CadastroResultadoPage() {
             </CardHeader>
 
             <CardContent className="space-y-4 pt-4">
-              {et.grupos && et.grupos.length > 0 ? (
+              {et.groups && et.groups.length > 0 ? (
                 <>
-                  {et.grupos.map((grupo) => (
+                  {et.groups.map((group) => (
                     <GrupoSection
-                      key={grupo.nomeGrupo ?? "default"}
-                      grupo={grupo}
-                      valores={etForm.parametros[grupo.nomeGrupo ?? ""] ?? {}}
+                      key={group.groupName ?? "default"}
+                      grupo={group}
+                      valores={etForm.parameters[group.groupName ?? ""] ?? {}}
                       onChangeParam={(paramNome, value) =>
                         handleParamChange(
                           et.id,
-                          grupo.nomeGrupo ?? "",
+                          group.groupName ?? "",
                           paramNome,
                           value,
                         )
@@ -467,9 +472,9 @@ export default function CadastroResultadoPage() {
                     <Textarea
                       id={`obs-${et.id}`}
                       placeholder="Ex: Série Vermelha — Normocitose e Normocromia"
-                      value={etForm.observacoes}
+                      value={etForm.observations}
                       onChange={(e) =>
-                        handleFieldChange(et.id, "observacoes", e.target.value)
+                        handleFieldChange(et.id, "observations", e.target.value)
                       }
                       rows={3}
                     />
@@ -482,13 +487,9 @@ export default function CadastroResultadoPage() {
                     <Input
                       id={`val-${et.id}`}
                       placeholder="Digite o resultado"
-                      value={etForm.valorGenerico}
+                      value={etForm.genericValue}
                       onChange={(e) =>
-                        handleFieldChange(
-                          et.id,
-                          "valorGenerico",
-                          e.target.value,
-                        )
+                        handleFieldChange(et.id, "genericValue", e.target.value)
                       }
                     />
                   </div>
@@ -500,9 +501,9 @@ export default function CadastroResultadoPage() {
                     <Textarea
                       id={`obs-${et.id}`}
                       placeholder="Observações (opcional)"
-                      value={etForm.observacoes}
+                      value={etForm.observations}
                       onChange={(e) =>
-                        handleFieldChange(et.id, "observacoes", e.target.value)
+                        handleFieldChange(et.id, "observations", e.target.value)
                       }
                       rows={3}
                     />

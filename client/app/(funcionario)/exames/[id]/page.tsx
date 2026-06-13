@@ -29,25 +29,25 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Skeleton } from "@/components/ui/skeleton";
 
-const parametroSchema = z.object({
-  nome: z.string().min(1, "Informe o nome do parâmetro."),
-  unidade: z.string().optional(),
-  referencia: z.string().optional(),
+const parameterSchema = z.object({
+  name: z.string().min(1, "Informe o nome do parâmetro."),
+  unit: z.string().optional(),
+  reference: z.string().optional(),
 });
 
-const grupoSchema = z.object({
-  nomeGrupo: z.string().optional(),
-  parametros: z
-    .array(parametroSchema)
+const groupSchema = z.object({
+  groupName: z.string().optional(),
+  parameters: z
+    .array(parameterSchema)
     .min(1, "Adicione pelo menos um parâmetro neste grupo."),
 });
 
 const formExameSchema = z.object({
-  titulo: z.string().min(1, "O título do exame é obrigatório."),
+  title: z.string().min(1, "O título do exame é obrigatório."),
   material: z.string().optional(),
-  descricao: z.string().optional(),
-  observacoes: z.string().optional(),
-  grupos: z.array(grupoSchema).min(1, "Adicione pelo menos um grupo."),
+  description: z.string().optional(),
+  observations: z.string().optional(),
+  groups: z.array(groupSchema).min(1, "Adicione pelo menos um grupo."),
 });
 
 type FormExame = z.infer<typeof formExameSchema>;
@@ -69,7 +69,13 @@ type SectionProps = {
   children: React.ReactNode;
 };
 
-function Section({ step, icon: Icon, title, description, children }: SectionProps) {
+function Section({
+  step,
+  icon: Icon,
+  title,
+  description,
+  children,
+}: SectionProps) {
   return (
     <section className="space-y-5">
       <div className="flex items-center gap-3">
@@ -82,7 +88,9 @@ function Section({ step, icon: Icon, title, description, children }: SectionProp
             <h2 className="text-base font-semibold text-foreground">{title}</h2>
           </div>
           {description && (
-            <p className="mt-0.5 text-xs text-muted-foreground">{description}</p>
+            <p className="mt-0.5 text-xs text-muted-foreground">
+              {description}
+            </p>
           )}
         </div>
       </div>
@@ -108,17 +116,19 @@ function InformacoesGeraisSection() {
     >
       <div className="grid gap-4 sm:grid-cols-2">
         <div className="space-y-1.5 sm:col-span-2">
-          <Label htmlFor="titulo">
+          <Label htmlFor="title">
             Título do exame{" "}
-            <span aria-hidden className="text-destructive">*</span>
+            <span aria-hidden className="text-destructive">
+              *
+            </span>
           </Label>
           <Input
-            id="titulo"
+            id="title"
             placeholder="Ex.: Hemograma Completo"
-            {...register("titulo")}
-            aria-invalid={!!errors.titulo}
+            {...register("title")}
+            aria-invalid={!!errors.title}
           />
-          <FieldError message={errors.titulo?.message} />
+          <FieldError message={errors.title?.message} />
         </div>
 
         <div className="space-y-1.5 sm:col-span-2">
@@ -131,24 +141,24 @@ function InformacoesGeraisSection() {
         </div>
 
         <div className="space-y-1.5 sm:col-span-2">
-          <Label htmlFor="descricao">Descrição</Label>
+          <Label htmlFor="description">Descrição</Label>
           <Textarea
-            id="descricao"
+            id="description"
             placeholder="Análise completa das células sanguíneas."
             rows={3}
             className="resize-none"
-            {...register("descricao")}
+            {...register("description")}
           />
         </div>
 
         <div className="space-y-1.5 sm:col-span-2">
-          <Label htmlFor="observacoes">Observações (Preparo)</Label>
+          <Label htmlFor="observations">Observações (Preparo)</Label>
           <Textarea
-            id="observacoes"
+            id="observations"
             placeholder="Ex.: Este exame exige jejum de 8 horas."
             rows={2}
             className="resize-none"
-            {...register("observacoes")}
+            {...register("observations")}
           />
         </div>
       </div>
@@ -173,10 +183,10 @@ function GrupoItem({
 
   const { fields, append, remove } = useFieldArray({
     control,
-    name: `grupos.${groupIndex}.parametros`,
+    name: `groups.${groupIndex}.parameters`,
   });
 
-  const grupoErrors = errors.grupos?.[groupIndex];
+  const grupoErrors = errors.groups?.[groupIndex];
 
   return (
     <div className="rounded-xl border border-border bg-card shadow-sm overflow-hidden mb-5 last:mb-0">
@@ -185,7 +195,7 @@ function GrupoItem({
           <Input
             placeholder="Nome do grupo (ex.: Eritrograma)"
             className="bg-background"
-            {...register(`grupos.${groupIndex}.nomeGrupo`)}
+            {...register(`groups.${groupIndex}.groupName`)}
           />
         </div>
         {totalGrupos > 1 && (
@@ -208,26 +218,32 @@ function GrupoItem({
             key={field.id}
             className="flex flex-col sm:flex-row gap-3 items-start"
           >
-            <div className="flex-[2] w-full space-y-1.5">
+            <div className="flex-2 w-full space-y-1.5">
               <Input
                 placeholder="Nome do parâmetro (Ex.: Hemácias)"
-                {...register(`grupos.${groupIndex}.parametros.${paramIndex}.nome`)}
-                aria-invalid={!!grupoErrors?.parametros?.[paramIndex]?.nome}
+                {...register(
+                  `groups.${groupIndex}.parameters.${paramIndex}.name`,
+                )}
+                aria-invalid={!!grupoErrors?.parameters?.[paramIndex]?.name}
               />
               <FieldError
-                message={grupoErrors?.parametros?.[paramIndex]?.nome?.message}
+                message={grupoErrors?.parameters?.[paramIndex]?.name?.message}
               />
             </div>
             <div className="flex-1 w-full space-y-1.5">
               <Input
                 placeholder="Unidade (Ex.: g/dL)"
-                {...register(`grupos.${groupIndex}.parametros.${paramIndex}.unidade`)}
+                {...register(
+                  `groups.${groupIndex}.parameters.${paramIndex}.unit`,
+                )}
               />
             </div>
             <div className="flex-1 w-full space-y-1.5">
               <Input
                 placeholder="Referência (Ex.: 4,50 a 6,10)"
-                {...register(`grupos.${groupIndex}.parametros.${paramIndex}.referencia`)}
+                {...register(
+                  `groups.${groupIndex}.parameters.${paramIndex}.reference`,
+                )}
               />
             </div>
             {fields.length > 1 && (
@@ -245,8 +261,8 @@ function GrupoItem({
           </div>
         ))}
 
-        {typeof grupoErrors?.parametros?.root?.message === "string" && (
-          <FieldError message={grupoErrors.parametros.root.message} />
+        {typeof grupoErrors?.parameters?.root?.message === "string" && (
+          <FieldError message={grupoErrors.parameters.root.message} />
         )}
 
         <Button
@@ -254,7 +270,7 @@ function GrupoItem({
           variant="outline"
           size="sm"
           className="w-full border-dashed mt-2"
-          onClick={() => append({ nome: "", unidade: "", referencia: "" })}
+          onClick={() => append({ name: "", unit: "", reference: "" })}
         >
           <Plus className="size-4 mr-2" aria-hidden />
           Adicionar parâmetro
@@ -268,7 +284,7 @@ function GruposSection() {
   const { control } = useFormContext<FormExame>();
   const { fields, append, remove } = useFieldArray({
     control,
-    name: "grupos",
+    name: "groups",
   });
 
   return (
@@ -296,8 +312,8 @@ function GruposSection() {
           className="w-full border-dashed"
           onClick={() =>
             append({
-              nomeGrupo: "",
-              parametros: [{ nome: "", unidade: "", referencia: "" }],
+              groupName: "",
+              parameters: [{ name: "", unit: "", reference: "" }],
             })
           }
         >
@@ -325,24 +341,29 @@ function PageSkeleton() {
 
 function examToForm(exam: ExamType): FormExame {
   return {
-    titulo: exam.name,
+    title: exam.name,
     material: exam.material ?? "",
-    descricao: exam.description ?? "",
-    observacoes: exam.observacoes ?? "",
-    grupos:
-      exam.grupos && exam.grupos.length > 0
-        ? exam.grupos.map((g) => ({
-            nomeGrupo: g.nomeGrupo ?? "",
-            parametros:
-              g.parametros.length > 0
-                ? g.parametros.map((p) => ({
-                    nome: p.nome,
-                    unidade: p.unidade ?? "",
-                    referencia: p.referencia ?? "",
+    description: exam.description ?? "",
+    observations: exam.observations ?? "",
+    groups:
+      exam.groups && exam.groups.length > 0
+        ? exam.groups.map((g) => ({
+            groupName: g.groupName ?? "",
+            parameters:
+              g.parameters.length > 0
+                ? g.parameters.map((p) => ({
+                    name: p.name,
+                    unit: p.unit ?? "",
+                    reference: p.reference ?? "",
                   }))
-                : [{ nome: "", unidade: "", referencia: "" }],
+                : [{ name: "", unit: "", reference: "" }],
           }))
-        : [{ nomeGrupo: "", parametros: [{ nome: "", unidade: "", referencia: "" }] }],
+        : [
+            {
+              groupName: "",
+              parameters: [{ name: "", unit: "", reference: "" }],
+            },
+          ],
   };
 }
 
@@ -360,11 +381,16 @@ export default function ExameDetailPage() {
   const methods = useForm<FormExame>({
     resolver: zodResolver(formExameSchema),
     defaultValues: {
-      titulo: "",
+      title: "",
       material: "",
-      descricao: "",
-      observacoes: "",
-      grupos: [{ nomeGrupo: "", parametros: [{ nome: "", unidade: "", referencia: "" }] }],
+      description: "",
+      observations: "",
+      groups: [
+        {
+          groupName: "",
+          parameters: [{ name: "", unit: "", reference: "" }],
+        },
+      ],
     },
   });
 
@@ -390,11 +416,11 @@ export default function ExameDetailPage() {
     setSaveSuccess(false);
     try {
       const updated = await updateExamType(id, {
-        name: data.titulo,
-        description: data.descricao ?? "",
+        name: data.title,
+        description: data.description ?? "",
         material: data.material || undefined,
-        observacoes: data.observacoes || undefined,
-        grupos: data.grupos,
+        observations: data.observations || undefined,
+        groups: data.groups,
       });
       setExam(updated);
       setSaveSuccess(true);
@@ -410,14 +436,23 @@ export default function ExameDetailPage() {
     <div className="mx-auto w-full max-w-4xl px-4 py-10 sm:px-6">
       {/* Header */}
       <div className="mb-8 space-y-1">
-        <Button variant="ghost" size="sm" className="mb-2 -ml-2 gap-1.5 text-muted-foreground" asChild>
+        <Button
+          variant="ghost"
+          size="sm"
+          className="mb-2 -ml-2 gap-1.5 text-muted-foreground"
+          asChild
+        >
           <Link href="/exames">
             <ArrowLeft className="size-4" />
             Voltar para exames
           </Link>
         </Button>
         <h1 className="text-2xl font-bold tracking-tight text-foreground">
-          {isLoading ? <Skeleton className="h-7 w-64 rounded inline-block" /> : (exam?.name ?? "Exame")}
+          {isLoading ? (
+            <Skeleton className="h-7 w-64 rounded inline-block" />
+          ) : (
+            (exam?.name ?? "Exame")
+          )}
         </h1>
         <p className="text-sm text-muted-foreground">
           Edite as informações, grupos e parâmetros do exame.
