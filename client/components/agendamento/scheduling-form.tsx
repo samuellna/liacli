@@ -39,12 +39,14 @@ import {
 import { getWeekById } from "../../app/(pesquisador)/agendamento/_lib/weeks";
 import { SampleItem } from "./sample-item";
 import { WeekPicker } from "./week-picker";
+import { randomBytes } from "crypto";
 
-function generateProtocol(): string {
+export function generateProtocol(): string {
   const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-  return Array.from({ length: 8 }, () =>
-    chars.charAt(Math.floor(Math.random() * chars.length)),
-  ).join("");
+
+  return Array.from(randomBytes(7))
+    .map((byte) => chars[byte % chars.length])
+    .join("");
 }
 
 function FieldError({ message }: { message?: string }) {
