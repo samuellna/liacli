@@ -5,6 +5,7 @@ export interface CreateSampleResultData {
   sampleId: number;
   examTypeId: number;
   resultData: Record<string, unknown>;
+  observations?: string;
 }
 
 export async function createSampleResult(

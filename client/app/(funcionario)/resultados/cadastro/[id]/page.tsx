@@ -48,10 +48,10 @@ function buildInitialState(examTypes: ExamType[]): FormState {
   for (const et of examTypes) {
     const parameters: Record<string, GroupForm> = {};
     if (et.groups) {
-      for (const grupo of et.groups) {
-        const key = grupo.groupName ?? "";
+      for (const group of et.groups) {
+        const key = group.groupName ?? "";
         parameters[key] = {};
-        for (const param of grupo.parameters) {
+        for (const param of group.parameters) {
           parameters[key][param.name] = "";
         }
       }
@@ -68,16 +68,12 @@ function buildResultData(
   const data: Record<string, unknown> = {};
 
   if (et.groups && et.groups.length > 0) {
-    for (const grupo of et.groups) {
-      const key = grupo.groupName ?? "";
+    for (const group of et.groups) {
+      const key = group.groupName ?? "";
       data[key] = { ...etForm.parameters[key] };
     }
   } else {
-    data.resultado = etForm.genericValue;
-  }
-
-  if (etForm.observations.trim()) {
-    data.observations = etForm.observations.trim();
+    data.resultData = etForm.genericValue;
   }
 
   return data;
@@ -108,24 +104,24 @@ const statusLabel: Partial<Record<SampleStatus, string>> = {
 
 // ─── Sub-components ───────────────────────────────────────────────────────────
 
-function GrupoSection({
-  grupo,
-  valores,
+function GroupSection({
+  group,
+  values,
   onChangeParam,
 }: {
-  grupo: ParameterGroups;
-  valores: GroupForm;
+  group: ParameterGroups;
+  values: GroupForm;
   onChangeParam: (paramNome: string, value: string) => void;
 }) {
   return (
     <div className="rounded-md border">
       <div className="border-b bg-muted/40 px-4 py-2.5">
         <p className="text-sm font-semibold">
-          {grupo.groupName || "Parâmetros"}
+          {group.groupName || "Parâmetros"}
         </p>
       </div>
       <div className="divide-y">
-        {grupo.parameters.map((param) => (
+        {group.parameters.map((param) => (
           <div
             key={param.name}
             className="grid grid-cols-1 items-start gap-2 px-4 py-3 sm:grid-cols-[1fr_auto_auto]"
@@ -141,7 +137,7 @@ function GrupoSection({
             <div className="flex items-center gap-2">
               <Input
                 placeholder="—"
-                value={valores[param.name] ?? ""}
+                value={values[param.name] ?? ""}
                 onChange={(e) => onChangeParam(param.name, e.target.value)}
                 className="w-36"
               />
@@ -302,7 +298,7 @@ export default function CadastroResultadoPage() {
         <Card>
           <CardContent className="py-8 text-center">
             <p className="text-sm text-muted-foreground">
-              Nenhuma alteração pode ser realizada. Protocolo:{" "}
+              Nenhuma alteração pode ser realizada. Protocolo:
               <span className="font-mono">{sample.protocol}</span>
             </p>
           </CardContent>
@@ -313,7 +309,7 @@ export default function CadastroResultadoPage() {
 
   function handleParamChange(
     examTypeId: number,
-    nomeGrupo: string,
+    groupName: string,
     paramNome: string,
     value: string,
   ) {
@@ -323,8 +319,8 @@ export default function CadastroResultadoPage() {
         ...prev[examTypeId],
         parameters: {
           ...prev[examTypeId].parameters,
-          [nomeGrupo]: {
-            ...prev[examTypeId].parameters[nomeGrupo],
+          [groupName]: {
+            ...prev[examTypeId].parameters[groupName],
             [paramNome]: value,
           },
         },
@@ -358,6 +354,7 @@ export default function CadastroResultadoPage() {
           sampleId: sample.id,
           examTypeId: et.id,
           resultData: buildResultData(et, etForm),
+          observations: etForm.observations.trim() || undefined,
         });
       }
       toast.success("Resultados cadastrados com sucesso.");
@@ -450,10 +447,10 @@ export default function CadastroResultadoPage() {
               {et.groups && et.groups.length > 0 ? (
                 <>
                   {et.groups.map((group) => (
-                    <GrupoSection
+                    <GroupSection
                       key={group.groupName ?? "default"}
-                      grupo={group}
-                      valores={etForm.parameters[group.groupName ?? ""] ?? {}}
+                      group={group}
+                      values={etForm.parameters[group.groupName ?? ""] ?? {}}
                       onChangeParam={(paramNome, value) =>
                         handleParamChange(
                           et.id,

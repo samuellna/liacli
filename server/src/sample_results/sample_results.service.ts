@@ -91,11 +91,15 @@ export class SampleResultsService {
     const totalResults = sample.results.length + 1;
 
     if (totalResults === totalExamTypes) {
-      sample.status = SampleStatus.DONE;
-      await this.sampleRepository.save(sample);
+      await this.sampleRepository.update(sample.id, {
+        status: SampleStatus.DONE,
+      });
     }
 
-    return savedResult;
+    return this.sampleResultRepository.findOne({
+      where: { id: savedResult.id },
+      relations: ['sample', 'examType'],
+    }) as Promise<SampleResult>;
   }
 
   async findAll(unique?: boolean): Promise<SampleResult[]> {

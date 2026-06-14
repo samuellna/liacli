@@ -81,6 +81,7 @@ export interface SampleResult {
   sample: Sample;
   examType: ExamType;
   resultData: Record<string, unknown>;
+  observations: string | null;
   validated: boolean;
   createdAt: Date;
 }
