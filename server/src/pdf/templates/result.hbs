@@ -426,9 +426,9 @@
               </div>
 
               <!-- Grupos de parâmetros -->
-              {{#each grupos}}
-                {{#if nomeGrupo}}
-                  <div class='grupo-title'>{{nomeGrupo}}</div>
+              {{#each groups}}
+                {{#if groupName}}
+                  <div class='grupo-title'>{{groupName}}</div>
                 {{/if}}
 
                 <table class='result-table'>
@@ -441,12 +441,12 @@
                     </tr>
                   </thead>
                   <tbody>
-                    {{#each parametros}}
+                    {{#each parameters}}
                       <tr>
-                        <td>{{nome}}</td>
-                        <td class='td-valor'>{{valor}}</td>
-                        <td>{{unidade}}</td>
-                        <td class='td-ref'>{{referencia}}</td>
+                        <td>{{name}}</td>
+                        <td class='td-valor'>{{value}}</td>
+                        <td>{{unit}}</td>
+                        <td class='td-ref'>{{reference}}</td>
                       </tr>
                     {{/each}}
                   </tbody>
@@ -454,10 +454,10 @@
               {{/each}}
 
               <!-- Observações do tipo de exame -->
-              {{#if observacoes}}
+              {{#if observations}}
                 <div class='exam-obs'>
                   <div class='exam-obs-label'>Observações</div>
-                  {{observacoes}}
+                  {{observations}}
                 </div>
               {{/if}}
 

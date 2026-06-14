@@ -4,25 +4,25 @@ import * as path from 'path';
 import * as Handlebars from 'handlebars';
 import { Sample } from 'src/samples/samples.entity';
 import { SampleResult } from 'src/sample_results/sample_results.entity';
-import { GrupoParametros } from 'src/exam_types/exam_types.entity';
+import { ParameterGroups } from 'src/exam_types/exam_types.entity';
 
 interface ProcessedParam {
-  nome: string;
-  valor: string;
-  unidade: string;
-  referencia: string;
+  name: string;
+  value: string;
+  unit: string;
+  reference: string;
 }
 
-interface ProcessedGrupo {
-  nomeGrupo: string;
-  parametros: ProcessedParam[];
+interface ProcessedGroup {
+  groupName: string;
+  parameters: ProcessedParam[];
 }
 
 interface ProcessedResult {
   examTypeName: string;
   validated: boolean;
-  grupos: ProcessedGrupo[];
-  observacoes: string;
+  grupos: ProcessedGroup[];
+  observations: string;
 }
 
 interface PdfTemplateData {
@@ -79,8 +79,8 @@ export class PdfService {
     const project = sample.researchProject;
 
     const processedResults: ProcessedResult[] = results.map((result) => {
-      const grupos = this.processGrupos(
-        result.examType.grupos ?? [],
+      const grupos = this.processGroups(
+        result.examType.groups ?? [],
         result.resultData as Record<string, Record<string, string>>,
       );
 
@@ -88,7 +88,7 @@ export class PdfService {
         examTypeName: result.examType.name,
         validated: result.validated,
         grupos,
-        observacoes: result.observations ?? '',
+        observations: result.observations ?? '',
       };
     });
 
@@ -122,17 +122,17 @@ export class PdfService {
     };
   }
 
-  private processGrupos(
-    grupos: GrupoParametros[],
+  private processGroups(
+    groups: ParameterGroups[],
     resultData: Record<string, Record<string, string>>,
-  ): ProcessedGrupo[] {
-    return grupos.map((grupo) => ({
-      nomeGrupo: grupo.nomeGrupo ?? '',
-      parametros: grupo.parametros.map((param) => ({
-        nome: param.nome,
-        valor: resultData[grupo.nomeGrupo ?? '']?.[param.nome] ?? '—',
-        unidade: param.unidade ?? '',
-        referencia: param.referencia ?? '',
+  ): ProcessedGroup[] {
+    return groups.map((group) => ({
+      groupName: group.groupName ?? '',
+      parameters: group.parameters.map((param) => ({
+        name: param.name,
+        value: resultData[group.groupName ?? '']?.[param.name] ?? '—',
+        unit: param.unit ?? '',
+        reference: param.reference ?? '',
       })),
     }));
   }

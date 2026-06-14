@@ -28,53 +28,53 @@ export async function runSeed(dataSource: DataSource) {
     {
       name: 'Hemograma',
       description: 'Exame de sangue completo',
-      grupos: [
+      groups: [
         {
-          nomeGrupo: 'Eritrograma',
-          parametros: [
+          groupName: 'Eritrograma',
+          parameters: [
             {
-              nome: 'Hemácias',
-              unidade: 'Milhões/mm³',
-              referencia: 'Homens: 4,50–6,10 | Mulheres: 4,00–5,40',
+              name: 'Hemácias',
+              unit: 'Milhões/mm³',
+              reference: 'Homens: 4,50–6,10 | Mulheres: 4,00–5,40',
             },
             {
-              nome: 'Hemoglobina',
-              unidade: 'g/dL',
-              referencia: 'Homens: 13,0–16,5 | Mulheres: 12,0–15,8',
+              name: 'Hemoglobina',
+              unit: 'g/dL',
+              reference: 'Homens: 13,0–16,5 | Mulheres: 12,0–15,8',
             },
             {
-              nome: 'Hematócrito',
-              unidade: '%',
-              referencia: 'Homens: 36,0–54,0 | Mulheres: 33,0–47,8',
+              name: 'Hematócrito',
+              unit: '%',
+              reference: 'Homens: 36,0–54,0 | Mulheres: 33,0–47,8',
             },
-            { nome: 'VCM', unidade: 'fL', referencia: '80,0–98,0' },
-            { nome: 'HCM', unidade: 'pg', referencia: '26,8–32,9' },
-            { nome: 'CHCM', unidade: 'g/dL', referencia: '30,0–36,5' },
+            { name: 'VCM', unit: 'fL', reference: '80,0–98,0' },
+            { name: 'HCM', unit: 'pg', reference: '26,8–32,9' },
+            { name: 'CHCM', unit: 'g/dL', reference: '30,0–36,5' },
           ],
         },
         {
-          nomeGrupo: 'Leucograma',
-          parametros: [
-            { nome: 'Leucócitos', unidade: '/mm³', referencia: '3.600–11.000' },
-            { nome: 'Bastonetes', unidade: '/mm³', referencia: '0–550' },
-            { nome: 'Segmentados', unidade: '/mm³', referencia: '1.480–7.700' },
-            { nome: 'Eosinófilos', unidade: '/mm³', referencia: '0–550' },
-            { nome: 'Basófilos', unidade: '/mm³', referencia: '0–220' },
+          groupName: 'Leucograma',
+          parameters: [
+            { name: 'Leucócitos', unit: '/mm³', reference: '3.600–11.000' },
+            { name: 'Bastonetes', unit: '/mm³', reference: '0–550' },
+            { name: 'Segmentados', unit: '/mm³', reference: '1.480–7.700' },
+            { name: 'Eosinófilos', unit: '/mm³', reference: '0–550' },
+            { name: 'Basófilos', unit: '/mm³', reference: '0–220' },
             {
-              nome: 'Linfócitos Típicos',
-              unidade: '/mm³',
-              referencia: '740–5.500',
+              name: 'Linfócitos Típicos',
+              unit: '/mm³',
+              reference: '740–5.500',
             },
-            { nome: 'Monócitos', unidade: '/mm³', referencia: '37–1.100' },
+            { name: 'Monócitos', unit: '/mm³', reference: '37–1.100' },
           ],
         },
         {
-          nomeGrupo: 'Série Plaquetária',
-          parametros: [
+          groupName: 'Série Plaquetária',
+          parameters: [
             {
-              nome: 'Plaquetas',
-              unidade: '/mm³',
-              referencia: '150.000–450.000',
+              name: 'Plaquetas',
+              unit: '/mm³',
+              reference: '150.000–450.000',
             },
           ],
         },
@@ -83,19 +83,19 @@ export async function runSeed(dataSource: DataSource) {
     {
       name: 'Eletrocardiograma',
       description: 'Exame do coração',
-      grupos: [
+      groups: [
         {
-          nomeGrupo: 'ECG',
-          parametros: [
+          groupName: 'ECG',
+          parameters: [
             {
-              nome: 'Frequência Cardíaca',
-              unidade: 'bpm',
-              referencia: '60–100',
+              name: 'Frequência Cardíaca',
+              unit: 'bpm',
+              reference: '60–100',
             },
-            { nome: 'Ritmo', unidade: '—', referencia: '' },
-            { nome: 'Intervalo PR', unidade: 'ms', referencia: '120–200' },
-            { nome: 'QRS', unidade: 'ms', referencia: '< 120' },
-            { nome: 'Intervalo QT', unidade: 'ms', referencia: '< 440' },
+            { name: 'Ritmo', unit: '—', reference: '' },
+            { name: 'Intervalo PR', unit: 'ms', reference: '120–200' },
+            { name: 'QRS', unit: 'ms', reference: '< 120' },
+            { name: 'Intervalo QT', unit: 'ms', reference: '< 440' },
           ],
         },
       ],
@@ -103,14 +103,14 @@ export async function runSeed(dataSource: DataSource) {
     {
       name: 'Glicemia',
       description: 'Medição de glicose no sangue',
-      grupos: [
+      groups: [
         {
-          nomeGrupo: 'Glicemia',
-          parametros: [
+          groupName: 'Glicemia',
+          parameters: [
             {
-              nome: 'Glicose',
-              unidade: 'mg/dL',
-              referencia: 'Jejum: 70–99 | 2h pós-prandial: < 140',
+              name: 'Glicose',
+              unit: 'mg/dL',
+              reference: 'Jejum: 70–99 | 2h pós-prandial: < 140',
             },
           ],
         },
@@ -125,9 +125,9 @@ export async function runSeed(dataSource: DataSource) {
 
     if (!existing) {
       existing = await examRepo.save(exam);
-    } else if (!existing.grupos) {
-      await examRepo.update(existing.id, { grupos: exam.grupos });
-      existing = { ...existing, grupos: exam.grupos };
+    } else if (!existing.groups) {
+      await examRepo.update(existing.id, { groups: exam.groups });
+      existing = { ...existing, groups: exam.groups };
     }
 
     examTypes.push(existing);
