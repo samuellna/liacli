@@ -12,6 +12,8 @@ import { Repository } from 'typeorm';
 import { SampleResult } from './sample_results.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { ExamType } from 'src/exam_types/exam_types.entity';
+import { PdfService } from 'src/pdf/pdf.service';
+import { EmailService } from 'src/email/email.service';
 
 @Injectable()
 export class SampleResultsService {
@@ -24,6 +26,9 @@ export class SampleResultsService {
 
     @InjectRepository(ExamType)
     private readonly examTypeRepository: Repository<ExamType>,
+
+    private readonly pdfService: PdfService,
+    private readonly emailService: EmailService,
   ) {}
 
   async create(
@@ -206,7 +211,40 @@ export class SampleResultsService {
     }
 
     const updated = results.map((r) => ({ ...r, validated: true }));
-    return this.sampleResultRepository.save(updated);
+    const savedResults = await this.sampleResultRepository.save(updated);
+
+    const sample = await this.sampleRepository.findOne({
+      where: { id: sampleId },
+      relations: [
+        'researchProject',
+        'researchProject.researcher',
+        'researchProject.examTypes',
+        'approvedBy',
+      ],
+    });
+
+    if (sample) {
+      const resultsForPdf = await this.sampleResultRepository.find({
+        where: { sample: { id: sampleId } },
+        relations: ['examType'],
+      });
+
+      const pdfBuffer = await this.pdfService.generateResultPdf(
+        sample,
+        resultsForPdf,
+      );
+      const researcher = sample.researchProject.researcher;
+
+      await this.emailService.sendResultEmail({
+        toEmail: researcher.email,
+        pesquisadorNome: researcher.name,
+        protocolo: sample.protocol,
+        pdfBuffer,
+        pdfFileName: `laudo-${sample.protocol}.pdf`,
+      });
+    }
+
+    return savedResults;
   }
 
   async rejectSampleResults(sampleId: number): Promise<Sample> {

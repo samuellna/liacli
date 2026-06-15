@@ -8,6 +8,7 @@ import { SamplesModule } from 'src/samples/samples.module';
 import { ExamType } from 'src/exam_types/exam_types.entity';
 import { ExamTypesModule } from 'src/exam_types/exam_types.module';
 import { PdfModule } from 'src/pdf/pdf.module';
+import { EmailModule } from 'src/email/email.module';
 
 @Module({
   imports: [
@@ -15,6 +16,7 @@ import { PdfModule } from 'src/pdf/pdf.module';
     SamplesModule,
     ExamTypesModule,
     PdfModule,
+    EmailModule,
   ],
   providers: [SampleResultsService],
   controllers: [SampleResultsController],
