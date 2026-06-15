@@ -1,6 +1,5 @@
 import {
   ArrowLeft,
-  CalendarClock,
   Clock,
   Download,
   FileCheck2,
@@ -16,11 +15,10 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 
-import { EXAM_LABELS } from "../../app/(pesquisador)/protocolo/[codigo]/_lib/mock";
-import type { AppointmentData } from "../../app/(pesquisador)/protocolo/[codigo]/_lib/types";
 import { AgendamentoBadge, AnaliseBadge } from "./status-badge";
 import { Timeline } from "./timeline";
-import { Researcher, Sample } from "@/api/types";
+import { ApprovalStatus, Sample, SampleStatus } from "@/api/types";
+import type { TimelineEvent } from "../../app/(pesquisador)/protocolo/[codigo]/_lib/types";
 
 function convertAcademicLevel(level: string) {
   switch (level) {
@@ -91,15 +89,6 @@ function StatusCard({ data }: { data: Sample }) {
       value: <AnaliseBadge status={data.status} size="lg" />,
     },
     {
-      label: "Semana de envio",
-      value: (
-        <span className="flex items-center gap-1.5 text-sm font-medium">
-          <CalendarClock className="size-4 text-muted-foreground" aria-hidden />
-          {new Date(data.collectedAt).toLocaleDateString("pt-BR")}
-        </span>
-      ),
-    },
-    {
       label: "Amostras",
       value: (
         <span className="text-sm font-medium">
@@ -114,7 +103,7 @@ function StatusCard({ data }: { data: Sample }) {
 
   return (
     <Section icon={ShieldCheck} title="Visão geral da solicitação">
-      <dl className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+      <dl className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
         {stats.map(({ label, value }) => (
           <div key={label} className="space-y-1.5">
             <dt className="text-xs font-medium uppercase tracking-[0.12em] text-muted-foreground">
@@ -145,24 +134,34 @@ function StatusCard({ data }: { data: Sample }) {
 
 function ResearcherInfo({ info }: { info: Sample }) {
   const fields = [
-    { icon: User, label: "Nome", value: info.researcher.name },
-    { icon: Mail, label: "E-mail", value: info.researcher.email },
-    ...(info.researcher.phone
-      ? [{ icon: Phone, label: "Telefone", value: info.researcher.phone }]
+    { icon: User, label: "Nome", value: info.researchProject.researcher.name },
+    {
+      icon: Mail,
+      label: "E-mail",
+      value: info.researchProject.researcher.email,
+    },
+    ...(info.researchProject.researcher.phone
+      ? [
+          {
+            icon: Phone,
+            label: "Telefone",
+            value: info.researchProject.researcher.phone,
+          },
+        ]
       : []),
-    ...(info.researcher.advisorName
+    ...(info.researchProject.researcher.advisorName
       ? [
           {
             icon: User,
             label: "Orientador",
-            value: info.researcher.advisorName,
+            value: info.researchProject.researcher.advisorName,
           },
         ]
       : []),
     {
       icon: Info,
       label: "Nível acadêmico",
-      value: convertAcademicLevel(info.researcher.level),
+      value: convertAcademicLevel(info.researchProject.researcher.level),
     },
     {
       icon: FileCheck2,
@@ -266,7 +265,10 @@ function SamplesSection({ amostras }: { amostras: Sample }) {
 
 /* ── Report section ──────────────────────────────────────────────── */
 
-function ReportSection({ laudoUrl }: { laudoUrl: string }) {
+function ReportSection({ resultId }: { resultId: number }) {
+  const base = process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:3001";
+  const pdfUrl = `${base}/results/${resultId}/pdf`;
+
   return (
     <div className="flex items-center justify-between gap-4 rounded-2xl border border-success/30 bg-success/5 px-5 py-4">
       <div className="flex items-start gap-3">
@@ -283,7 +285,7 @@ function ReportSection({ laudoUrl }: { laudoUrl: string }) {
         </div>
       </div>
       <Button asChild size="sm" className="shrink-0">
-        <a href={laudoUrl} download>
+        <a href={pdfUrl} download>
           <Download className="size-4" aria-hidden />
           Baixar laudo
         </a>
@@ -334,15 +336,110 @@ export function PendingNewView({ protocolo }: { protocolo: string }) {
   );
 }
 
+/* ── Timeline builder ────────────────────────────────────────────── */
+
+function buildTimeline(sample: Sample): TimelineEvent[] {
+  const { approvalStatus, status, createdAt, approvedAt, updatedAt } = sample;
+
+  const fmt = (d: Date | string | null | undefined): string =>
+    d ? new Date(d as string).toLocaleDateString("pt-BR") : "Aguardando";
+
+  const approved = approvalStatus === ApprovalStatus.APPROVED;
+  const rejectedApproval = approvalStatus === ApprovalStatus.REJECTED;
+  const rejectedSample = status === SampleStatus.REJECTED;
+  const collected = [
+    SampleStatus.COLLECTED,
+    SampleStatus.ANALYZING,
+    SampleStatus.DONE,
+  ].includes(status);
+  const done = status === SampleStatus.DONE;
+
+  const events: TimelineEvent[] = [
+    {
+      id: "enviada",
+      icon: "send",
+      label: "Solicitação enviada",
+      description: "Solicitação registrada com sucesso.",
+      date: fmt(createdAt),
+      completed: true,
+      current: false,
+    },
+    {
+      id: "agendamento",
+      icon: rejectedApproval ? "x-circle" : "calendar-check",
+      label: rejectedApproval
+        ? "Solicitação rejeitada"
+        : "Agendamento aprovado",
+      description: rejectedApproval
+        ? "A equipe LIACLI não pôde aprovar esta solicitação."
+        : approved
+          ? "A equipe LIACLI analisou e aprovou o agendamento."
+          : "Aguardando análise pela equipe LIACLI.",
+      date: approved || rejectedApproval ? fmt(approvedAt) : "Aguardando",
+      completed: approved,
+      current: !approved,
+    },
+  ];
+
+  if (rejectedApproval) return events;
+
+  events.push({
+    id: "coletada",
+    icon: rejectedSample ? "x-circle" : "package",
+    label: rejectedSample ? "Coleta rejeitada" : "Amostra coletada",
+    description: rejectedSample
+      ? "Houve um problema com o recebimento da amostra."
+      : collected
+        ? "A amostra foi recebida pelo laboratório."
+        : "Aguardando o recebimento da amostra.",
+    date: collected || rejectedSample ? fmt(updatedAt) : "Aguardando",
+    completed: collected,
+    current: (approved && status === SampleStatus.PENDING) || rejectedSample,
+  });
+
+  if (rejectedSample) return events;
+
+  events.push({
+    id: "analisando",
+    icon: "microscope",
+    label: "Em análise",
+    description: done
+      ? "A análise foi concluída."
+      : collected
+        ? "A amostra está sendo analisada no laboratório."
+        : "Aguardando início da análise.",
+    date: collected ? fmt(updatedAt) : "Aguardando",
+    completed: done,
+    current: collected && !done,
+  });
+
+  events.push({
+    id: "concluido",
+    icon: "file-check",
+    label: "Resultado disponível",
+    description: done
+      ? "O laudo técnico foi emitido e está disponível para download."
+      : "Aguardando conclusão da análise.",
+    date: done ? fmt(updatedAt) : "Aguardando",
+    completed: done,
+    current: done,
+  });
+
+  return events;
+}
+
 /* ── Main StatusView ─────────────────────────────────────────────── */
 
 export function StatusView({ data }: { data: Sample }) {
+  const firstResult = data.results?.[0];
+  const showReport = data.status === SampleStatus.DONE && firstResult != null;
+
   return (
     <div className="mx-auto w-full max-w-6xl px-4 py-10 sm:px-6">
-      <ReportSection laudoUrl={"oii"} />
+      {showReport && <ReportSection resultId={firstResult!.id} />}
 
       <div
-        className={`grid gap-8 lg:grid-cols-[1fr_340px] ${data.status === "DONE" ? "mt-6" : ""}`}
+        className={`grid gap-8 lg:grid-cols-[1fr_340px] ${showReport ? "mt-6" : ""}`}
       >
         {/* Left column */}
         <div className="space-y-6 min-w-0">
@@ -360,17 +457,17 @@ export function StatusView({ data }: { data: Sample }) {
         </div>
 
         {/* Right sidebar — Timeline */}
-        {/* <aside>
-        <div className="sticky top-24 rounded-2xl border border-border bg-card p-6 shadow-sm">
-          <div className="mb-5 flex items-center gap-2">
-            <Clock className="size-4 text-accent" aria-hidden />
-            <h2 className="text-sm font-semibold text-foreground">
-              Histórico de atualizações
-            </h2>
+        <aside>
+          <div className="sticky top-24 rounded-2xl border border-border bg-card p-6 shadow-sm">
+            <div className="mb-5 flex items-center gap-2">
+              <Clock className="size-4 text-accent" aria-hidden />
+              <h2 className="text-sm font-semibold text-foreground">
+                Histórico de atualizações
+              </h2>
+            </div>
+            <Timeline events={buildTimeline(data)} />
           </div>
-          <Timeline events={data.timeline} />
-        </div>
-      </aside> */}
+        </aside>
       </div>
     </div>
   );

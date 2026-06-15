@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
-const PROTOCOL_PATTERN = /^[A-Z0-9]{6}$/;
+const PROTOCOL_PATTERN = /^[A-Z0-9]{7}$/;
 
 export function ProtocolLookupCard() {
   const router = useRouter();
@@ -20,7 +20,7 @@ export function ProtocolLookupCard() {
     const normalized = protocol.trim().toUpperCase();
 
     if (!PROTOCOL_PATTERN.test(normalized)) {
-      setError("Informe um protocolo válido (6 caracteres, letras e números).");
+      setError("Informe um protocolo válido (7 caracteres, letras e números).");
       return;
     }
 
@@ -70,8 +70,8 @@ export function ProtocolLookupCard() {
             inputMode="text"
             autoComplete="off"
             spellCheck={false}
-            placeholder="Ex.: A1B2C3"
-            maxLength={6}
+            placeholder="Ex.: A1B2C3D"
+            maxLength={7}
             value={protocol}
             onChange={(event) => {
               setProtocol(event.target.value.toUpperCase());
@@ -100,7 +100,7 @@ export function ProtocolLookupCard() {
           </p>
         ) : (
           <p id="protocolo-ajuda" className="text-xs text-muted-foreground">
-            O protocolo possui 6 caracteres (letras e números) e é enviado após
+            O protocolo possui 7 caracteres (letras e números) e é enviado após
             o agendamento.
           </p>
         )}
