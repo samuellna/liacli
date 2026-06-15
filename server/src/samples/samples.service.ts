@@ -62,6 +62,7 @@ export class SamplesService {
         'researchProject.researcher',
         'researchProject.examTypes',
         'approvedBy',
+        'results',
       ],
     });
     if (!sample) {
