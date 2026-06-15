@@ -198,25 +198,26 @@ export function AmostrasTabela({ amostras }: { amostras: AmostraRow[] }) {
       </CardHeader>
 
       <CardContent className="p-0">
-        <Table>
-          <TableHeader>
-            <TableRow className="bg-muted/40 hover:bg-muted/40">
-              <TableHead className="w-48 px-6 text-xs font-semibold tracking-wide text-muted-foreground uppercase">
+        <div className="max-h-[calc(100vh-18rem)] overflow-y-auto">
+        <Table className="table-fixed">
+          <TableHeader className="sticky top-0 z-10 bg-card">
+            <TableRow className="bg-muted/50 hover:bg-muted/50">
+              <TableHead className="w-[10%] px-6 text-xs font-semibold tracking-wide text-muted-foreground uppercase">
                 Protocolo
               </TableHead>
-              <TableHead className="w-52 text-xs font-semibold tracking-wide text-muted-foreground uppercase">
+              <TableHead className="w-[18%] text-xs font-semibold tracking-wide text-muted-foreground uppercase">
                 Exames
               </TableHead>
-              <TableHead className="w-36 text-xs font-semibold tracking-wide text-muted-foreground uppercase">
+              <TableHead className="w-[14%] text-xs font-semibold tracking-wide text-muted-foreground uppercase">
                 Pesquisador
               </TableHead>
               <TableHead className="text-xs font-semibold tracking-wide text-muted-foreground uppercase">
                 Título do projeto
               </TableHead>
-              <TableHead className="w-32 text-xs font-semibold tracking-wide text-muted-foreground uppercase">
+              <TableHead className="w-[12%] text-xs font-semibold tracking-wide text-muted-foreground uppercase">
                 Status
               </TableHead>
-              <TableHead className="w-44 px-6 text-right text-xs font-semibold tracking-wide text-muted-foreground uppercase">
+              <TableHead className="w-[20%] px-6 text-right text-xs font-semibold tracking-wide text-muted-foreground uppercase">
                 Ação
               </TableHead>
             </TableRow>
@@ -257,20 +258,20 @@ export function AmostrasTabela({ amostras }: { amostras: AmostraRow[] }) {
                     key={amostra.id}
                     className="align-top transition-colors"
                   >
-                    <TableCell className="px-6 py-5 font-mono text-xs text-muted-foreground">
+                    <TableCell className="truncate px-6 py-5 font-mono text-xs text-muted-foreground" title={amostra.protocolo}>
                       {amostra.protocolo}
                     </TableCell>
                     <TableCell className="py-5">
                       <ExameBadges exames={amostra.exames} />
                     </TableCell>
                     <TableCell
-                      className="py-5 text-sm text-foreground truncate"
+                      className="truncate py-5 text-sm text-foreground"
                       title={amostra.pesquisador}
                     >
                       {amostra.pesquisador}
                     </TableCell>
-                    <TableCell className="py-5">
-                      <p className="text-sm font-medium leading-snug text-foreground">
+                    <TableCell className="py-5" title={amostra.titulo}>
+                      <p className="truncate text-sm font-medium leading-snug text-foreground">
                         {amostra.titulo}
                       </p>
                     </TableCell>
@@ -346,6 +347,7 @@ export function AmostrasTabela({ amostras }: { amostras: AmostraRow[] }) {
             )}
           </TableBody>
         </Table>
+        </div>
       </CardContent>
     </Card>
   );

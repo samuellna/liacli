@@ -39,7 +39,7 @@ function TimelineNode({
         <span
           aria-hidden
           className={cn(
-            "absolute left-[17px] top-9 h-[calc(100%-8px)] w-px",
+            "absolute left-4.25 top-9 h-[calc(100%-8px)] w-px",
             event.completed
               ? "bg-success/30"
               : event.current
