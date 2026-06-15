@@ -79,8 +79,8 @@ export class SampleResultsService {
     }
 
     const result = this.sampleResultRepository.create({
-      sample,
-      examType,
+      sample: { id: sample.id } as Sample,
+      examType: { id: examType.id } as ExamType,
       resultData,
       observations: observations || null,
     });

@@ -98,7 +98,7 @@ function GroupDisplay({
 function ResultCard({ result }: { result: SampleResult }) {
   const { examType, resultData } = result;
   const data = resultData as Record<string, unknown>;
-  const observacoes = data.observacoes as string | undefined;
+  const observations = result.observations as string | undefined;
   const hasGroups = examType.groups && examType.groups.length > 0;
 
   return (
@@ -124,12 +124,12 @@ function ResultCard({ result }: { result: SampleResult }) {
           </div>
         )}
 
-        {observacoes && (
+        {observations && (
           <div className="rounded-md bg-muted/40 px-4 py-3">
             <p className="text-xs font-medium text-muted-foreground">
               Observações
             </p>
-            <p className="mt-1 text-sm">{observacoes}</p>
+            <p className="mt-1 text-sm">{observations}</p>
           </div>
         )}
       </CardContent>
