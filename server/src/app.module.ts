@@ -9,8 +9,10 @@ import { SampleResultsModule } from './sample_results/sample_results.module';
 import { EmailModule } from './email/email.module';
 import { ResearchProjectsModule } from './researcher_projects/researcher_projects.module';
 import { FirebaseModule } from './auth/firebase.module';
+import { AppController } from './app.controller';
 
 @Module({
+  controllers: [AppController],
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
     FirebaseModule,

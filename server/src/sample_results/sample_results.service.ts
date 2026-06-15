@@ -11,22 +11,41 @@ import {
 import { Repository } from 'typeorm';
 import { SampleResult } from './sample_results.entity';
 import { InjectRepository } from '@nestjs/typeorm';
+import { ExamType } from 'src/exam_types/exam_types.entity';
+import { PdfService } from 'src/pdf/pdf.service';
+import { EmailService } from 'src/email/email.service';
 
 @Injectable()
 export class SampleResultsService {
   constructor(
     @InjectRepository(Sample)
     private readonly sampleRepository: Repository<Sample>,
+
     @InjectRepository(SampleResult)
     private readonly sampleResultRepository: Repository<SampleResult>,
+
+    @InjectRepository(ExamType)
+    private readonly examTypeRepository: Repository<ExamType>,
+
+    private readonly pdfService: PdfService,
+    private readonly emailService: EmailService,
   ) {}
 
   async create(
     sampleId: number,
+    examTypeId: number,
     resultData: Record<string, any>,
+    observations?: string,
   ): Promise<SampleResult> {
-    // Verifica se a amostra existe
-    const sample = await this.sampleRepository.findOneBy({ id: sampleId });
+    const sample = await this.sampleRepository.findOne({
+      where: { id: sampleId },
+      relations: [
+        'researchProject',
+        'researchProject.examTypes',
+        'results',
+        'results.examType',
+      ],
+    });
 
     if (!sample) {
       throw new NotFoundException('Sample not found');
@@ -36,30 +55,112 @@ export class SampleResultsService {
       throw new BadRequestException('Sample not approved');
     }
 
-    // Verifica se já existe um resultado para essa amostra
-    const existing = await this.sampleResultRepository.findOne({
-      where: { sample: { id: sampleId } },
+    const examType = await this.examTypeRepository.findOneBy({
+      id: examTypeId,
     });
 
-    if (existing) {
-      throw new BadRequestException('Result already exists');
+    if (!examType) {
+      throw new NotFoundException('ExamType not found');
     }
 
-    // Cria o resultado e atualiza o status da amostra
-    const result = this.sampleResultRepository.create({
-      sample,
-      resultData,
-      createdAt: new Date(),
-    });
-    sample.status = SampleStatus.DONE;
+    const examTypeBelongsToProject = sample.researchProject.examTypes.some(
+      (et) => et.id === examTypeId,
+    );
 
-    // Atualiza o status da amostra e salva o resultado
-    await this.sampleRepository.save(sample);
-    return this.sampleResultRepository.save(result);
+    if (!examTypeBelongsToProject) {
+      throw new BadRequestException(
+        'ExamType does not belong to this sample project',
+      );
+    }
+
+    const alreadyHasResult = sample.results.some(
+      (r) => r.examType.id === examTypeId,
+    );
+
+    if (alreadyHasResult) {
+      throw new BadRequestException(
+        'Result for this exam type already exists on this sample',
+      );
+    }
+
+    const result = this.sampleResultRepository.create({
+      sample: { id: sample.id } as Sample,
+      examType: { id: examType.id } as ExamType,
+      resultData,
+      observations: observations || null,
+    });
+
+    const savedResult = await this.sampleResultRepository.save(result);
+
+    const totalExamTypes = sample.researchProject.examTypes.length;
+    const totalResults = sample.results.length + 1;
+
+    if (totalResults === totalExamTypes) {
+      await this.sampleRepository.update(sample.id, {
+        status: SampleStatus.DONE,
+      });
+    }
+
+    return this.sampleResultRepository.findOne({
+      where: { id: savedResult.id },
+      relations: ['sample', 'examType'],
+    }) as Promise<SampleResult>;
   }
 
-  async findByProtocol(protocol: string): Promise<SampleResult> {
-    // Busca a amostra pelo protocolo
+  async findAll(unique?: boolean): Promise<SampleResult[]> {
+    const results = await this.sampleResultRepository.find({
+      relations: [
+        'sample',
+        'sample.researchProject',
+        'sample.researchProject.researcher',
+        'sample.researchProject.examTypes',
+        'examType',
+      ],
+    });
+
+    if (!unique) return results;
+
+    const seen = new Set<number>();
+    return results.filter((r) => {
+      if (seen.has(r.sample.id)) return false;
+      seen.add(r.sample.id);
+      return true;
+    });
+  }
+
+  async findBySampleId(sampleId: number): Promise<SampleResult[]> {
+    const results = await this.sampleResultRepository.find({
+      where: { sample: { id: sampleId } },
+      relations: [
+        'examType',
+        'sample',
+        'sample.researchProject',
+        'sample.researchProject.researcher',
+        'sample.approvedBy',
+      ],
+    });
+
+    if (!results.length) {
+      throw new NotFoundException('No results found for this sample');
+    }
+
+    return results;
+  }
+
+  async findAmountResults(): Promise<number> {
+    const results = await this.sampleResultRepository.find();
+    const createdThisMonth = results.filter((result) => {
+      const now = new Date();
+      const createdAt = new Date(result.createdAt);
+      return (
+        createdAt.getMonth() === now.getMonth() &&
+        createdAt.getFullYear() === now.getFullYear()
+      );
+    });
+    return createdThisMonth.length;
+  }
+
+  async findByProtocol(protocol: string): Promise<SampleResult[]> {
     const sample = await this.sampleRepository.findOne({
       where: { protocol },
     });
@@ -68,21 +169,128 @@ export class SampleResultsService {
       throw new NotFoundException('Sample not found');
     }
 
-    // Busca o resultado associado à amostra
-    const result = await this.sampleResultRepository.findOne({
+    const results = await this.sampleResultRepository.find({
       where: { sample: { id: sample.id } },
       relations: [
+        'examType',
         'sample',
-        'sample.examType',
-        'sample.researcher',
+        'sample.researchProject',
+        'sample.researchProject.researcher',
         'sample.approvedBy',
       ],
     });
 
-    if (!result) {
-      throw new NotFoundException('Result not found for this sample');
+    if (!results.length) {
+      throw new NotFoundException('No results found for this sample');
     }
 
-    return result;
+    return results;
+  }
+
+  async validateResult(id: number): Promise<SampleResult> {
+    const result = await this.sampleResultRepository.findOne({
+      where: { id },
+      relations: ['sample'],
+    });
+
+    if (!result) {
+      throw new NotFoundException('Result not found');
+    }
+
+    result.validated = true;
+    return this.sampleResultRepository.save(result);
+  }
+
+  async validateAllResultsBySample(sampleId: number): Promise<SampleResult[]> {
+    const results = await this.sampleResultRepository.find({
+      where: { sample: { id: sampleId } },
+    });
+
+    if (!results.length) {
+      throw new NotFoundException('No results found for this sample');
+    }
+
+    const updated = results.map((r) => ({ ...r, validated: true }));
+    const savedResults = await this.sampleResultRepository.save(updated);
+
+    const sample = await this.sampleRepository.findOne({
+      where: { id: sampleId },
+      relations: [
+        'researchProject',
+        'researchProject.researcher',
+        'researchProject.examTypes',
+        'approvedBy',
+      ],
+    });
+
+    if (sample) {
+      const resultsForPdf = await this.sampleResultRepository.find({
+        where: { sample: { id: sampleId } },
+        relations: ['examType'],
+      });
+
+      const pdfBuffer = await this.pdfService.generateResultPdf(
+        sample,
+        resultsForPdf,
+      );
+      const researcher = sample.researchProject.researcher;
+
+      await this.emailService.sendResultEmail({
+        toEmail: researcher.email,
+        pesquisadorNome: researcher.name,
+        protocolo: sample.protocol,
+        pdfBuffer,
+        pdfFileName: `laudo-${sample.protocol}.pdf`,
+      });
+    }
+
+    return savedResults;
+  }
+
+  async rejectSampleResults(sampleId: number): Promise<Sample> {
+    const sample = await this.sampleRepository.findOne({
+      where: { id: sampleId },
+    });
+
+    if (!sample) {
+      throw new NotFoundException('Sample not found');
+    }
+
+    sample.status = SampleStatus.REJECTED;
+    return this.sampleRepository.save(sample);
+  }
+
+  async findOneForPdf(
+    id: number,
+  ): Promise<{ sample: Sample; results: SampleResult[] }> {
+    const result = await this.sampleResultRepository.findOne({
+      where: { id },
+      relations: ['sample'],
+    });
+
+    if (!result) {
+      throw new NotFoundException('Result not found');
+    }
+
+    const sample = await this.sampleRepository.findOne({
+      where: { id: result.sample.id },
+      relations: [
+        'researchProject',
+        'researchProject.researcher',
+        'researchProject.examTypes',
+        'approvedBy',
+      ],
+    });
+
+    if (!sample) {
+      throw new NotFoundException('Sample not found');
+    }
+
+    const results = await this.sampleResultRepository.find({
+      where: { sample: { id: sample.id } },
+      relations: ['examType'],
+    });
+
+    return { sample, results };
   }
 }

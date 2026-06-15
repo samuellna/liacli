@@ -1,5 +1,4 @@
 import { ResearchProject } from 'src/researcher_projects/researcher_projects.entity';
-import { Sample } from 'src/samples/samples.entity';
 import {
   Column,
   CreateDateColumn,
@@ -40,9 +39,6 @@ export class Researchers {
 
   @CreateDateColumn({ name: 'created_at' })
   createdAt: string;
-
-  @OneToMany(() => Sample, (sample) => sample.researcher)
-  samples: Sample[];
 
   @OneToMany(() => ResearchProject, (project) => project.researcher)
   projects: ResearchProject[];

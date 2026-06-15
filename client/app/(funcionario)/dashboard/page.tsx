@@ -1,53 +1,53 @@
-type Solicitacao = {
+import DashboardClient from "./DashboardClient";
+import { fetchDashboard } from "@/api/dashboard";
+
+export type SolicitacaoPendente = {
   protocolo: string;
   pesquisador: string;
-  tipo: string;
-  status: string;
+  dataAgendada: string;
+  primeiraVez: boolean;
 };
 
-type DashboardData = {
+export type DashboardData = {
   cards: {
     pendentes: number;
-    analise: number;
-    concluidas: number;
-    taxa: number;
+    aguardandoAmostras: number;
+    emAnaliseLab: number;
+    concluidasMes: number;
+    totalMes: number;
   };
-  solicitacoes: Solicitacao[];
+  solicitacoesPendentes: SolicitacaoPendente[];
 };
 
-// MOCK (trocar depois pelo backend)
-async function getDashboardData(): Promise<DashboardData> {
-  return {
-    cards: {
-      pendentes: 12,
-      analise: 8,
-      concluidas: 156,
-      taxa: 97,
-    },
-    solicitacoes: [
-      {
-        protocolo: "LIA-001",
-        pesquisador: "João Mendes",
-        tipo: "qPCR",
-        status: "Pendentes",
-      },
-      {
-        protocolo: "LIA-002",
-        pesquisador: "Ana Costa",
-        tipo: "HPLC",
-        status: "Em análise",
-      },
-      {
-        protocolo: "LIA-003",
-        pesquisador: "Maria Silva",
-        tipo: "NGS",
-        status: "Concluídas",
-      },
-    ],
-  };
+function formatDate(dateStr: string): string {
+  return new Date(dateStr).toLocaleDateString("pt-BR", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+  });
 }
 
-import DashboardClient from "./DashboardClient";
+async function getDashboardData(): Promise<DashboardData> {
+  const raw = await fetchDashboard();
+  const { inAnalysis, pendingApproval, approvedPendingCollection, finished } =
+    raw.samples;
+
+  return {
+    cards: {
+      pendentes: pendingApproval,
+      aguardandoAmostras: approvedPendingCollection,
+      emAnaliseLab: inAnalysis,
+      concluidasMes: finished,
+      totalMes: inAnalysis + pendingApproval + approvedPendingCollection + finished,
+    },
+    solicitacoesPendentes: raw.pendingApproval.slice(0, 5).map((s) => ({
+      protocolo: s.protocol,
+      pesquisador: s.researcher,
+      dataAgendada: formatDate(s.date),
+      primeiraVez: s.firstTime,
+    })),
+  };
+}
 
 export default async function DashboardPage() {
   const data = await getDashboardData();

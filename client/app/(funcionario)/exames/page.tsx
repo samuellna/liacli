@@ -1,98 +1,74 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   FlaskConical,
-  Pencil,
-  Calendar,
   ChevronLeft,
   ChevronRight,
+  AlertCircle,
+  Calendar,
+  Plus,
+  Beaker,
+  Layers,
 } from "lucide-react";
+import Link from "next/link";
 
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
+import { Skeleton } from "@/components/ui/skeleton";
+import { findAllExamTypes } from "@/api/exams";
+import type { ExamType } from "@/api/types";
 
-interface Exame {
-  id: string;
-  name: string;
-  description: string;
-  createdAt: string;
+function ExameCardSkeleton() {
+  return (
+    <Card className="flex flex-col overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
+      <CardContent className="flex h-full flex-col gap-3 p-5">
+        <div className="flex items-start gap-3">
+          <Skeleton className="mt-0.5 size-9 shrink-0 rounded-lg" />
+          <Skeleton className="mt-1 h-4 w-3/4 rounded" />
+        </div>
+        <Skeleton className="h-3 w-full rounded" />
+        <Skeleton className="h-3 w-2/3 rounded" />
+        <div className="mt-auto flex items-center justify-between border-t border-border pt-3">
+          <Skeleton className="h-4 w-24 rounded" />
+          <Skeleton className="h-4 w-20 rounded" />
+        </div>
+      </CardContent>
+    </Card>
+  );
 }
 
-const EXAMES_MOCK: Exame[] = [
-  {
-    id: "1",
-    name: "Hemograma Completo",
-    description: "Avaliação quantitativa e qualitativa das células sanguíneas.",
-    createdAt: "15/01/2026",
-  },
-  {
-    id: "2",
-    name: "Glicemia de Jejum",
-    description:
-      "Mensuração dos níveis de glicose no sangue após período de jejum.",
-    createdAt: "18/01/2026",
-  },
-  {
-    id: "3",
-    name: "Eletrocardiograma (ECG)",
-    description: "Registro da atividade elétrica do coração em repouso.",
-    createdAt: "20/01/2026",
-  },
-  {
-    id: "4",
-    name: "Colesterol Total e Frações",
-    description: "Análise dos níveis de LDL, HDL e VLDL no organismo.",
-    createdAt: "22/01/2026",
-  },
-  {
-    id: "5",
-    name: "Ureia e Creatinina",
-    description: "Avaliação da função renal e taxa de filtração.",
-    createdAt: "25/01/2026",
-  },
-  {
-    id: "6",
-    name: "TGO e TGP",
-    description: "Avaliação das enzimas hepáticas e saúde do fígado.",
-    createdAt: "26/01/2026",
-  },
-  {
-    id: "7",
-    name: "Exame de Urina Tipo 1",
-    description: "Análise física, química e microscópica da urina.",
-    createdAt: "28/01/2026",
-  },
-  {
-    id: "8",
-    name: "Papanicolau",
-    description: "Exame preventivo ginecológico de rastreio.",
-    createdAt: "30/01/2026",
-  },
-];
+function totalParametros(exame: ExamType): number {
+  if (!exame.groups) return 0;
+  return exame.groups.reduce((acc, g) => acc + g.parameters.length, 0);
+}
 
 export default function ExamesPage() {
-  const [exames, setExames] = useState<Exame[]>(EXAMES_MOCK);
+  const [exames, setExames] = useState<ExamType[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 6;
+  const itemsPerPage = 9;
   const totalPages = Math.ceil(exames.length / itemsPerPage);
 
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [selectedExame, setSelectedExame] = useState<Exame | null>(null);
-  const [editName, setEditName] = useState("");
-  const [editDescription, setEditDescription] = useState("");
+  async function loadExames() {
+    setError(null);
+    setIsLoading(true);
+    try {
+      const data = await findAllExamTypes();
+      setExames(data);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Erro ao carregar exames.");
+    } finally {
+      setIsLoading(false);
+    }
+  }
+
+  useEffect(() => {
+    loadExames();
+  }, []);
 
   const startIndex = (currentPage - 1) * itemsPerPage;
   const currentExames = exames.slice(startIndex, startIndex + itemsPerPage);
@@ -102,29 +78,8 @@ export default function ExamesPage() {
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
-  const openEditModal = (exame: Exame) => {
-    setSelectedExame(exame);
-    setEditName(exame.name);
-    setEditDescription(exame.description);
-    setIsModalOpen(true);
-  };
-
-  const handleSaveChanges = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!selectedExame) return;
-
-    setExames((prev) =>
-      prev.map((item) =>
-        item.id === selectedExame.id
-          ? { ...item, name: editName, description: editDescription }
-          : item,
-      ),
-    );
-    setIsModalOpen(false);
-  };
-
   return (
-    <div className="w-full max-w-7xl mx-auto px-4 py-8 sm:px-6 lg:px-8 space-y-8">
+    <div className="w-full max-w-7xl mx-auto space-y-4">
       {/* Header */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex items-start gap-3 min-w-0">
@@ -141,60 +96,133 @@ export default function ExamesPage() {
           </div>
         </div>
 
-        <Badge
-          variant="secondary"
-          className="self-start sm:self-auto shrink-0 gap-1.5 px-3 py-1.5 text-xs font-medium"
-        >
-          <FlaskConical className="size-3.5" />
-          {exames.length} exames cadastrados
-        </Badge>
+        <div className="flex items-center gap-3 self-start sm:self-auto">
+          {!isLoading && !error && (
+            <Badge
+              variant="secondary"
+              className="shrink-0 gap-1.5 px-3 py-1.5 text-xs font-medium"
+            >
+              <FlaskConical className="size-3.5" />
+              {exames.length} exames cadastrados
+            </Badge>
+          )}
+          <Button asChild size="sm" className="shrink-0 gap-1.5">
+            <Link href="/exames/cadastro">
+              <Plus className="size-4" />
+              Novo exame
+            </Link>
+          </Button>
+        </div>
       </div>
 
-      <div className="h-px bg-border" />
+      {/* Loading */}
+      {isLoading && (
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {Array.from({ length: 6 }).map((_, i) => (
+            <ExameCardSkeleton key={i} />
+          ))}
+        </div>
+      )}
+
+      {/* Error */}
+      {!isLoading && error && (
+        <div className="flex flex-col items-center justify-center gap-3 rounded-2xl border border-destructive/30 bg-destructive/5 py-16 text-center">
+          <AlertCircle className="size-10 text-destructive/50" />
+          <p className="text-sm font-medium text-foreground">
+            Não foi possível carregar os exames
+          </p>
+          <p className="text-xs text-muted-foreground">{error}</p>
+          <Button variant="outline" size="sm" onClick={loadExames}>
+            Tentar novamente
+          </Button>
+        </div>
+      )}
+
+      {/* Empty state */}
+      {!isLoading && !error && exames.length === 0 && (
+        <div className="flex flex-col items-center justify-center gap-3 rounded-2xl border border-border bg-card py-16 text-center">
+          <FlaskConical className="size-10 text-muted-foreground/40" />
+          <p className="text-sm font-medium text-foreground">
+            Nenhum exame cadastrado
+          </p>
+          <p className="text-xs text-muted-foreground">
+            Cadastre o primeiro exame para vê-lo aqui.
+          </p>
+        </div>
+      )}
 
       {/* Grid */}
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {currentExames.map((exame) => (
-          <Card
-            key={exame.id}
-            className="group flex flex-col overflow-hidden rounded-2xl border border-border bg-card shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:border-accent/30 hover:shadow-md"
-          >
-            <CardContent className="flex h-full flex-col gap-3 p-5">
-              <div className="flex items-start gap-3 min-w-0">
-                <span className="mt-0.5 inline-flex size-9 shrink-0 items-center justify-center rounded-lg bg-accent/10 text-accent ring-1 ring-accent/20">
-                  <FlaskConical className="size-4" />
-                </span>
-                <h3 className="min-w-0 pt-1 text-sm font-semibold leading-snug text-foreground line-clamp-2">
-                  {exame.name}
-                </h3>
-              </div>
+      {!isLoading && !error && currentExames.length > 0 && (
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {currentExames.map((exame) => {
+            const nGrupos = exame.groups?.length ?? 0;
+            const nParams = totalParametros(exame);
 
-              <p className="flex-1 text-sm leading-relaxed text-muted-foreground line-clamp-2">
-                {exame.description}
-              </p>
+            return (
+              <Link
+                key={exame.id}
+                href={`/exames/${exame.id}`}
+                className="group block outline-none focus-visible:ring-2 focus-visible:ring-accent rounded-2xl"
+              >
+                <Card className="flex flex-col h-full overflow-hidden rounded-2xl border border-border bg-card shadow-sm transition-all duration-200 group-hover:-translate-y-0.5 group-hover:border-accent/40 group-hover:shadow-md group-focus-visible:border-accent/40">
+                  <CardContent className="flex h-full flex-col gap-3 p-5">
+                    {/* Nome */}
+                    <div className="flex items-start gap-3 min-w-0">
+                      <span className="mt-0.5 inline-flex size-9 shrink-0 items-center justify-center rounded-lg bg-accent/10 text-accent ring-1 ring-accent/20">
+                        <FlaskConical className="size-4" />
+                      </span>
+                      <h3 className="min-w-0 pt-1 text-sm font-semibold leading-snug text-foreground line-clamp-2">
+                        {exame.name}
+                      </h3>
+                    </div>
 
-              <div className="mt-auto flex items-center justify-between border-t border-border pt-3">
-                <div className="flex min-w-0 items-center gap-1.5 text-xs text-muted-foreground">
-                  <Calendar className="size-3.5 shrink-0" />
-                  <span className="truncate">{exame.createdAt}</span>
-                </div>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="h-7 shrink-0 gap-1.5 px-2.5 text-xs text-muted-foreground hover:text-foreground"
-                  onClick={() => openEditModal(exame)}
-                >
-                  <Pencil className="size-3" />
-                  Editar
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
+                    {/* Descrição */}
+                    {exame.description && (
+                      <p className="text-xs leading-relaxed text-muted-foreground line-clamp-2">
+                        {exame.description}
+                      </p>
+                    )}
+
+                    {/* Material */}
+                    {exame.material && (
+                      <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                        <Beaker className="size-3.5 shrink-0" />
+                        <span className="truncate">{exame.material}</span>
+                      </div>
+                    )}
+
+                    {/* Footer */}
+                    <div className="mt-auto flex items-center justify-between border-t border-border pt-3">
+                      <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                        <Calendar className="size-3.5 shrink-0" />
+                        <span>
+                          {new Date(exame.createdAt).toLocaleDateString(
+                            "pt-BR",
+                          )}
+                        </span>
+                      </div>
+
+                      {nGrupos > 0 && (
+                        <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                          <Layers className="size-3.5 shrink-0" />
+                          <span>
+                            {nGrupos} {nGrupos === 1 ? "grupo" : "grupos"} ·{" "}
+                            {nParams}{" "}
+                            {nParams === 1 ? "parâmetro" : "parâmetros"}
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
+              </Link>
+            );
+          })}
+        </div>
+      )}
 
       {/* Pagination */}
-      {totalPages > 1 && (
+      {!isLoading && !error && totalPages > 1 && (
         <div className="flex items-center justify-center gap-3 pt-2">
           <Button
             variant="outline"
@@ -209,8 +237,7 @@ export default function ExamesPage() {
           <span className="min-w-28 text-center text-sm text-muted-foreground">
             Página{" "}
             <span className="font-medium text-foreground">{currentPage}</span>{" "}
-            de{" "}
-            <span className="font-medium text-foreground">{totalPages}</span>
+            de <span className="font-medium text-foreground">{totalPages}</span>
           </span>
           <Button
             variant="outline"
@@ -224,66 +251,6 @@ export default function ExamesPage() {
           </Button>
         </div>
       )}
-
-      {/* Modal de edição */}
-      <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <div className="flex items-center gap-3">
-              <span className="inline-flex size-9 shrink-0 items-center justify-center rounded-xl bg-accent/10 text-accent ring-1 ring-accent/20">
-                <FlaskConical className="size-4" />
-              </span>
-              <div className="min-w-0">
-                <DialogTitle className="text-base">Editar Exame</DialogTitle>
-                <DialogDescription className="mt-0.5 truncate text-xs">
-                  {selectedExame?.name}
-                </DialogDescription>
-              </div>
-            </div>
-          </DialogHeader>
-
-          <form onSubmit={handleSaveChanges} className="space-y-4 pt-2">
-            <div className="space-y-1.5">
-              <Label htmlFor="name" className="text-sm font-medium">
-                Nome do exame
-              </Label>
-              <Input
-                id="name"
-                value={editName}
-                onChange={(e) => setEditName(e.target.value)}
-                required
-              />
-            </div>
-            <div className="space-y-1.5">
-              <Label htmlFor="description" className="text-sm font-medium">
-                Descrição
-              </Label>
-              <Textarea
-                id="description"
-                rows={3}
-                className="resize-none"
-                value={editDescription}
-                onChange={(e) => setEditDescription(e.target.value)}
-                required
-              />
-            </div>
-
-            <div className="flex justify-end gap-2 pt-1">
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                onClick={() => setIsModalOpen(false)}
-              >
-                Cancelar
-              </Button>
-              <Button type="submit" size="sm">
-                Salvar alterações
-              </Button>
-            </div>
-          </form>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 }

@@ -1,3 +1,10 @@
+export enum ResearchLevel {
+  SCIENTIFIC_INITIATION = "SCIENTIFIC_INITIATION",
+  MASTERS = "MASTERS",
+  DOCTORATE = "DOCTORATE",
+  POST_DOCTORATE = "POST_DOCTORATE",
+}
+
 export enum SampleStatus {
   PENDING = "PENDING",
   COLLECTED = "COLLECTED",
@@ -27,17 +34,31 @@ export interface Researcher {
   institution: string;
   phone: string;
   advisorName: string;
-  level: string;
+  level: ResearchLevel;
   createdAt: string;
-  samples: Sample[];
   projects: ResearchProject[];
+}
+
+export interface ExamParameter {
+  name: string;
+  unit?: string;
+  reference?: string;
+}
+
+export interface ParameterGroups {
+  groupName?: string;
+  parameters: ExamParameter[];
 }
 
 export interface ExamType {
   id: number;
   name: string;
   description: string;
-  samples: Sample[];
+  material: string | null;
+  observations: string | null;
+  groups: ParameterGroups[] | null;
+  createdAt: Date;
+  updatedAt: Date;
 }
 
 export interface Sample {
@@ -45,13 +66,12 @@ export interface Sample {
   protocol: string;
   status: SampleStatus;
   approvalStatus: ApprovalStatus;
-  examType: ExamType;
-  researcher: Researcher;
   approvedBy: Employee | null;
   approvedAt: Date | null;
-  collectedAt: Date;
   scheduledAt: Date | null;
-  researchProject: ResearchProject | null;
+  animalsInThisShipment: number;
+  researchProject: ResearchProject;
+  results?: SampleResult[];
   createdAt: Date;
   updatedAt: Date;
 }
@@ -59,7 +79,10 @@ export interface Sample {
 export interface SampleResult {
   id: number;
   sample: Sample;
+  examType: ExamType;
   resultData: Record<string, unknown>;
+  observations: string | null;
+  validated: boolean;
   createdAt: Date;
 }
 

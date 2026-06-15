@@ -2,15 +2,16 @@
 
 import { useEffect, useMemo, useState } from "react";
 import {
+  AlertCircle,
   ChevronDown,
-  FileText,
-  ListFilter,
   CheckCircle,
-  XCircle,
   Clock,
   Eye,
-  RefreshCw,
+  FileText,
+  ListFilter,
   Loader2,
+  RefreshCw,
+  XCircle,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -25,12 +26,12 @@ import {
 } from "@/components/ui/card";
 import {
   Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogFooter,
-  DialogTitle,
-  DialogDescription,
   DialogClose,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
 } from "@/components/ui/dialog";
 import {
   DropdownMenu,
@@ -53,149 +54,32 @@ import {
 } from "@/components/ui/table";
 import { Textarea } from "@/components/ui/textarea";
 
-// ─── Types ───────────────────────────────────────────────────────────────────
+import { ApprovalStatus } from "@/api/types";
+import { findAllSamples, approveSample } from "@/api/samples";
+import { findAllEmployees } from "@/api/employees";
 
-type AprovacaoStatus = "PENDENTE" | "APROVADO" | "REPROVADO";
+import {
+  toSolicitacaoRow,
+  ordenarPorAgendamento,
+  statusOpcoes,
+  statusRotulo,
+  statusVariant,
+  statusClass,
+} from "./_lib/helpers";
+import type { SolicitacaoRow } from "./_lib/types";
 
-type Exame = {
-  nome: string;
-  descricao: string;
+// ─── Status icon map ──────────────────────────────────────────────────────────
+
+const StatusIcon: Record<
+  ApprovalStatus,
+  React.ComponentType<{ className?: string }>
+> = {
+  [ApprovalStatus.PENDING]: Clock,
+  [ApprovalStatus.APPROVED]: CheckCircle,
+  [ApprovalStatus.REJECTED]: XCircle,
 };
 
-type Solicitacao = {
-  id: number;
-  protocolo: string;
-  pesquisador: {
-    nome: string;
-    email: string;
-    instituicao: string;
-  };
-  exames: Exame[];
-  dataAgendamento: string;
-  dataEnvio: string;
-  status: AprovacaoStatus;
-  observacao?: string;
-  avaliadoPor?: string;
-  avaliadoEm?: string;
-};
-
-// ─── Mock data ────────────────────────────────────────────────────────────────
-
-const solicitacoesMock: Solicitacao[] = [
-  {
-    id: 1,
-    protocolo: "SAM-20260510-0001",
-    pesquisador: {
-      nome: "João Silva",
-      email: "joao.silva@usp.br",
-      instituicao: "Universidade de São Paulo",
-    },
-    exames: [
-      { nome: "Glicose", descricao: "Dosagem de glicose em soro" },
-      { nome: "Insulina", descricao: "Dosagem de insulina em soro" },
-    ],
-    dataAgendamento: "2026-05-20",
-    dataEnvio: "2026-05-10",
-    status: "PENDENTE",
-  },
-  {
-    id: 2,
-    protocolo: "SAM-20260508-0002",
-    pesquisador: {
-      nome: "Maria Souza",
-      email: "maria.souza@unicamp.br",
-      instituicao: "Universidade Estadual de Campinas",
-    },
-    exames: [{ nome: "Hemograma Completo", descricao: "Análise completa das células sanguíneas" }],
-    dataAgendamento: "2026-05-22",
-    dataEnvio: "2026-05-08",
-    status: "PENDENTE",
-  },
-  {
-    id: 3,
-    protocolo: "SAM-20260501-0003",
-    pesquisador: {
-      nome: "Carlos Mendes",
-      email: "c.mendes@unifesp.br",
-      instituicao: "Universidade Federal de São Paulo",
-    },
-    exames: [
-      { nome: "PCR Ultrassensível", descricao: "Proteína C-reativa de alta sensibilidade" },
-      { nome: "VHS", descricao: "Velocidade de hemossedimentação" },
-      { nome: "Ferritina", descricao: "Dosagem de ferritina sérica" },
-    ],
-    dataAgendamento: "2026-05-15",
-    dataEnvio: "2026-05-01",
-    status: "APROVADO",
-    observacao: "Agendamento confirmado. Trazer amostras devidamente identificadas.",
-    avaliadoPor: "Dr. Roberto Lima",
-    avaliadoEm: "2026-05-03",
-  },
-  {
-    id: 4,
-    protocolo: "SAM-20260428-0004",
-    pesquisador: {
-      nome: "Ana Paula Rocha",
-      email: "anapaula@fiocruz.br",
-      instituicao: "Fundação Oswaldo Cruz",
-    },
-    exames: [{ nome: "Cultura Bacteriana", descricao: "Identificação e antibiograma" }],
-    dataAgendamento: "2026-05-12",
-    dataEnvio: "2026-04-28",
-    status: "REPROVADO",
-    observacao: "Documentação incompleta. O termo de consentimento não foi anexado.",
-    avaliadoPor: "Dra. Fernanda Costa",
-    avaliadoEm: "2026-04-30",
-  },
-  {
-    id: 5,
-    protocolo: "SAM-20260512-0005",
-    pesquisador: {
-      nome: "Lucas Ferreira",
-      email: "lucas.f@ufmg.br",
-      instituicao: "Universidade Federal de Minas Gerais",
-    },
-    exames: [
-      { nome: "Vitamina D", descricao: "25-hidroxivitamina D" },
-      { nome: "Cálcio Iônico", descricao: "Dosagem de cálcio ionizado" },
-    ],
-    dataAgendamento: "2026-05-28",
-    dataEnvio: "2026-05-12",
-    status: "PENDENTE",
-  },
-];
-
-// ─── Helpers ──────────────────────────────────────────────────────────────────
-
-const statusOpcoes: { valor: AprovacaoStatus; rotulo: string }[] = [
-  { valor: "PENDENTE", rotulo: "Pendente" },
-  { valor: "APROVADO", rotulo: "Aprovado" },
-  { valor: "REPROVADO", rotulo: "Reprovado" },
-];
-
-const statusRotulo: Record<AprovacaoStatus, string> = {
-  PENDENTE: "Pendente",
-  APROVADO: "Aprovado",
-  REPROVADO: "Reprovado",
-};
-
-const statusVariant: Record<AprovacaoStatus, "outline" | "secondary" | "default"> = {
-  PENDENTE: "outline",
-  APROVADO: "default",
-  REPROVADO: "secondary",
-};
-
-const statusClass: Record<AprovacaoStatus, string> = {
-  PENDENTE: "border-warning/40 bg-warning/15 text-warning-foreground dark:text-warning",
-  APROVADO: "border-success/40 bg-success/15 text-success dark:text-success",
-  REPROVADO: "border-destructive/40 bg-destructive/15 text-destructive dark:text-destructive",
-};
-
-const StatusIcon: Record<AprovacaoStatus, React.ComponentType<{ className?: string }>> = {
-  PENDENTE: Clock,
-  APROVADO: CheckCircle,
-  REPROVADO: XCircle,
-};
+// ─── Date formatting ──────────────────────────────────────────────────────────
 
 const dateFormatter = new Intl.DateTimeFormat("pt-BR", {
   day: "2-digit",
@@ -203,17 +87,9 @@ const dateFormatter = new Intl.DateTimeFormat("pt-BR", {
   year: "numeric",
 });
 
-function formatarData(iso: string) {
-  const date = new Date(`${iso}T00:00:00`);
-  if (Number.isNaN(date.getTime())) return iso;
+function formatarData(date: Date | null): string {
+  if (!date) return "—";
   return dateFormatter.format(date);
-}
-
-function ordenarPorAgendamento(lista: Solicitacao[]): Solicitacao[] {
-  return [...lista].sort(
-    (a, b) =>
-      new Date(a.dataAgendamento).getTime() - new Date(b.dataAgendamento).getTime()
-  );
 }
 
 // ─── Skeleton de carregamento ─────────────────────────────────────────────────
@@ -254,13 +130,13 @@ function ModalDetalhes({
   open,
   onOpenChange,
 }: {
-  solicitacao: Solicitacao | null;
+  solicitacao: SolicitacaoRow | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }) {
   if (!solicitacao) return null;
 
-  const Icon = StatusIcon[solicitacao.status];
+  const Icon = StatusIcon[solicitacao.approvalStatus];
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -278,11 +154,11 @@ function ModalDetalhes({
         <div className="space-y-5 overflow-y-auto px-6 pb-2 max-h-[60vh]">
           <div className="flex items-center gap-2">
             <Badge
-              variant={statusVariant[solicitacao.status]}
-              className={statusClass[solicitacao.status]}
+              variant={statusVariant[solicitacao.approvalStatus]}
+              className={statusClass[solicitacao.approvalStatus]}
             >
               <Icon className="size-3" aria-hidden />
-              {statusRotulo[solicitacao.status]}
+              {statusRotulo[solicitacao.approvalStatus]}
             </Badge>
           </div>
 
@@ -294,11 +170,17 @@ function ModalDetalhes({
             </h3>
             <dl className="grid grid-cols-[max-content_1fr] gap-x-4 gap-y-2 text-sm">
               <dt className="text-muted-foreground">Nome</dt>
-              <dd className="font-medium text-foreground">{solicitacao.pesquisador.nome}</dd>
+              <dd className="font-medium text-foreground">
+                {solicitacao.pesquisador}
+              </dd>
               <dt className="text-muted-foreground">E-mail</dt>
-              <dd className="text-foreground">{solicitacao.pesquisador.email}</dd>
+              <dd className="text-foreground">
+                {solicitacao.pesquisadorEmail}
+              </dd>
               <dt className="text-muted-foreground">Instituição</dt>
-              <dd className="text-foreground">{solicitacao.pesquisador.instituicao}</dd>
+              <dd className="text-foreground">
+                {solicitacao.pesquisadorInstituicao}
+              </dd>
             </dl>
           </section>
 
@@ -306,19 +188,28 @@ function ModalDetalhes({
 
           <section className="space-y-3">
             <h3 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-              Exames Solicitados ({solicitacao.exames.length})
+              Projeto de Pesquisa
             </h3>
-            <ul className="space-y-2">
-              {solicitacao.exames.map((exame, i) => (
-                <li
-                  key={i}
-                  className="rounded-lg border border-border bg-muted/30 px-3 py-2"
-                >
-                  <p className="text-sm font-medium text-foreground">{exame.nome}</p>
-                  <p className="text-xs text-muted-foreground">{exame.descricao}</p>
-                </li>
-              ))}
-            </ul>
+            <p className="text-sm text-foreground">
+              {solicitacao.projetoPesquisa}
+            </p>
+          </section>
+
+          <Separator />
+
+          <section className="space-y-3">
+            <h3 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+              Exames solicitados ({solicitacao.numExames})
+            </h3>
+            <p className="text-sm text-muted-foreground">
+              {solicitacao.numExames === 0
+                ? "Nenhum exame associado ao projeto."
+                : `${solicitacao.numExames} ${
+                    solicitacao.numExames === 1
+                      ? "exame associado ao projeto."
+                      : "exames associados ao projeto."
+                  }`}
+            </p>
           </section>
 
           <Separator />
@@ -330,20 +221,16 @@ function ModalDetalhes({
             <dl className="grid grid-cols-[max-content_1fr] gap-x-4 gap-y-2 text-sm">
               <dt className="text-muted-foreground">Envio da solicitação</dt>
               <dd className="text-foreground">
-                <time dateTime={solicitacao.dataEnvio}>
-                  {formatarData(solicitacao.dataEnvio)}
-                </time>
+                {formatarData(solicitacao.createdAt)}
               </dd>
               <dt className="text-muted-foreground">Agendamento</dt>
               <dd className="font-medium text-foreground">
-                <time dateTime={solicitacao.dataAgendamento}>
-                  {formatarData(solicitacao.dataAgendamento)}
-                </time>
+                {formatarData(solicitacao.dataAgendamento)}
               </dd>
             </dl>
           </section>
 
-          {solicitacao.status !== "PENDENTE" && (
+          {solicitacao.approvalStatus !== ApprovalStatus.PENDING && (
             <>
               <Separator />
               <section className="space-y-3">
@@ -354,26 +241,20 @@ function ModalDetalhes({
                   {solicitacao.avaliadoPor && (
                     <>
                       <dt className="text-muted-foreground">Avaliado por</dt>
-                      <dd className="text-foreground">{solicitacao.avaliadoPor}</dd>
+                      <dd className="text-foreground">
+                        {solicitacao.avaliadoPor}
+                      </dd>
                     </>
                   )}
                   {solicitacao.avaliadoEm && (
                     <>
                       <dt className="text-muted-foreground">Avaliado em</dt>
                       <dd className="text-foreground">
-                        <time dateTime={solicitacao.avaliadoEm}>
-                          {formatarData(solicitacao.avaliadoEm)}
-                        </time>
+                        {formatarData(solicitacao.avaliadoEm)}
                       </dd>
                     </>
                   )}
                 </dl>
-                {solicitacao.observacao && (
-                  <div className="rounded-lg border border-border bg-muted/30 px-3 py-2">
-                    <p className="text-xs font-medium text-muted-foreground mb-1">Observação</p>
-                    <p className="text-sm text-foreground">{solicitacao.observacao}</p>
-                  </div>
-                )}
               </section>
             </>
           )}
@@ -397,10 +278,14 @@ function ModalAtualizar({
   onOpenChange,
   onConfirmar,
 }: {
-  solicitacao: Solicitacao | null;
+  solicitacao: SolicitacaoRow | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onConfirmar: (id: number, aprovado: boolean, observacao: string) => Promise<void>;
+  onConfirmar: (
+    id: number,
+    aprovado: boolean,
+    observacao: string,
+  ) => Promise<void>;
 }) {
   const [decisao, setDecisao] = useState<"APROVAR" | "REPROVAR" | null>(null);
   const [observacao, setObservacao] = useState("");
@@ -421,6 +306,8 @@ function ModalAtualizar({
       await onConfirmar(solicitacao.id, decisao === "APROVAR", observacao);
       setDecisao(null);
       setObservacao("");
+    } catch {
+      // erro já tratado com toast em onConfirmar
     } finally {
       setIsPending(false);
     }
@@ -440,7 +327,7 @@ function ModalAtualizar({
             <span className="font-mono font-medium text-foreground">
               {solicitacao.protocolo}
             </span>{" "}
-            — {solicitacao.pesquisador.nome}
+            — {solicitacao.pesquisador}
           </DialogDescription>
         </DialogHeader>
 
@@ -532,33 +419,57 @@ function ModalAtualizar({
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
 export default function SolicitacoesPage() {
-  const [dados, setDados] = useState<Solicitacao[]>(solicitacoesMock);
-  const [isLoading, setIsLoading] = useState(true);
-  const [statusSelecionados, setStatusSelecionados] = useState<Set<AprovacaoStatus>>(
-    new Set(["PENDENTE"])
+  const [solicitacoes, setSolicitacoes] = useState<SolicitacaoRow[]>([]);
+  const [currentEmployeeId, setCurrentEmployeeId] = useState<number | null>(
+    null,
   );
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [statusSelecionados, setStatusSelecionados] = useState<
+    Set<ApprovalStatus>
+  >(new Set([ApprovalStatus.PENDING]));
 
   const [modalDetalhes, setModalDetalhes] = useState<{
     aberto: boolean;
-    solicitacao: Solicitacao | null;
+    solicitacao: SolicitacaoRow | null;
   }>({ aberto: false, solicitacao: null });
 
   const [modalAtualizar, setModalAtualizar] = useState<{
     aberto: boolean;
-    solicitacao: Solicitacao | null;
+    solicitacao: SolicitacaoRow | null;
   }>({ aberto: false, solicitacao: null });
 
+  async function load() {
+    setIsLoading(true);
+    setError(null);
+    try {
+      const [samples, employees] = await Promise.all([
+        findAllSamples(),
+        findAllEmployees(),
+      ]);
+      setSolicitacoes(samples.map(toSolicitacaoRow));
+      if (employees.length > 0) {
+        setCurrentEmployeeId(employees[0].id);
+      }
+    } catch {
+      setError("Não foi possível carregar as solicitações.");
+    } finally {
+      setIsLoading(false);
+    }
+  }
+
   useEffect(() => {
-    const t = setTimeout(() => setIsLoading(false), 600);
-    return () => clearTimeout(t);
+    load();
   }, []);
 
   const filtradas = useMemo(() => {
-    const lista = dados.filter((s) => statusSelecionados.has(s.status));
+    const lista = solicitacoes.filter((s) =>
+      statusSelecionados.has(s.approvalStatus),
+    );
     return ordenarPorAgendamento(lista);
-  }, [dados, statusSelecionados]);
+  }, [solicitacoes, statusSelecionados]);
 
-  function toggleStatus(status: AprovacaoStatus) {
+  function toggleStatus(status: ApprovalStatus) {
     setStatusSelecionados((prev) => {
       const next = new Set(prev);
       if (next.has(status)) next.delete(status);
@@ -567,44 +478,48 @@ export default function SolicitacoesPage() {
     });
   }
 
-  function abrirDetalhes(solicitacao: Solicitacao) {
+  function abrirDetalhes(solicitacao: SolicitacaoRow) {
     setModalDetalhes({ aberto: true, solicitacao });
   }
 
-  function abrirAtualizar(solicitacao: Solicitacao) {
+  function abrirAtualizar(solicitacao: SolicitacaoRow) {
     setModalAtualizar({ aberto: true, solicitacao });
   }
 
-  async function confirmarAtualizacao(id: number, aprovado: boolean, observacao: string) {
-    await new Promise((resolve) => setTimeout(resolve, 800));
-
+  async function confirmarAtualizacao(
+    id: number,
+    aprovado: boolean,
+    observacao: string,
+  ) {
+    if (currentEmployeeId === null) {
+      toast.error("Nenhum funcionário disponível para registrar a decisão.");
+      throw new Error("no_employee");
+    }
     try {
-      setDados((prev) =>
-        prev.map((s) =>
-          s.id === id
-            ? {
-                ...s,
-                status: aprovado ? "APROVADO" : "REPROVADO",
-                observacao: observacao || undefined,
-                avaliadoPor: "Funcionário Atual",
-                avaliadoEm: new Date().toISOString().split("T")[0],
-              }
-            : s
-        )
-      );
+      await approveSample(id, {
+        approved: aprovado,
+        employeeId: currentEmployeeId,
+        decisionReason: observacao || undefined,
+      });
+      const samples = await findAllSamples();
+      setSolicitacoes(samples.map(toSolicitacaoRow));
       setModalAtualizar({ aberto: false, solicitacao: null });
-
-      if (aprovado) {
-        toast.success("Solicitação aprovada com sucesso.");
-      } else {
-        toast.success("Solicitação reprovada e registrada.");
+      toast.success(
+        aprovado
+          ? "Solicitação aprovada com sucesso."
+          : "Solicitação rejeitada e registrada.",
+      );
+    } catch (err) {
+      if ((err as Error).message !== "no_employee") {
+        toast.error(
+          "Não foi possível processar a solicitação. Tente novamente.",
+        );
       }
-    } catch {
-      toast.error("Não foi possível processar. Tente novamente.");
+      throw err;
     }
   }
 
-  const total = dados.length;
+  const total = solicitacoes.length;
   const totalFiltradas = filtradas.length;
 
   if (isLoading) {
@@ -620,6 +535,34 @@ export default function SolicitacoesPage() {
           </div>
         </header>
         <TabelaSkeleton />
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="space-y-6">
+        <header className="space-y-2">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div className="space-y-1">
+              <h1 className="text-2xl font-semibold tracking-tight text-foreground">
+                Solicitações
+              </h1>
+              <p className="text-sm text-muted-foreground">
+                Gerencie as solicitações de agendamento de amostras.
+              </p>
+            </div>
+          </div>
+        </header>
+        <Card>
+          <CardContent className="flex flex-col items-center gap-3 py-16 text-center">
+            <AlertCircle className="size-10 text-destructive/50" aria-hidden />
+            <p className="text-sm font-medium text-foreground">{error}</p>
+            <Button variant="outline" size="sm" onClick={load}>
+              Tentar novamente
+            </Button>
+          </CardContent>
+        </Card>
       </div>
     );
   }
@@ -653,7 +596,8 @@ export default function SolicitacoesPage() {
                 Registro de solicitações
               </CardTitle>
               <CardDescription>
-                Por padrão exibe apenas solicitações pendentes, ordenadas por data de agendamento.
+                Por padrão exibe apenas solicitações pendentes, ordenadas por
+                data de agendamento.
               </CardDescription>
             </div>
 
@@ -697,29 +641,29 @@ export default function SolicitacoesPage() {
           </div>
         </CardHeader>
 
-        <CardContent className="p-0">
-          <Table>
+        <CardContent className="p-0 overflow-x-auto">
+          <Table className="table-fixed w-full">
             <TableHeader>
               <TableRow className="bg-muted/40 hover:bg-muted/40">
-                <TableHead className="px-6 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                <TableHead className="w-[17%] px-6 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                   Protocolo
                 </TableHead>
-                <TableHead className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                <TableHead className="w-[12%] text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                   Pesquisador
                 </TableHead>
-                <TableHead className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                  Instituição
+                <TableHead className="w-[22%] text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                  Projeto de Pesquisa
                 </TableHead>
-                <TableHead className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                <TableHead className="w-[10%] text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                   Qtd. de exames
                 </TableHead>
-                <TableHead className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                  Data do agendamento
+                <TableHead className="w-[10%] text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                  Data
                 </TableHead>
-                <TableHead className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                <TableHead className="w-[11%] text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                   Status
                 </TableHead>
-                <TableHead className="px-6 text-right text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                <TableHead className="w-[20%] px-6 text-right text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                   Ações
                 </TableHead>
               </TableRow>
@@ -742,39 +686,42 @@ export default function SolicitacoesPage() {
                 </TableRow>
               ) : (
                 filtradas.map((s) => {
-                  const Icon = StatusIcon[s.status];
+                  const Icon = StatusIcon[s.approvalStatus];
                   return (
                     <TableRow key={s.id}>
-                      <TableCell className="px-6 py-4 font-mono text-xs text-muted-foreground">
+                      <TableCell className="px-6 py-4 font-mono text-xs text-muted-foreground truncate whitespace-nowrap">
                         {s.protocolo}
                       </TableCell>
-                      <TableCell className="py-4 text-sm font-medium text-foreground">
-                        {s.pesquisador.nome}
+                      <TableCell
+                        className="py-4 text-sm font-medium text-foreground truncate"
+                        title={s.pesquisador}
+                      >
+                        {s.pesquisador}
                       </TableCell>
-                      <TableCell className="py-4 text-sm text-foreground">
-                        {s.pesquisador.instituicao}
+                      <TableCell
+                        className="py-4 text-sm text-foreground truncate"
+                        title={s.projetoPesquisa}
+                      >
+                        {s.projetoPesquisa}
                       </TableCell>
-                      <TableCell className="py-4 text-sm text-foreground">
-                        {s.exames.length}{" "}
-                        {s.exames.length === 1 ? "exame" : "exames"}
+                      <TableCell className="py-4 text-sm text-foreground whitespace-nowrap">
+                        {s.numExames} {s.numExames === 1 ? "exame" : "exames"}
                       </TableCell>
-                      <TableCell className="py-4 text-sm text-muted-foreground">
-                        <time dateTime={s.dataAgendamento}>
-                          {formatarData(s.dataAgendamento)}
-                        </time>
+                      <TableCell className="py-4 text-sm text-muted-foreground whitespace-nowrap">
+                        {formatarData(s.dataAgendamento)}
                       </TableCell>
                       <TableCell className="py-4">
                         <Badge
-                          variant={statusVariant[s.status]}
-                          className={statusClass[s.status]}
+                          variant={statusVariant[s.approvalStatus]}
+                          className={statusClass[s.approvalStatus]}
                         >
                           <Icon className="size-3" aria-hidden />
-                          {statusRotulo[s.status]}
+                          {statusRotulo[s.approvalStatus]}
                         </Badge>
                       </TableCell>
                       <TableCell className="px-6 py-4">
                         <div className="flex items-center justify-end gap-2">
-                          {s.status === "PENDENTE" && (
+                          {s.approvalStatus === ApprovalStatus.PENDING && (
                             <Button
                               size="sm"
                               variant="outline"

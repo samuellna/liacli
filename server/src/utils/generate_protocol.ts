@@ -1,9 +1,9 @@
-import { randomUUID } from 'crypto';
+import { randomBytes } from 'crypto';
 
 export function generateProtocol(): string {
-  const date = new Date().toISOString().slice(0, 10).replace(/-/g, '');
+  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
 
-  const random = randomUUID().replace(/-/g, '').slice(0, 8).toUpperCase();
-
-  return `SAM-${date}-${random}`;
+  return Array.from(randomBytes(7))
+    .map((byte) => chars[byte % chars.length])
+    .join('');
 }

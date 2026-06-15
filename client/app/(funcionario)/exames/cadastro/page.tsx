@@ -12,6 +12,7 @@ import * as z from "zod";
 import { ClipboardList, FlaskConical, Plus, Trash2, Save } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { createExamType } from "@/api/exams";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -21,26 +22,26 @@ import { Textarea } from "@/components/ui/textarea";
 // ESQUEMAS DE VALIDAÇÃO
 const parametroSchema = z.object({
   // Validação de cada parâmetro
-  nome: z.string().min(1, "Informe o nome do parâmetro."),
-  unidade: z.string().optional(),
-  referencia: z.string().optional(),
+  name: z.string().min(1, "Informe o name do parâmetro."),
+  unit: z.string().optional(),
+  reference: z.string().optional(),
 });
 
 const grupoSchema = z.object({
   // Validação de cada grupo de parâmetros
-  nomeGrupo: z.string().optional(),
-  parametros: z
+  groupName: z.string().optional(),
+  parameters: z
     .array(parametroSchema)
     .min(1, "Adicione pelo menos um parâmetro neste grupo."),
 });
 
 const formExameSchema = z.object({
   // Validação geral do formulário de exame
-  titulo: z.string().min(1, "O título do exame é obrigatório."),
+  title: z.string().min(1, "O título do exame é obrigatório."),
   material: z.string().optional(),
-  descricao: z.string().optional(),
-  observacoes: z.string().optional(),
-  grupos: z.array(grupoSchema).min(1, "Adicione pelo menos um grupo."),
+  description: z.string().optional(),
+  observations: z.string().optional(),
+  groups: z.array(grupoSchema).min(1, "Adicione pelo menos um grupo."),
 });
 
 type FormExame = z.infer<typeof formExameSchema>;
@@ -114,7 +115,7 @@ function InformacoesGeraisSection() {
     >
       <div className="grid gap-4 sm:grid-cols-2">
         <div className="space-y-1.5 sm:col-span-2">
-          <Label htmlFor="titulo">
+          <Label htmlFor="title">
             Título do exame{" "}
             <span aria-hidden className="text-destructive">
               *
@@ -123,10 +124,10 @@ function InformacoesGeraisSection() {
           <Input
             id="titulo"
             placeholder="Ex.: Hemograma Completo"
-            {...register("titulo")}
-            aria-invalid={!!errors.titulo}
+            {...register("title")}
+            aria-invalid={!!errors.title}
           />
-          <FieldError message={errors.titulo?.message} />
+          <FieldError message={errors.title?.message} />
         </div>
 
         <div className="space-y-1.5 sm:col-span-2">
@@ -139,24 +140,24 @@ function InformacoesGeraisSection() {
         </div>
 
         <div className="space-y-1.5 sm:col-span-2">
-          <Label htmlFor="descricao">Descrição</Label>
+          <Label htmlFor="description">Descrição</Label>
           <Textarea
-            id="descricao"
+            id="description"
             placeholder="Análise completa das células sanguíneas."
             rows={3}
             className="resize-none"
-            {...register("descricao")}
+            {...register("description")}
           />
         </div>
 
         <div className="space-y-1.5 sm:col-span-2">
-          <Label htmlFor="observacoes">Observações (Preparo)</Label>
+          <Label htmlFor="observations">Observações (Preparo)</Label>
           <Textarea
-            id="observacoes"
+            id="observations"
             placeholder="Ex.: Este exame exige jejum de 8 horas."
             rows={2}
             className="resize-none"
-            {...register("observacoes")}
+            {...register("observations")}
           />
         </div>
       </div>
@@ -170,11 +171,11 @@ function GrupoItem({
   // Componente para cada grupo de parâmetros, permitindo adicionar/remover parâmetros e o próprio grupo
   groupIndex,
   onRemove,
-  totalGrupos,
+  totalGroups,
 }: {
   groupIndex: number;
   onRemove: () => void;
-  totalGrupos: number;
+  totalGroups: number;
 }) {
   const {
     control,
@@ -184,10 +185,10 @@ function GrupoItem({
 
   const { fields, append, remove } = useFieldArray({
     control,
-    name: `grupos.${groupIndex}.parametros`,
+    name: `groups.${groupIndex}.parameters`,
   });
 
-  const grupoErrors = errors.grupos?.[groupIndex];
+  const grupoErrors = errors.groups?.[groupIndex];
 
   return (
     <div className="rounded-xl border border-border bg-card shadow-sm overflow-hidden mb-5 last:mb-0">
@@ -197,10 +198,10 @@ function GrupoItem({
           <Input
             placeholder="Nome do grupo (ex.: Eritrograma)"
             className="bg-background"
-            {...register(`grupos.${groupIndex}.nomeGrupo`)}
+            {...register(`groups.${groupIndex}.groupName`)}
           />
         </div>
-        {totalGrupos > 1 && (
+        {totalGroups > 1 && (
           <Button
             type="button"
             variant="ghost"
@@ -221,23 +222,23 @@ function GrupoItem({
             key={field.id}
             className="flex flex-col sm:flex-row gap-3 items-start sm:items-start"
           >
-            <div className="flex-[2] w-full space-y-1.5">
+            <div className="flex-2 w-full space-y-1.5">
               <Input
                 placeholder="Nome do parâmetro (Ex.: Hemácias)"
                 {...register(
-                  `grupos.${groupIndex}.parametros.${paramIndex}.nome`,
+                  `groups.${groupIndex}.parameters.${paramIndex}.name`,
                 )}
-                aria-invalid={!!grupoErrors?.parametros?.[paramIndex]?.nome}
+                aria-invalid={!!grupoErrors?.parameters?.[paramIndex]?.name}
               />
               <FieldError
-                message={grupoErrors?.parametros?.[paramIndex]?.nome?.message}
+                message={grupoErrors?.parameters?.[paramIndex]?.name?.message}
               />
             </div>
             <div className="flex-1 w-full space-y-1.5">
               <Input
                 placeholder="Unidade (Ex.: g/dL)"
                 {...register(
-                  `grupos.${groupIndex}.parametros.${paramIndex}.unidade`,
+                  `groups.${groupIndex}.parameters.${paramIndex}.unit`,
                 )}
               />
             </div>
@@ -245,7 +246,7 @@ function GrupoItem({
               <Input
                 placeholder="Referência (Ex.: 4,50 a 6,10)"
                 {...register(
-                  `grupos.${groupIndex}.parametros.${paramIndex}.referencia`,
+                  `groups.${groupIndex}.parameters.${paramIndex}.reference`,
                 )}
               />
             </div>
@@ -264,8 +265,8 @@ function GrupoItem({
           </div>
         ))}
 
-        {typeof grupoErrors?.parametros?.root?.message === "string" && ( // Erro geral do array de parâmetros (ex.: nenhum parâmetro adicionado)
-          <FieldError message={grupoErrors.parametros.root.message} />
+        {typeof grupoErrors?.parameters?.root?.message === "string" && ( // Erro geral do array de parâmetros (ex.: nenhum parâmetro adicionado)
+          <FieldError message={grupoErrors.parameters.root.message} />
         )}
 
         <Button
@@ -275,9 +276,9 @@ function GrupoItem({
           className="w-full border-dashed mt-2"
           onClick={() =>
             append({
-              nome: "",
-              unidade: "",
-              referencia: "",
+              name: "",
+              unit: "",
+              reference: "",
             })
           }
         >
@@ -294,7 +295,7 @@ function GruposSection() {
   const { control } = useFormContext<FormExame>();
   const { fields, append, remove } = useFieldArray({
     control,
-    name: "grupos",
+    name: "groups",
   });
 
   return (
@@ -310,7 +311,7 @@ function GruposSection() {
             <GrupoItem
               key={field.id}
               groupIndex={index}
-              totalGrupos={fields.length}
+              totalGroups={fields.length}
               onRemove={() => remove(index)}
             />
           ))}
@@ -322,12 +323,12 @@ function GruposSection() {
           className="w-full border-dashed"
           onClick={() =>
             append({
-              nomeGrupo: "",
-              parametros: [
+              groupName: "",
+              parameters: [
                 {
-                  nome: "",
-                  unidade: "",
-                  referencia: "",
+                  name: "",
+                  unit: "",
+                  reference: "",
                 },
               ],
             })
@@ -350,18 +351,18 @@ export default function CadastroExamePage() {
   const methods = useForm<FormExame>({
     resolver: zodResolver(formExameSchema),
     defaultValues: {
-      titulo: "",
+      title: "",
       material: "",
-      descricao: "",
-      observacoes: "",
-      grupos: [
+      description: "",
+      observations: "",
+      groups: [
         {
-          nomeGrupo: "",
-          parametros: [
+          groupName: "",
+          parameters: [
             {
-              nome: "",
-              unidade: "",
-              referencia: "",
+              name: "",
+              unit: "",
+              reference: "",
             },
           ],
         },
@@ -369,17 +370,20 @@ export default function CadastroExamePage() {
     },
   });
 
-  function onSubmit(data: FormExame) {
+  async function onSubmit(data: FormExame) {
     setIsSubmitting(true);
-
-    // Log da estrutura JSON gerada pelo form conforme solicitado
-    console.log("Dados do Exame (JSON):", JSON.stringify(data, null, 2));
-
-    // Simulação do salvamento
-    setTimeout(() => {
+    try {
+      await createExamType({
+        name: data.title,
+        description: data.description ?? "",
+        material: data.material || undefined,
+        observations: data.observations || undefined,
+        groups: data.groups,
+      });
+      router.push("/exames");
+    } finally {
       setIsSubmitting(false);
-      // Aqui entraria a chamada real à API
-    }, 500);
+    }
   }
 
   return (

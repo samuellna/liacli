@@ -5,10 +5,21 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { SampleResult } from './sample_results.entity';
 import { Sample } from 'src/samples/samples.entity';
 import { SamplesModule } from 'src/samples/samples.module';
+import { ExamType } from 'src/exam_types/exam_types.entity';
+import { ExamTypesModule } from 'src/exam_types/exam_types.module';
+import { PdfModule } from 'src/pdf/pdf.module';
+import { EmailModule } from 'src/email/email.module';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([SampleResult, Sample]), SamplesModule],
+  imports: [
+    TypeOrmModule.forFeature([SampleResult, Sample, ExamType]),
+    SamplesModule,
+    ExamTypesModule,
+    PdfModule,
+    EmailModule,
+  ],
   providers: [SampleResultsService],
   controllers: [SampleResultsController],
+  exports: [SampleResultsService],
 })
 export class SampleResultsModule {}

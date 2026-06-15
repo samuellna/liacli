@@ -1,13 +1,14 @@
 import { Employees } from 'src/employees/employees.entity';
-import { ExamType } from 'src/exam_types/exam_types.entity';
 import { ResearchProject } from 'src/researcher_projects/researcher_projects.entity';
-import { Researchers } from 'src/researchers/researchers.entity';
+import { SampleResult } from 'src/sample_results/sample_results.entity';
 import {
   Column,
   CreateDateColumn,
   Entity,
   ManyToOne,
+  OneToMany,
   PrimaryGeneratedColumn,
+  UpdateDateColumn,
 } from 'typeorm';
 
 export enum SampleStatus {
@@ -29,12 +30,6 @@ export class Sample {
   @PrimaryGeneratedColumn('increment')
   id: number;
 
-  @ManyToOne(() => ExamType, (examType) => examType.samples)
-  examType: ExamType;
-
-  @ManyToOne(() => Researchers, (researcher) => researcher.samples)
-  researcher: Researchers;
-
   @Column({ unique: true })
   protocol: string;
 
@@ -51,21 +46,24 @@ export class Sample {
   @ManyToOne(() => Employees, { nullable: true })
   approvedBy: Employees;
 
-  @ManyToOne(() => ResearchProject, { nullable: true })
+  @ManyToOne(() => ResearchProject, (p) => p.samples, { nullable: false })
   researchProject: ResearchProject;
+
+  @Column({ type: 'int' })
+  animalsInThisShipment: number;
+
+  @OneToMany(() => SampleResult, (r) => r.sample)
+  results: SampleResult[];
 
   @Column({ type: 'timestamp', nullable: true })
   approvedAt: Date;
 
-  @CreateDateColumn({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
-  collectedAt: Date;
-
   @Column({ type: 'timestamp', nullable: true })
   scheduledAt: Date;
 
-  @CreateDateColumn({ name: 'created_at' })
+  @CreateDateColumn({ name: 'created_at', type: 'timestamp' })
   createdAt: Date;
 
-  @CreateDateColumn({ name: 'updated_at' })
+  @UpdateDateColumn({ name: 'updated_at', type: 'timestamp' })
   updatedAt: Date;
 }

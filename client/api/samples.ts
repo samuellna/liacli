@@ -1,15 +1,16 @@
 import api from "./axios";
-import type { Sample, SampleStatus } from "./types";
+import type { Sample } from "./types";
 
 export interface CreateSampleData {
-  examTypeId: number;
-  researcherId: number;
+  researchProjectId: number;
+  animalsInThisShipment: number;
   scheduledAt: string;
 }
 
 export interface ApproveSampleData {
   approved: boolean;
   employeeId: number;
+  decisionReason?: string;
 }
 
 export async function findAllSamples(): Promise<Sample[]> {
@@ -36,9 +37,9 @@ export async function createSample(data: CreateSampleData): Promise<Sample> {
 
 export async function updateSampleStatus(
   id: number,
-  status: SampleStatus,
+  status: string,
 ): Promise<Sample> {
-  const response = await api.patch<Sample>(`/samples/${id}`, { status });
+  const response = await api.patch<Sample>(`/samples/${id}/status`, { status });
   return response.data;
 }
 

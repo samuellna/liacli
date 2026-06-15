@@ -8,7 +8,6 @@ import {
   Param,
   Patch,
   Post,
-  Query,
   // UseGuards,
 } from '@nestjs/common';
 import { ExamTypesService } from './exam_types.service';

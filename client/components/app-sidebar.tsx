@@ -7,7 +7,6 @@ import {
   FileText,
   TestTube,
   Activity,
-  FileCheck2,
   LogOut,
   FlaskConical,
 } from "lucide-react";
@@ -30,9 +29,7 @@ const mainItems = [
   { title: "Dashboard", url: "/dashboard", icon: LayoutDashboard },
   { title: "Solicitações", url: "/solicitacoes", icon: FileText },
   { title: "Amostras", url: "/amostras", icon: TestTube },
-  {title: "Exames", url: "/exames", icon: FlaskConical},
   { title: "Resultados", url: "/resultados", icon: Activity },
-  { title: "Laudos", url: "/laudos", icon: FileCheck2 },
 ];
 
 export function AppSidebar() {
@@ -74,7 +71,8 @@ export function AppSidebar() {
 
           <SidebarMenu className="mt-3 space-y-1">
             {mainItems.map((item) => {
-              const isActive = pathname === item.url || pathname.startsWith(item.url + "/");
+              const isActive =
+                pathname === item.url || pathname.startsWith(item.url + "/");
               return (
                 <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton
@@ -93,6 +91,24 @@ export function AppSidebar() {
           </SidebarMenu>
         </SidebarGroup>
 
+        <SidebarGroup>
+          <SidebarGroupLabel className="text-sidebar-foreground/50 text-xs font-semibold tracking-widest">
+            ADMINISTRATIVO
+          </SidebarGroupLabel>
+          <SidebarMenu className="mt-3 space-y-1">
+            <SidebarMenuItem>
+              <SidebarMenuButton
+                asChild
+                className="h-11 rounded-xl text-sidebar-foreground/80 transition-colors duration-150 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+              >
+                <Link href="/exames">
+                  <FlaskConical />
+                  <span className="font-medium">Exames</span>
+                </Link>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+          </SidebarMenu>
+        </SidebarGroup>
         <SidebarGroup className="mt-8">
           <SidebarGroupLabel className="text-sidebar-foreground/50 text-xs font-semibold tracking-widest">
             CONTA
@@ -125,7 +141,9 @@ export function AppSidebar() {
             <p className="truncate text-sm font-semibold text-sidebar-foreground">
               {displayName}
             </p>
-            <p className="truncate text-xs text-sidebar-foreground/60">{cargo}</p>
+            <p className="truncate text-xs text-sidebar-foreground/60">
+              {cargo}
+            </p>
           </div>
         </div>
       </SidebarFooter>

@@ -37,6 +37,23 @@ export class ResearchProjectsController {
     }
   }
 
+  @Get('finalized')
+  @HttpCode(HttpStatus.OK)
+  async findAllFinalized() {
+    try {
+      return await this.researchProjectsService.findAllFinalized();
+    } catch (error) {
+      throw new HttpException(
+        {
+          status: 500,
+          message: 'Error fetching finalized researchers projects',
+        },
+        HttpStatus.INTERNAL_SERVER_ERROR,
+        { cause: error },
+      );
+    }
+  }
+
   @Get('by-researcher/:researcherId')
   @HttpCode(HttpStatus.OK)
   async findByResearcher(@Param('researcherId') researcherId: number) {

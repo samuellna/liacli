@@ -1,11 +1,21 @@
-import { Sample } from 'src/samples/samples.entity';
 import {
   Column,
   CreateDateColumn,
   Entity,
-  OneToMany,
   PrimaryGeneratedColumn,
+  UpdateDateColumn,
 } from 'typeorm';
+
+export type ExamParameter = {
+  name: string;
+  unit?: string;
+  reference?: string;
+};
+
+export type ParameterGroups = {
+  groupName?: string;
+  parameters: ExamParameter[];
+};
 
 @Entity({ name: 'exam_types' })
 export class ExamType {
@@ -18,12 +28,18 @@ export class ExamType {
   @Column('text')
   description: string;
 
-  @OneToMany(() => Sample, (sample) => sample.examType)
-  samples: Sample[];
+  @Column('varchar', { length: 255, nullable: true })
+  material: string | null;
+
+  @Column('text', { nullable: true })
+  observations: string | null;
+
+  @Column('jsonb', { nullable: true })
+  groups: ParameterGroups[] | null;
 
   @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;
 
-  @CreateDateColumn({ name: 'updated_at' })
+  @UpdateDateColumn({ name: 'updated_at' })
   updatedAt: Date;
 }

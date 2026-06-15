@@ -1,7 +1,12 @@
 "use client";
 
-import { useMemo, useState } from "react";
-import { ClipboardCheck, FlaskConical } from "lucide-react";
+import { useEffect, useState } from "react";
+import {
+  AlertCircle,
+  ClipboardCheck,
+  FlaskConical,
+  Loader2,
+} from "lucide-react";
 import { useParams, useRouter } from "next/navigation";
 import { toast } from "sonner";
 
@@ -16,150 +21,129 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Textarea } from "@/components/ui/textarea";
 
-import { findTemplate, type GrupoExame } from "../_lib/exam-parameters";
+import { findSampleById } from "@/api/samples";
+import { createSampleResult } from "@/api/results";
+import { ApprovalStatus, SampleStatus } from "@/api/types";
+import type { ExamType, ParameterGroups, Sample } from "@/api/types";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
-type StatusAmostra = "Pendente" | "Em análise" | "Concluído";
+type GroupForm = Record<string, string>; // paramNome → value
 
-type Exame = { id: number; nome: string };
-
-type Amostra = {
-  codigo: string;
-  protocolo: string;
-  pesquisador: string;
-  dataAgendamento: string;
-  status: StatusAmostra;
-  exames: Exame[];
+type ExameFormState = {
+  parameters: Record<string, GroupForm>; // nomeGrupo → paramNome → value
+  observations: string;
+  genericValue: string;
 };
 
-// ─── Mock ─────────────────────────────────────────────────────────────────────
-
-const amostrasMock: Record<string, Amostra> = {
-  AM001: {
-    codigo: "AM001",
-    protocolo: "A1B2C3",
-    pesquisador: "João Silva",
-    dataAgendamento: "20/05/2026",
-    status: "Em análise",
-    exames: [{ id: 1, nome: "Glicemia" }],
-  },
-  AM002: {
-    codigo: "AM002",
-    protocolo: "D4E5F6",
-    pesquisador: "Maria Souza",
-    dataAgendamento: "08/05/2026",
-    status: "Concluído",
-    exames: [{ id: 1, nome: "Hemograma" }],
-  },
-  AM003: {
-    codigo: "AM003",
-    protocolo: "D4E5F6",
-    pesquisador: "Maria Souza",
-    dataAgendamento: "08/05/2026",
-    status: "Pendente",
-    exames: [{ id: 1, nome: "Hemograma" }],
-  },
-  AM004: {
-    codigo: "AM004",
-    protocolo: "G7H8I9",
-    pesquisador: "Carlos Melo",
-    dataAgendamento: "15/05/2026",
-    status: "Em análise",
-    exames: [
-      { id: 1, nome: "Hemograma" },
-      { id: 2, nome: "Glicemia" },
-    ],
-  },
-};
+type FormState = Record<number, ExameFormState>; // examTypeId → state
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
-const statusClass: Record<StatusAmostra, string> = {
-  Pendente:
-    "border-warning/40 bg-warning/15 text-warning-foreground dark:text-warning",
-  "Em análise": "border-info/40 bg-info/15 text-info dark:text-info",
-  Concluído: "border-success/40 bg-success/15 text-success dark:text-success",
-};
-
-// ─── Estado do formulário ─────────────────────────────────────────────────────
-
-type FormState = Record<
-  number,
-  {
-    parametros: Record<string, Record<string, string>>;
-    observacoes: string;
-    valorGenerico: string;
-  }
->;
-
-function buildInitialState(exames: Exame[]): FormState {
+function buildInitialState(examTypes: ExamType[]): FormState {
   const state: FormState = {};
-  for (const exame of exames) {
-    const template = findTemplate(exame.nome);
-    const parametros: Record<string, Record<string, string>> = {};
-    if (template) {
-      for (const grupo of template.grupos) {
-        parametros[grupo.id] = {};
-        for (const param of grupo.parametros) {
-          parametros[grupo.id][param.id] = "";
+  for (const et of examTypes) {
+    const parameters: Record<string, GroupForm> = {};
+    if (et.groups) {
+      for (const group of et.groups) {
+        const key = group.groupName ?? "";
+        parameters[key] = {};
+        for (const param of group.parameters) {
+          parameters[key][param.name] = "";
         }
       }
     }
-    state[exame.id] = { parametros, observacoes: "", valorGenerico: "" };
+    state[et.id] = { parameters, observations: "", genericValue: "" };
   }
   return state;
 }
 
-// ─── Sub-componente: grupo de parâmetros ──────────────────────────────────────
+function buildResultData(
+  et: ExamType,
+  etForm: ExameFormState,
+): Record<string, unknown> {
+  const data: Record<string, unknown> = {};
 
-function GrupoParametros({
-  grupo,
-  valores,
+  if (et.groups && et.groups.length > 0) {
+    for (const group of et.groups) {
+      const key = group.groupName ?? "";
+      data[key] = { ...etForm.parameters[key] };
+    }
+  } else {
+    data.resultData = etForm.genericValue;
+  }
+
+  return data;
+}
+
+// ─── Status helpers ───────────────────────────────────────────────────────────
+
+const statusClass: Partial<Record<SampleStatus, string>> = {
+  [SampleStatus.PENDING]:
+    "border-warning/40 bg-warning/15 text-warning-foreground dark:text-warning",
+  [SampleStatus.COLLECTED]:
+    "border-info/40 bg-info/15 text-info dark:text-info",
+  [SampleStatus.ANALYZING]:
+    "border-info/40 bg-info/15 text-info dark:text-info",
+  [SampleStatus.DONE]:
+    "border-success/40 bg-success/15 text-success dark:text-success",
+  [SampleStatus.REJECTED]:
+    "border-destructive/40 bg-destructive/15 text-destructive dark:text-destructive",
+};
+
+const statusLabel: Partial<Record<SampleStatus, string>> = {
+  [SampleStatus.PENDING]: "Pendente",
+  [SampleStatus.COLLECTED]: "Coletada",
+  [SampleStatus.ANALYZING]: "Em análise",
+  [SampleStatus.DONE]: "Concluído",
+  [SampleStatus.REJECTED]: "Rejeitado",
+};
+
+// ─── Sub-components ───────────────────────────────────────────────────────────
+
+function GroupSection({
+  group,
+  values,
   onChangeParam,
 }: {
-  grupo: GrupoExame;
-  valores: Record<string, string>;
-  onChangeParam: (paramId: string, value: string) => void;
+  group: ParameterGroups;
+  values: GroupForm;
+  onChangeParam: (paramNome: string, value: string) => void;
 }) {
   return (
     <div className="rounded-md border">
       <div className="border-b bg-muted/40 px-4 py-2.5">
-        <p className="text-sm font-semibold">{grupo.nome}</p>
-        {grupo.metodo && (
-          <p className="text-xs text-muted-foreground">Método: {grupo.metodo}</p>
-        )}
+        <p className="text-sm font-semibold">
+          {group.groupName || "Parâmetros"}
+        </p>
       </div>
-
       <div className="divide-y">
-        {grupo.parametros.map((param) => (
+        {group.parameters.map((param) => (
           <div
-            key={param.id}
+            key={param.name}
             className="grid grid-cols-1 items-start gap-2 px-4 py-3 sm:grid-cols-[1fr_auto_auto]"
           >
             <div>
-              <p className="text-sm font-medium">{param.nome}</p>
-              {param.referencia && (
+              <p className="text-sm font-medium">{param.name}</p>
+              {param.reference && (
                 <p className="text-xs text-muted-foreground">
-                  Ref: {param.referencia}
+                  Ref: {param.reference}
                 </p>
               )}
             </div>
-
             <div className="flex items-center gap-2">
               <Input
-                type={param.tipo}
-                step={param.tipo === "number" ? "0.01" : undefined}
                 placeholder="—"
-                value={valores[param.id] ?? ""}
-                onChange={(e) => onChangeParam(param.id, e.target.value)}
+                value={values[param.name] ?? ""}
+                onChange={(e) => onChangeParam(param.name, e.target.value)}
                 className="w-36"
               />
-              {param.unidade !== "—" && (
+              {param.unit && param.unit !== "—" && (
                 <span className="shrink-0 text-sm text-muted-foreground">
-                  {param.unidade}
+                  {param.unit}
                 </span>
               )}
             </div>
@@ -170,35 +154,36 @@ function GrupoParametros({
   );
 }
 
-// ─── Not found ────────────────────────────────────────────────────────────────
-
-function AmostraNaoEncontrada({ id }: { id: string }) {
-  const router = useRouter();
+function PageSkeleton() {
   return (
     <div className="space-y-6">
       <header className="space-y-1">
-        <h1 className="flex items-center gap-2 text-2xl font-semibold">
-          <ClipboardCheck className="size-6" />
-          Cadastro de Resultados
-        </h1>
+        <Skeleton className="h-8 w-64" />
+        <Skeleton className="h-4 w-72" />
       </header>
-
       <Card>
-        <CardContent className="flex flex-col items-center gap-3 py-16 text-center">
-          <FlaskConical className="size-10 text-muted-foreground/40" aria-hidden />
-          <p className="text-sm font-medium">
-            Amostra <span className="font-mono">{id}</span> não encontrada.
-          </p>
-          <p className="text-xs text-muted-foreground">
-            Verifique o código e tente novamente.
-          </p>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => router.push("/amostras")}
-          >
-            Voltar para amostras
-          </Button>
+        <CardHeader className="border-b">
+          <Skeleton className="h-5 w-44" />
+          <Skeleton className="h-4 w-32" />
+        </CardHeader>
+        <CardContent className="grid gap-4 pt-6 md:grid-cols-2">
+          {Array.from({ length: 6 }).map((_, i) => (
+            <div key={i} className="space-y-1.5">
+              <Skeleton className="h-3 w-24" />
+              <Skeleton className="h-5 w-40" />
+            </div>
+          ))}
+        </CardContent>
+      </Card>
+      <Card>
+        <CardHeader className="border-b">
+          <Skeleton className="h-5 w-32" />
+          <Skeleton className="h-4 w-48" />
+        </CardHeader>
+        <CardContent className="space-y-4 pt-4">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <Skeleton key={i} className="h-14 w-full rounded-md" />
+          ))}
         </CardContent>
       </Card>
     </div>
@@ -211,117 +196,179 @@ export default function CadastroResultadoPage() {
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
 
-  const amostra = amostrasMock[id?.toUpperCase() ?? ""];
+  const [sample, setSample] = useState<Sample | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
+  const [form, setForm] = useState<FormState>({});
+  const [isSaving, setIsSaving] = useState(false);
 
-  const [loading, setLoading] = useState(false);
-  const [form, setForm] = useState<FormState>(() =>
-    buildInitialState(amostra?.exames ?? []),
-  );
-
-  const formReady = useMemo(
-    () => buildInitialState(amostra?.exames ?? []),
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [],
-  );
-
-  if (!amostra) {
-    return <AmostraNaoEncontrada id={id ?? ""} />;
-  }
-
-  function handleParamChange(
-    exameId: number,
-    grupoId: string,
-    paramId: string,
-    value: string,
-  ) {
-    setForm((prev) => ({
-      ...prev,
-      [exameId]: {
-        ...prev[exameId],
-        parametros: {
-          ...prev[exameId].parametros,
-          [grupoId]: {
-            ...prev[exameId].parametros[grupoId],
-            [paramId]: value,
-          },
-        },
-      },
-    }));
-  }
-
-  function handleCampoChange(
-    exameId: number,
-    field: "valorGenerico" | "observacoes",
-    value: string,
-  ) {
-    setForm((prev) => ({
-      ...prev,
-      [exameId]: { ...prev[exameId], [field]: value },
-    }));
-  }
-
-  async function salvarResultados() {
-    setLoading(true);
-    try {
-      const resultData: Record<string, unknown> = {};
-
-      for (const exame of amostra.exames) {
-        const exameForm = form[exame.id];
-        const template = findTemplate(exame.nome);
-
-        if (template) {
-          const exameData: Record<string, unknown> = {};
-          for (const grupo of template.grupos) {
-            exameData[grupo.id] = { ...exameForm.parametros[grupo.id] };
-          }
-          if (exameForm.observacoes) {
-            exameData.observacoes = exameForm.observacoes;
-          }
-          resultData[exame.nome.toLowerCase()] = exameData;
-        } else {
-          resultData[exame.nome.toLowerCase()] = {
-            resultado: exameForm.valorGenerico,
-            observacoes: exameForm.observacoes,
-          };
-        }
-      }
-
-      // TODO: POST /sample-results com { sampleId, resultData }
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-      console.log(
-        "resultData:",
-        JSON.stringify({ sampleId: amostra.codigo, resultData }, null, 2),
-      );
-
-      toast.success("Resultados cadastrados com sucesso.");
-      router.push("/amostras");
-    } catch {
-      toast.error("Erro ao salvar resultados.");
-    } finally {
-      setLoading(false);
+  useEffect(() => {
+    const sampleId = Number(id);
+    if (!sampleId || isNaN(sampleId)) {
+      setLoadError("ID de amostra inválido.");
+      setIsLoading(false);
+      return;
     }
+
+    findSampleById(sampleId)
+      .then((data) => {
+        setSample(data);
+        setForm(buildInitialState(data.researchProject.examTypes));
+      })
+      .catch(() => setLoadError("Amostra não encontrada."))
+      .finally(() => setIsLoading(false));
+  }, [id]);
+
+  if (isLoading) return <PageSkeleton />;
+
+  if (loadError || !sample) {
+    return (
+      <div className="space-y-6">
+        <header className="space-y-1">
+          <h1 className="flex items-center gap-2 text-2xl font-semibold">
+            <ClipboardCheck className="size-6" />
+            Cadastro de Resultados
+          </h1>
+        </header>
+        <Card>
+          <CardContent className="flex flex-col items-center gap-3 py-16 text-center">
+            <AlertCircle className="size-10 text-destructive/50" aria-hidden />
+            <p className="text-sm font-medium">
+              {loadError ?? "Amostra não encontrada."}
+            </p>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => router.push("/amostras")}
+            >
+              Voltar para amostras
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
   }
 
-  if (amostra.status === "Concluído") {
+  if (sample.approvalStatus !== ApprovalStatus.APPROVED) {
+    const msg =
+      sample.approvalStatus === ApprovalStatus.REJECTED
+        ? "Esta amostra foi rejeitada e não pode receber resultados."
+        : "Esta amostra ainda não foi aprovada. Aguarde a aprovação para cadastrar resultados.";
+
+    return (
+      <div className="space-y-6">
+        <header className="space-y-1">
+          <h1 className="flex items-center gap-2 text-2xl font-semibold">
+            <ClipboardCheck className="size-6" />
+            Cadastro de Resultados
+          </h1>
+        </header>
+        <Card>
+          <CardContent className="flex flex-col items-center gap-3 py-16 text-center">
+            <FlaskConical
+              className="size-10 text-muted-foreground/40"
+              aria-hidden
+            />
+            <p className="text-sm font-medium">{msg}</p>
+            <p className="font-mono text-xs text-muted-foreground">
+              {sample.protocol}
+            </p>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => router.push("/amostras")}
+            >
+              Voltar para amostras
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  if (sample.status === SampleStatus.DONE) {
     return (
       <div className="space-y-6">
         <header className="space-y-1">
           <h1 className="text-2xl font-semibold">Cadastro de Resultados</h1>
           <p className="text-sm text-muted-foreground">
-            Esta amostra já possui resultados cadastrados.
+            Todos os resultados desta amostra já foram cadastrados.
           </p>
         </header>
-
         <Card>
-          <CardContent className="py-8">
+          <CardContent className="py-8 text-center">
             <p className="text-sm text-muted-foreground">
-              Nenhuma alteração pode ser realizada.
+              Nenhuma alteração pode ser realizada. Protocolo:
+              <span className="font-mono">{sample.protocol}</span>
             </p>
           </CardContent>
         </Card>
       </div>
     );
   }
+
+  function handleParamChange(
+    examTypeId: number,
+    groupName: string,
+    paramNome: string,
+    value: string,
+  ) {
+    setForm((prev) => ({
+      ...prev,
+      [examTypeId]: {
+        ...prev[examTypeId],
+        parameters: {
+          ...prev[examTypeId].parameters,
+          [groupName]: {
+            ...prev[examTypeId].parameters[groupName],
+            [paramNome]: value,
+          },
+        },
+      },
+    }));
+  }
+
+  function handleFieldChange(
+    examTypeId: number,
+    field: "genericValue" | "observations",
+    value: string,
+  ) {
+    setForm((prev) => ({
+      ...prev,
+      [examTypeId]: { ...prev[examTypeId], [field]: value },
+    }));
+  }
+
+  async function salvarResultados() {
+    setIsSaving(true);
+    if (loadError || !sample) {
+      toast.error("Amostra inválida. Impossível salvar resultados.");
+      setIsSaving(false);
+      return;
+    }
+    try {
+      const examTypes = sample.researchProject.examTypes;
+      for (const et of examTypes) {
+        const etForm = form[et.id];
+        await createSampleResult({
+          sampleId: sample.id,
+          examTypeId: et.id,
+          resultData: buildResultData(et, etForm),
+          observations: etForm.observations.trim() || undefined,
+        });
+      }
+      toast.success("Resultados cadastrados com sucesso.");
+      router.push("/amostras");
+    } catch {
+      toast.error(
+        "Erro ao salvar resultados. Verifique os dados e tente novamente.",
+      );
+    } finally {
+      setIsSaving(false);
+    }
+  }
+
+  const examTypes = sample.researchProject.examTypes;
 
   return (
     <div className="space-y-6">
@@ -341,76 +388,90 @@ export default function CadastroResultadoPage() {
           <CardTitle>Informações da Amostra</CardTitle>
           <CardDescription>Dados gerais da solicitação.</CardDescription>
         </CardHeader>
-
-        <CardContent className="grid gap-4 md:grid-cols-2">
-          <div>
-            <p className="text-sm text-muted-foreground">Código da Amostra</p>
-            <p className="font-medium">{amostra.codigo}</p>
-          </div>
-
+        <CardContent className="grid gap-4 pt-6 md:grid-cols-2">
           <div>
             <p className="text-sm text-muted-foreground">Protocolo</p>
-            <p className="font-mono">{amostra.protocolo}</p>
+            <p className="font-mono font-medium">{sample.protocol}</p>
           </div>
-
           <div>
             <p className="text-sm text-muted-foreground">Pesquisador</p>
-            <p>{amostra.pesquisador}</p>
+            <p className="font-medium">
+              {sample.researchProject.researcher.name}
+            </p>
           </div>
-
+          <div>
+            <p className="text-sm text-muted-foreground">Projeto</p>
+            <p className="font-medium">{sample.researchProject.title}</p>
+          </div>
           <div>
             <p className="text-sm text-muted-foreground">Data do Agendamento</p>
-            <p>{amostra.dataAgendamento}</p>
+            <p className="font-medium">
+              {sample.scheduledAt
+                ? new Date(sample.scheduledAt).toLocaleDateString("pt-BR")
+                : "—"}
+            </p>
           </div>
-
+          <div>
+            <p className="text-sm text-muted-foreground">
+              Animais nesta remessa
+            </p>
+            <p className="font-medium">{sample.animalsInThisShipment}</p>
+          </div>
           <div>
             <p className="text-sm text-muted-foreground">Status</p>
-            <Badge variant="outline" className={statusClass[amostra.status]}>
-              {amostra.status}
+            <Badge
+              variant="outline"
+              className={statusClass[sample.status] ?? ""}
+            >
+              {statusLabel[sample.status] ?? sample.status}
             </Badge>
           </div>
         </CardContent>
       </Card>
 
-      {/* Exames */}
-      {amostra.exames.map((exame) => {
-        const template = findTemplate(exame.nome);
-        const exameForm = form[exame.id];
+      {/* Formulário por tipo de exame */}
+      {examTypes.map((et) => {
+        const etForm = form[et.id];
+        if (!etForm) return null;
 
         return (
-          <Card key={exame.id}>
+          <Card key={et.id}>
             <CardHeader className="border-b">
-              <CardTitle>{exame.nome}</CardTitle>
+              <CardTitle>{et.name}</CardTitle>
               <CardDescription>
                 Preencha os resultados obtidos na análise.
               </CardDescription>
             </CardHeader>
 
-            <CardContent className="space-y-4">
-              {template ? (
+            <CardContent className="space-y-4 pt-4">
+              {et.groups && et.groups.length > 0 ? (
                 <>
-                  {template.grupos.map((grupo) => (
-                    <GrupoParametros
-                      key={grupo.id}
-                      grupo={grupo}
-                      valores={exameForm.parametros[grupo.id] ?? {}}
-                      onChangeParam={(paramId, value) =>
-                        handleParamChange(exame.id, grupo.id, paramId, value)
+                  {et.groups.map((group) => (
+                    <GroupSection
+                      key={group.groupName ?? "default"}
+                      group={group}
+                      values={etForm.parameters[group.groupName ?? ""] ?? {}}
+                      onChangeParam={(paramNome, value) =>
+                        handleParamChange(
+                          et.id,
+                          group.groupName ?? "",
+                          paramNome,
+                          value,
+                        )
                       }
                     />
                   ))}
-
                   <div className="space-y-1.5">
-                    <Label htmlFor={`obs-${exame.id}`}>
+                    <Label htmlFor={`obs-${et.id}`}>
                       Observações{" "}
                       <span className="text-muted-foreground">(opcional)</span>
                     </Label>
                     <Textarea
-                      id={`obs-${exame.id}`}
-                      placeholder="Ex: Série Vermelha - Normocitose e Normocromia"
-                      value={exameForm.observacoes}
+                      id={`obs-${et.id}`}
+                      placeholder="Ex: Série Vermelha — Normocitose e Normocromia"
+                      value={etForm.observations}
                       onChange={(e) =>
-                        handleCampoChange(exame.id, "observacoes", e.target.value)
+                        handleFieldChange(et.id, "observations", e.target.value)
                       }
                       rows={3}
                     />
@@ -419,29 +480,29 @@ export default function CadastroResultadoPage() {
               ) : (
                 <>
                   <div className="space-y-1.5">
-                    <Label htmlFor={`val-${exame.id}`}>Resultado</Label>
+                    <Label htmlFor={`val-${et.id}`}>Resultado</Label>
                     <Input
-                      id={`val-${exame.id}`}
+                      id={`val-${et.id}`}
                       placeholder="Digite o resultado"
-                      value={exameForm.valorGenerico}
+                      value={etForm.genericValue}
                       onChange={(e) =>
-                        handleCampoChange(exame.id, "valorGenerico", e.target.value)
+                        handleFieldChange(et.id, "genericValue", e.target.value)
                       }
                     />
                   </div>
-
                   <div className="space-y-1.5">
-                    <Label htmlFor={`obs-${exame.id}`}>
+                    <Label htmlFor={`obs-${et.id}`}>
                       Observações{" "}
                       <span className="text-muted-foreground">(opcional)</span>
                     </Label>
-                    <Input
-                      id={`obs-${exame.id}`}
+                    <Textarea
+                      id={`obs-${et.id}`}
                       placeholder="Observações (opcional)"
-                      value={exameForm.observacoes}
+                      value={etForm.observations}
                       onChange={(e) =>
-                        handleCampoChange(exame.id, "observacoes", e.target.value)
+                        handleFieldChange(et.id, "observations", e.target.value)
                       }
+                      rows={3}
                     />
                   </div>
                 </>
@@ -453,12 +514,22 @@ export default function CadastroResultadoPage() {
 
       {/* Ações */}
       <div className="flex justify-end gap-3">
-        <Button variant="outline" onClick={() => router.push("/amostras")}>
+        <Button
+          variant="outline"
+          onClick={() => router.push("/amostras")}
+          disabled={isSaving}
+        >
           Cancelar
         </Button>
-
-        <Button onClick={salvarResultados} disabled={loading}>
-          {loading ? "Salvando..." : "Salvar Resultados"}
+        <Button onClick={salvarResultados} disabled={isSaving}>
+          {isSaving ? (
+            <>
+              <Loader2 className="mr-2 size-4 animate-spin" aria-hidden />
+              Salvando...
+            </>
+          ) : (
+            "Salvar Resultados"
+          )}
         </Button>
       </div>
     </div>

@@ -25,9 +25,97 @@ export async function runSeed(dataSource: DataSource) {
   // ─── EXAM TYPES ───────────────────────────────────────────────────────────
 
   const examTypesData = [
-    { name: 'Hemograma', description: 'Exame de sangue completo' },
-    { name: 'Eletrocardiograma', description: 'Exame do coração' },
-    { name: 'Glicemia', description: 'Medição de glicose no sangue' },
+    {
+      name: 'Hemograma',
+      description: 'Exame de sangue completo',
+      groups: [
+        {
+          groupName: 'Eritrograma',
+          parameters: [
+            {
+              name: 'Hemácias',
+              unit: 'Milhões/mm³',
+              reference: 'Homens: 4,50–6,10 | Mulheres: 4,00–5,40',
+            },
+            {
+              name: 'Hemoglobina',
+              unit: 'g/dL',
+              reference: 'Homens: 13,0–16,5 | Mulheres: 12,0–15,8',
+            },
+            {
+              name: 'Hematócrito',
+              unit: '%',
+              reference: 'Homens: 36,0–54,0 | Mulheres: 33,0–47,8',
+            },
+            { name: 'VCM', unit: 'fL', reference: '80,0–98,0' },
+            { name: 'HCM', unit: 'pg', reference: '26,8–32,9' },
+            { name: 'CHCM', unit: 'g/dL', reference: '30,0–36,5' },
+          ],
+        },
+        {
+          groupName: 'Leucograma',
+          parameters: [
+            { name: 'Leucócitos', unit: '/mm³', reference: '3.600–11.000' },
+            { name: 'Bastonetes', unit: '/mm³', reference: '0–550' },
+            { name: 'Segmentados', unit: '/mm³', reference: '1.480–7.700' },
+            { name: 'Eosinófilos', unit: '/mm³', reference: '0–550' },
+            { name: 'Basófilos', unit: '/mm³', reference: '0–220' },
+            {
+              name: 'Linfócitos Típicos',
+              unit: '/mm³',
+              reference: '740–5.500',
+            },
+            { name: 'Monócitos', unit: '/mm³', reference: '37–1.100' },
+          ],
+        },
+        {
+          groupName: 'Série Plaquetária',
+          parameters: [
+            {
+              name: 'Plaquetas',
+              unit: '/mm³',
+              reference: '150.000–450.000',
+            },
+          ],
+        },
+      ],
+    },
+    {
+      name: 'Eletrocardiograma',
+      description: 'Exame do coração',
+      groups: [
+        {
+          groupName: 'ECG',
+          parameters: [
+            {
+              name: 'Frequência Cardíaca',
+              unit: 'bpm',
+              reference: '60–100',
+            },
+            { name: 'Ritmo', unit: '—', reference: '' },
+            { name: 'Intervalo PR', unit: 'ms', reference: '120–200' },
+            { name: 'QRS', unit: 'ms', reference: '< 120' },
+            { name: 'Intervalo QT', unit: 'ms', reference: '< 440' },
+          ],
+        },
+      ],
+    },
+    {
+      name: 'Glicemia',
+      description: 'Medição de glicose no sangue',
+      groups: [
+        {
+          groupName: 'Glicemia',
+          parameters: [
+            {
+              name: 'Glicose',
+              unit: 'mg/dL',
+              reference: 'Jejum: 70–99 | 2h pós-prandial: < 140',
+            },
+          ],
+        },
+      ],
+    },
   ];
 
   const examTypes: ExamType[] = [];
@@ -37,6 +125,9 @@ export async function runSeed(dataSource: DataSource) {
 
     if (!existing) {
       existing = await examRepo.save(exam);
+    } else if (!existing.groups) {
+      await examRepo.update(existing.id, { groups: exam.groups });
+      existing = { ...existing, groups: exam.groups };
     }
 
     examTypes.push(existing);
@@ -45,7 +136,6 @@ export async function runSeed(dataSource: DataSource) {
   const [hemograma, ecg, glicemia] = examTypes;
 
   // ─── RESEARCHERS ──────────────────────────────────────────────────────────
-  // Novos campos: phone, advisorName, level
 
   const researchersData = [
     {
@@ -77,9 +167,7 @@ export async function runSeed(dataSource: DataSource) {
   const researchers: Researchers[] = [];
 
   for (const r of researchersData) {
-    let existing = await researcherRepo.findOne({
-      where: { email: r.email },
-    });
+    let existing = await researcherRepo.findOne({ where: { email: r.email } });
 
     if (!existing) {
       existing = await researcherRepo.save(r);
@@ -99,12 +187,7 @@ export async function runSeed(dataSource: DataSource) {
       password: '123456',
       role: 'ADMIN',
     },
-    {
-      name: 'Pedro',
-      email: 'pedro@lab.com',
-      password: '123456',
-      role: 'TECH',
-    },
+    { name: 'Pedro', email: 'pedro@lab.com', password: '123456', role: 'TECH' },
   ];
 
   const employees: Employees[] = [];
@@ -121,9 +204,7 @@ export async function runSeed(dataSource: DataSource) {
       });
     }
 
-    let employee = await employeeRepo.findOne({
-      where: { email: emp.email },
-    });
+    let employee = await employeeRepo.findOne({ where: { email: emp.email } });
 
     if (!employee) {
       employee = await employeeRepo.save({
@@ -193,7 +274,6 @@ export async function runSeed(dataSource: DataSource) {
   const [p1, p2, p3] = projects;
 
   // ─── SAMPLES ──────────────────────────────────────────────────────────────
-  // Campo researchProject adicionado (nullable para retrocompatibilidade)
 
   const sampleCount = await sampleRepo.count();
 
@@ -202,9 +282,9 @@ export async function runSeed(dataSource: DataSource) {
   if (sampleCount === 0) {
     samples = await sampleRepo.save([
       {
-        examType: hemograma,
-        researcher: r1,
+        // p1: hemograma + glicemia — DONE (todos os exames com resultado)
         researchProject: p1,
+        animalsInThisShipment: 10,
         protocol: generateProtocol(),
         status: SampleStatus.DONE,
         approvalStatus: ApprovalStatus.APPROVED,
@@ -213,9 +293,29 @@ export async function runSeed(dataSource: DataSource) {
         scheduledAt: new Date(Date.now() + 86400000),
       },
       {
-        examType: ecg,
-        researcher: r3,
+        // p1: hemograma + glicemia — ANALYZING (aprovada, sem resultado ainda)
+        researchProject: p1,
+        animalsInThisShipment: 8,
+        protocol: generateProtocol(),
+        status: SampleStatus.ANALYZING,
+        approvalStatus: ApprovalStatus.APPROVED,
+        approvedBy: e1,
+        approvedAt: new Date(),
+        scheduledAt: new Date(Date.now() + 86400000 * 5),
+      },
+      {
+        // p2: glicemia + ecg — PENDING (aguardando aprovação)
+        researchProject: p2,
+        animalsInThisShipment: 5,
+        protocol: generateProtocol(),
+        status: SampleStatus.PENDING,
+        approvalStatus: ApprovalStatus.PENDING,
+        scheduledAt: new Date(Date.now() + 86400000 * 3),
+      },
+      {
+        // p3: ecg — REJECTED
         researchProject: p3,
+        animalsInThisShipment: 3,
         protocol: generateProtocol(),
         status: SampleStatus.REJECTED,
         approvalStatus: ApprovalStatus.REJECTED,
@@ -223,44 +323,60 @@ export async function runSeed(dataSource: DataSource) {
         approvedAt: new Date(),
         scheduledAt: new Date(Date.now() + 86400000 * 2),
       },
-      {
-        examType: glicemia,
-        researcher: r2,
-        researchProject: p2,
-        protocol: generateProtocol(),
-        status: SampleStatus.PENDING,
-        approvalStatus: ApprovalStatus.PENDING,
-        scheduledAt: new Date(Date.now() + 86400000 * 3),
-      },
-      {
-        examType: hemograma,
-        researcher: r2,
-        researchProject: p2,
-        protocol: generateProtocol(),
-        status: SampleStatus.ANALYZING,
-        approvalStatus: ApprovalStatus.APPROVED,
-        approvedBy: e1,
-        approvedAt: new Date(),
-        scheduledAt: new Date(Date.now() + 86400000),
-      },
     ]);
   } else {
-    samples = await sampleRepo.find();
+    samples = await sampleRepo.find({
+      relations: ['researchProject', 'researchProject.examTypes'],
+    });
   }
 
+  const [s1] = samples;
+
   // ─── SAMPLE RESULTS ───────────────────────────────────────────────────────
+  // Apenas para s1 (DONE) — um resultado por examType do projeto p1 (hemograma + glicemia)
 
   const resultCount = await resultRepo.count();
 
   if (resultCount === 0) {
     await resultRepo.save([
       {
-        sample: samples[0],
+        sample: s1,
+        examType: hemograma,
+        observations:
+          'Amostra levemente hemolisada; valores do eritrograma podem estar discretamente subestimados. Leucograma sem alterações significativas.',
         resultData: {
-          hemoglobina: 13.5,
-          leucocitos: 7000,
+          Eritrograma: {
+            Hemácias: '5,2',
+            Hemoglobina: '14,1',
+            Hematócrito: '42,0',
+            VCM: '88,0',
+            HCM: '29,5',
+            CHCM: '33,5',
+          },
+          Leucograma: {
+            Leucócitos: '7.200',
+            Bastonetes: '180',
+            Segmentados: '4.500',
+            Eosinófilos: '220',
+            Basófilos: '50',
+            'Linfócitos Típicos': '1.800',
+            Monócitos: '450',
+          },
+          'Série Plaquetária': {
+            Plaquetas: '280.000',
+          },
         },
-        createdAt: new Date(),
+      },
+      {
+        sample: s1,
+        examType: glicemia,
+        observacoes:
+          'Animal em jejum de 12h confirmado antes da coleta. Glicose dentro do intervalo de referência para a espécie.',
+        resultData: {
+          Glicemia: {
+            Glicose: '92',
+          },
+        },
       },
     ]);
   }

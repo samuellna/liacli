@@ -1,9 +1,12 @@
 import api from "./axios";
-import type { ExamType } from "./types";
+import type { ExamType, ParameterGroups } from "./types";
 
 export interface CreateExamTypeData {
   name: string;
   description: string;
+  material?: string;
+  observations?: string;
+  groups?: ParameterGroups[];
 }
 
 export type UpdateExamTypeData = Partial<CreateExamTypeData>;

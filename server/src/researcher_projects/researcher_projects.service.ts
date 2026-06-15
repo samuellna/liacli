@@ -6,6 +6,7 @@ import { Researchers } from 'src/researchers/researchers.entity';
 import { ExamType } from 'src/exam_types/exam_types.entity';
 import { CreateResearchProjectDto } from './dto/create-research-project.dto';
 import { UpdateResearchProjectDto } from './dto/update-research-project.dto';
+import { ApprovalStatus, SampleStatus } from 'src/samples/samples.entity';
 
 @Injectable()
 export class ResearchProjectsService {
@@ -35,6 +36,22 @@ export class ResearchProjectsService {
       throw new NotFoundException('ResearchProject not found');
     }
     return project;
+  }
+
+  async findAllFinalized(): Promise<ResearchProject[]> {
+    const projects = await this.researchProjectRepository.find({
+      relations: ['researcher', 'examTypes', 'samples'],
+    });
+
+    const finalizedProjects = projects.filter((project) => {
+      return project.samples.every(
+        (sample) =>
+          sample.approvalStatus === ApprovalStatus.APPROVED &&
+          sample.status === SampleStatus.DONE,
+      );
+    });
+
+    return finalizedProjects;
   }
 
   async findByResearcher(researcherId: number): Promise<ResearchProject[]> {
