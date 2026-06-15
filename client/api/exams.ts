@@ -22,7 +22,9 @@ export async function findExamTypeById(id: number): Promise<ExamType> {
 }
 
 export async function findExamTypeByName(name: string): Promise<ExamType> {
-  const response = await api.get<ExamType>(`/exams/search?name=${name}`);
+  const response = await api.get<ExamType>(`/exams/search`, {
+    params: { name },
+  });
   return response.data;
 }
 

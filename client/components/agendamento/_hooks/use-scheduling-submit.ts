@@ -3,8 +3,12 @@
 import { useState } from "react";
 import { createResearcher, type CreateResearcherData } from "@/api/researchers";
 import { createProject } from "@/api/projects";
-import type { SchedulingFormData } from "@/app/(pesquisador)/agendamento/_lib/schema";
+import {
+  EXAM_OPTIONS,
+  type SchedulingFormData,
+} from "@/app/(pesquisador)/agendamento/_lib/schema";
 import { findExamTypeByName } from "@/api/exams";
+import { createSample } from "@/api/samples";
 
 export type SubmitState =
   | { status: "idle" }
@@ -32,11 +36,18 @@ export function useSchedulingSubmit() {
       const examTypeIds = await Promise.all(
         data.sample
           .flatMap((s) => s.samples)
-          .map((examName) =>
-            findExamTypeByName(examName).then((exam) => exam.id),
-          ),
+          .map((examId) => {
+            const label =
+              EXAM_OPTIONS.find((o) => o.id === examId)?.label ?? examId;
+            return findExamTypeByName(label).then((exam) => {
+              if (!exam)
+                throw new Error(`Tipo de exame não encontrado: ${label}`);
+              return exam.id;
+            });
+          }),
       );
 
+      console.log(examTypeIds);
       const project = await createProject({
         researcherId: researcher.id,
         title: data.title,
@@ -49,9 +60,13 @@ export function useSchedulingSubmit() {
         examTypeIds: examTypeIds,
       });
 
-      const protocol = project.samples[0]?.protocol || "N/A";
+      const sample = await createSample({
+        researchProjectId: project.id,
+        animalsInThisShipment: data.sample[0].totalAnimals,
+        scheduledAt: data.preferredDate,
+      });
 
-      setState({ status: "success", protocol });
+      setState({ status: "success", protocol: sample.protocol });
     } catch (err) {
       const message =
         err instanceof Error ? err.message : "Erro ao enviar agendamento.";

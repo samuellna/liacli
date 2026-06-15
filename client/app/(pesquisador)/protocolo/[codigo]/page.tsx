@@ -18,7 +18,7 @@ type PageProps = {
 export async function generateMetadata({ params }: PageProps) {
   const { codigo } = await params;
   return {
-    title: `Protocolo ${codigo.toUpperCase()} — LIACLI`,
+    title: `Consulta de protocolo ${codigo.toUpperCase()} — LIACLI`,
     description: "Acompanhe o status do seu agendamento de amostras.",
   };
 }
@@ -44,11 +44,9 @@ export default async function ConsultStatusPage({ params }: PageProps) {
               protocolo={result.protocol}
               agendamentoStatus={result.approvalStatus}
               analiseStatus={result.status}
-              ultimaAtualizacao={
-                result.approvedAt
-                  ? new Date(result.updatedAt).toLocaleString("pt-BR")
-                  : "Agora mesmo"
-              }
+              ultimaAtualizacao={new Date(result.updatedAt).toLocaleString(
+                "pt-BR",
+              )}
             />
             <StatusView data={result} />
           </>

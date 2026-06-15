@@ -18,7 +18,7 @@ export const EXAM_OPTIONS = [
   { id: "outro", label: "Outro" },
 ] as const;
 
-export const NIVEL_OPTIONS = [
+export const LEVEL_OPTIONS = [
   { value: "SCIENTIFIC_INITIATION", label: "Iniciação científica" },
   { value: "MASTERS", label: "Mestrado" },
   { value: "DOCTORATE", label: "Doutorado" },
@@ -49,3 +49,24 @@ export const schedulingSchema = z.object({
 
 export type SchedulingFormData = z.infer<typeof schedulingSchema>;
 export type SampleData = z.infer<typeof sampleSchema>;
+
+export const DEFAULT_VALUES: SchedulingFormData = {
+  email: "",
+  name: "",
+  phone: "",
+  advisorName: "",
+  level: "",
+  title: "",
+  course: "",
+  researchLab: "",
+  preferredDate: "",
+  sample: [
+    {
+      animalSpecies: "",
+      totalAnimals: 1,
+      samples: [],
+      expectedShipments: 1,
+    },
+  ],
+  observations: "",
+};

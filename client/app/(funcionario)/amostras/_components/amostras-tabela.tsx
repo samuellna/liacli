@@ -263,7 +263,10 @@ export function AmostrasTabela({ amostras }: { amostras: AmostraRow[] }) {
                     <TableCell className="py-5">
                       <ExameBadges exames={amostra.exames} />
                     </TableCell>
-                    <TableCell className="py-5 text-sm text-foreground">
+                    <TableCell
+                      className="py-5 text-sm text-foreground truncate"
+                      title={amostra.pesquisador}
+                    >
                       {amostra.pesquisador}
                     </TableCell>
                     <TableCell className="py-5">

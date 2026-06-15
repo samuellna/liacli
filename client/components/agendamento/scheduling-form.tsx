@@ -1,26 +1,45 @@
 "use client";
 
-import { FormProvider, useForm, useWatch } from "react-hook-form";
+import {
+  Controller,
+  FormProvider,
+  useFieldArray,
+  useForm,
+  useFormContext,
+  useWatch,
+} from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Loader2, Send } from "lucide-react";
+import {
+  ArrowRight,
+  BookOpen,
+  CalendarDays,
+  CheckCircle2,
+  ClipboardList,
+  FlaskConical,
+  Link,
+  Loader2,
+  Send,
+  StickyNote,
+  User,
+} from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import {
+  DEFAULT_VALUES,
+  LEVEL_OPTIONS,
   schedulingSchema,
   type SchedulingFormData,
 } from "../../app/(pesquisador)/agendamento/_lib/schema";
 import { getWeekById } from "../../app/(pesquisador)/agendamento/_lib/weeks";
 import { SampleItem } from "./sample-item";
 import { WeekPicker } from "./week-picker";
-import { randomBytes } from "crypto";
-
-export function generateProtocol(): string {
-  const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-
-  return Array.from(randomBytes(7))
-    .map((byte) => chars[byte % chars.length])
-    .join("");
-}
+import { Label } from "../ui/label";
+import { RadioGroup } from "../ui/radio-group";
+import { Separator } from "../ui/separator";
+import { Input } from "../ui/input";
+import { RadioGroupItem } from "../ui/radio-group";
+import { Textarea } from "../ui/textarea";
+import { useSchedulingSubmit } from "./_hooks/use-scheduling-submit";
 
 function FieldError({ message }: { message?: string }) {
   if (!message) return null;
@@ -87,7 +106,7 @@ function ResearcherSection() {
       <div className="grid gap-4 sm:grid-cols-2">
         <div className="space-y-1.5">
           <Label htmlFor="nome">
-            Nome completo{" "}
+            Nome completo
             <span aria-hidden className="text-destructive">
               *
             </span>
@@ -95,15 +114,15 @@ function ResearcherSection() {
           <Input
             id="nome"
             placeholder="Seu nome completo"
-            {...register("nome")}
-            aria-invalid={!!errors.nome}
+            {...register("name")}
+            aria-invalid={!!errors.name}
           />
-          <FieldError message={errors.nome?.message} />
+          <FieldError message={errors.name?.message} />
         </div>
 
         <div className="space-y-1.5">
           <Label htmlFor="email">
-            E-mail{" "}
+            E-mail
             <span aria-hidden className="text-destructive">
               *
             </span>
@@ -119,21 +138,21 @@ function ResearcherSection() {
         </div>
 
         <div className="space-y-1.5">
-          <Label htmlFor="telefone">Telefone</Label>
+          <Label htmlFor="phone">Telefone</Label>
           <Input
-            id="telefone"
+            id="phone"
             type="tel"
             placeholder="(81) 9 9999-9999"
-            {...register("telefone")}
+            {...register("phone")}
           />
         </div>
 
         <div className="space-y-1.5">
-          <Label htmlFor="orientador">Nome do orientador</Label>
+          <Label htmlFor="advisorName">Nome do orientador</Label>
           <Input
-            id="orientador"
+            id="advisorName"
             placeholder="Nome do orientador responsável"
-            {...register("orientador")}
+            {...register("advisorName")}
           />
         </div>
       </div>
@@ -158,14 +177,14 @@ function StudySection() {
       <div className="space-y-5">
         <div className="space-y-2.5">
           <Label>
-            Nível acadêmico{" "}
+            Nível acadêmico
             <span aria-hidden className="text-destructive">
               *
             </span>
           </Label>
           <Controller
             control={control}
-            name="nivel"
+            name="level"
             render={({ field }) => (
               <RadioGroup
                 value={field.value}
@@ -173,14 +192,14 @@ function StudySection() {
                 className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-5"
                 aria-required="true"
               >
-                {NIVEL_OPTIONS.map((opt) => (
+                {LEVEL_OPTIONS.map((opt) => (
                   <label
                     key={opt.value}
-                    htmlFor={`nivel-${opt.value}`}
+                    htmlFor={`level-${opt.value}`}
                     className="flex cursor-pointer items-center gap-2 rounded-lg border border-border p-2.5 text-sm transition-colors hover:bg-muted/50 has-[button[data-state=checked]]:border-accent/50 has-[button[data-state=checked]]:bg-accent/5"
                   >
                     <RadioGroupItem
-                      id={`nivel-${opt.value}`}
+                      id={`level-${opt.value}`}
                       value={opt.value}
                     />
                     <span className="leading-snug">{opt.label}</span>
@@ -189,15 +208,15 @@ function StudySection() {
               </RadioGroup>
             )}
           />
-          <FieldError message={errors.nivel?.message} />
+          <FieldError message={errors.level?.message} />
         </div>
 
         <Separator />
 
         <div className="grid gap-4 sm:grid-cols-2">
           <div className="space-y-1.5 sm:col-span-2">
-            <Label htmlFor="titulo">
-              Título da pesquisa / Projeto{" "}
+            <Label htmlFor="title">
+              Título da pesquisa / Projeto
               <span aria-hidden className="text-destructive">
                 *
               </span>
@@ -205,27 +224,27 @@ function StudySection() {
             <Input
               id="titulo"
               placeholder="Título completo da pesquisa ou projeto"
-              {...register("tituloProjeto")}
-              aria-invalid={!!errors.tituloProjeto}
+              {...register("title")}
+              aria-invalid={!!errors.title}
             />
-            <FieldError message={errors.tituloProjeto?.message} />
+            <FieldError message={errors.title?.message} />
           </div>
 
           <div className="space-y-1.5">
-            <Label htmlFor="curso">Curso / Programa de pós-graduação</Label>
+            <Label htmlFor="course">Curso / Programa de pós-graduação</Label>
             <Input
-              id="curso"
+              id="course"
               placeholder="Ex.: Mestrado em Ciências Biológicas"
-              {...register("cursoPrograma")}
+              {...register("course")}
             />
           </div>
 
           <div className="space-y-1.5">
-            <Label htmlFor="laboratorio">Laboratório de pesquisa</Label>
+            <Label htmlFor="researchLab">Laboratório de pesquisa</Label>
             <Input
-              id="laboratorio"
+              id="researchLab"
               placeholder="Ex.: Laboratório de Fisiologia Animal — UFPE"
-              {...register("laboratorio")}
+              {...register("researchLab")}
             />
           </div>
         </div>
@@ -239,9 +258,9 @@ function SamplesSection() {
     control,
     formState: { errors },
   } = useFormContext<SchedulingFormData>();
-  const { fields, append, remove } = useFieldArray({
+  const { fields } = useFieldArray({
     control,
-    name: "amostras",
+    name: "sample",
   });
 
   return (
@@ -253,36 +272,12 @@ function SamplesSection() {
     >
       <div className="space-y-4">
         {fields.map((field, index) => (
-          <SampleItem
-            key={field.id}
-            index={index}
-            total={fields.length}
-            onRemove={() => remove(index)}
-          />
+          <SampleItem key={field.id} index={index} />
         ))}
 
-        {typeof errors.amostras?.message === "string" && (
-          <FieldError message={errors.amostras.message} />
+        {typeof errors.sample?.message === "string" && (
+          <FieldError message={errors.sample.message} />
         )}
-
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
-          className="w-full border-dashed"
-          onClick={() =>
-            append({
-              especieAnimal: "",
-              totalAnimais: 1,
-              exames: [],
-              outroExame: "",
-              previsaoRemessas: "",
-            })
-          }
-        >
-          <Plus className="size-4" aria-hidden />
-          Adicionar outra amostra
-        </Button>
       </div>
     </Section>
   );
@@ -312,10 +307,10 @@ function ObservationsSection() {
       description="Informações complementares relevantes para o laboratório (opcional)"
     >
       <Textarea
-        id="observacoes"
+        id="observations"
         placeholder="Descreva aqui qualquer informação adicional sobre as amostras, cuidados especiais ou condições de armazenamento..."
         rows={4}
-        {...register("observacoes")}
+        {...register("observations")}
         className="resize-none"
       />
     </Section>
@@ -323,7 +318,7 @@ function ObservationsSection() {
 }
 
 function FormSummary({ data }: { data: SchedulingFormData }) {
-  const week = getWeekById(data.semana);
+  const week = getWeekById(data.preferredDate);
 
   return (
     <aside
@@ -342,7 +337,7 @@ function FormSummary({ data }: { data: SchedulingFormData }) {
       <dl className="grid gap-2 text-sm">
         <div className="flex justify-between gap-3">
           <dt className="text-muted-foreground">Pesquisador</dt>
-          <dd className="font-medium text-right">{data.nome || "—"}</dd>
+          <dd className="font-medium text-right">{data.name || "—"}</dd>
         </div>
         <div className="flex justify-between gap-3">
           <dt className="text-muted-foreground">Semana</dt>
@@ -353,15 +348,14 @@ function FormSummary({ data }: { data: SchedulingFormData }) {
         <div className="flex justify-between gap-3">
           <dt className="text-muted-foreground">Amostras</dt>
           <dd className="font-medium">
-            {data.amostras.length}{" "}
-            {data.amostras.length === 1 ? "lote" : "lotes"}
+            {data.sample.length} {data.sample.length === 1 ? "lote" : "lotes"}
           </dd>
         </div>
         <div className="flex justify-between gap-3">
           <dt className="text-muted-foreground">Total de animais</dt>
           <dd className="font-medium">
-            {data.amostras.reduce(
-              (acc, s) => acc + (Number(s.totalAnimais) || 0),
+            {data.sample.reduce(
+              (acc, s) => acc + (Number(s.totalAnimals) || 0),
               0,
             )}
           </dd>
@@ -444,6 +438,7 @@ export function SchedulingForm() {
   }) as SchedulingFormData;
 
   async function onSubmit(data: SchedulingFormData) {
+    console.log("Submitting data:", data);
     await submit(data);
   }
 
