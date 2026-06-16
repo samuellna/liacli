@@ -1,6 +1,8 @@
 "use client";
 
 import { useState, type FormEvent } from "react";
+import { useRouter } from "next/navigation";
+import { signInWithEmailAndPassword } from "firebase/auth";
 import { Eye, EyeOff, FlaskConical, Loader2, LogIn } from "lucide-react";
 
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
@@ -8,13 +10,19 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
+import { auth } from "@/lib/firebase";
 
-const usuarioMock = {
-  email: "admin@liacli.com",
-  senha: "123456",
+const FIREBASE_ERROR_MESSAGES: Record<string, string> = {
+  "auth/user-not-found": "Nenhuma conta encontrada com este e-mail.",
+  "auth/wrong-password": "Senha incorreta. Tente novamente.",
+  "auth/invalid-credential": "E-mail ou senha inválidos.",
+  "auth/invalid-email": "Endereço de e-mail inválido.",
+  "auth/too-many-requests":
+    "Muitas tentativas. Aguarde alguns minutos e tente novamente.",
 };
 
 export default function LoginPage() {
+  const router = useRouter();
   const [email, setEmail] = useState("");
   const [senha, setSenha] = useState("");
   const [erro, setErro] = useState("");
@@ -22,7 +30,7 @@ export default function LoginPage() {
   const [mostrarSenha, setMostrarSenha] = useState(false);
   const [enviando, setEnviando] = useState(false);
 
-  function handleLogin(event: FormEvent<HTMLFormElement>) {
+  async function handleLogin(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setErro("");
     setSucesso("");
@@ -34,15 +42,24 @@ export default function LoginPage() {
 
     setEnviando(true);
 
-    window.setTimeout(() => {
-      if (email === usuarioMock.email && senha === usuarioMock.senha) {
-        console.log("Login realizado");
-        setSucesso("Login realizado com sucesso!");
-      } else {
-        setErro("E-mail ou senha inválidos.");
-      }
+    try {
+      const userCredential = await signInWithEmailAndPassword(
+        auth,
+        email,
+        senha,
+      );
+      const idToken = await userCredential.user.getIdToken();
+      localStorage.setItem("token", idToken);
+      router.push("/dashboard");
+    } catch (error: unknown) {
+      const code = (error as { code?: string }).code ?? "";
+      setErro(
+        FIREBASE_ERROR_MESSAGES[code] ??
+          "Ocorreu um erro inesperado. Tente novamente.",
+      );
+    } finally {
       setEnviando(false);
-    }, 400);
+    }
   }
 
   return (
@@ -257,14 +274,6 @@ export default function LoginPage() {
               Registre-se grátis
             </a>
           </p>
-
-          {process.env.NODE_ENV === "development" && (
-            <p className="rounded-lg border border-dashed border-border bg-muted/50 px-3 py-2 text-center text-xs text-muted-foreground">
-              <span className="font-medium">Acesso de teste:</span>{" "}
-              <code className="font-mono">admin@liacli.com</code> /{" "}
-              <code className="font-mono">123456</code>
-            </p>
-          )}
         </div>
       </section>
     </main>
