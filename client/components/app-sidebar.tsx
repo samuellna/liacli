@@ -44,7 +44,7 @@ export function AppSidebar() {
   const cargo = "Analista de Laboratório";
 
   async function handleSignOut() {
-    await signOut(auth);
+    // await signOut(auth);
     router.push("/login");
   }
 
