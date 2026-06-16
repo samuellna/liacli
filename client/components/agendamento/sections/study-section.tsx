@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Separator } from "@/components/ui/separator";
 import {
-  NIVEL_OPTIONS,
+  LEVEL_OPTIONS,
   type SchedulingFormData,
 } from "@/app/(pesquisador)/agendamento/_lib/schema";
 
@@ -46,7 +46,7 @@ export function StudySection() {
                 className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-5"
                 aria-required="true"
               >
-                {NIVEL_OPTIONS.map((opt) => (
+                {LEVEL_OPTIONS.map((opt) => (
                   <label
                     key={opt.value}
                     htmlFor={`nivel-${opt.value}`}
