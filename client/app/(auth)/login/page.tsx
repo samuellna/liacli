@@ -9,7 +9,6 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Separator } from "@/components/ui/separator";
 import { auth } from "@/lib/firebase";
 
 const FIREBASE_ERROR_MESSAGES: Record<string, string> = {
@@ -49,7 +48,7 @@ export default function LoginPage() {
         senha,
       );
       const idToken = await userCredential.user.getIdToken();
-      localStorage.setItem("token", idToken);
+      document.cookie = `token=${idToken}; path=/; max-age=604800; SameSite=Strict`;
       router.push("/dashboard");
     } catch (error: unknown) {
       const code = (error as { code?: string }).code ?? "";
@@ -128,7 +127,7 @@ export default function LoginPage() {
               Bem-vindo de volta
             </h1>
             <p className="text-sm text-muted-foreground">
-              Entre com sua conta para acessar o painel.
+              Entre com sua conta administrativa para acessar o painel.
             </p>
           </header>
 
@@ -233,47 +232,6 @@ export default function LoginPage() {
               )}
             </Button>
           </form>
-
-          <div className="space-y-4">
-            <div className="flex items-center gap-3">
-              <Separator className="flex-1" />
-              <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                ou continue com
-              </span>
-              <Separator className="flex-1" />
-            </div>
-
-            <div className="grid grid-cols-3 gap-2">
-              {[
-                { label: "Google", title: "Login com Google (em breve)" },
-                { label: "GitHub", title: "Login com GitHub (em breve)" },
-                { label: "Facebook", title: "Login com Facebook (em breve)" },
-              ].map((provider) => (
-                <Button
-                  key={provider.label}
-                  type="button"
-                  variant="outline"
-                  size="lg"
-                  disabled
-                  title={provider.title}
-                  aria-label={provider.title}
-                  className="h-11 text-xs font-medium"
-                >
-                  {provider.label}
-                </Button>
-              ))}
-            </div>
-          </div>
-
-          <p className="text-center text-sm text-muted-foreground">
-            Ainda não tem conta?{" "}
-            <a
-              href="#"
-              className="font-medium text-primary hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded"
-            >
-              Registre-se grátis
-            </a>
-          </p>
         </div>
       </section>
     </main>

@@ -1,7 +1,9 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
+import { onAuthStateChanged, type User } from "firebase/auth";
 import {
   LayoutDashboard,
   FileText,
@@ -23,7 +25,7 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
-//import { auth } from "@/lib/firebase";
+import { auth } from "@/lib/firebase";
 
 const mainItems = [
   { title: "Dashboard", url: "/dashboard", icon: LayoutDashboard },
@@ -36,15 +38,18 @@ export function AppSidebar() {
   const pathname = usePathname();
   const router = useRouter();
 
-  // const user = auth.currentUser;
-  // const displayName = user?.displayName ?? user?.email ?? "Funcionário";
-  const user = { displayName: "Funcionário Teste", email: "teste@liacli.com" };
-  const displayName = user.displayName;
+  const [user, setUser] = useState<User | null>(null);
+
+  useEffect(() => {
+    return onAuthStateChanged(auth, setUser);
+  }, []);
+
+  const displayName = user?.displayName ?? user?.email ?? "Funcionário";
   const initials = displayName.slice(0, 2).toUpperCase();
-  const cargo = "Analista de Laboratório";
 
   async function handleSignOut() {
-    // await signOut(auth);
+    await signOut(auth);
+    document.cookie = "token=; path=/; max-age=0";
     router.push("/login");
   }
 
@@ -142,7 +147,7 @@ export function AppSidebar() {
               {displayName}
             </p>
             <p className="truncate text-xs text-sidebar-foreground/60">
-              {cargo}
+              {user?.email ?? ""}
             </p>
           </div>
         </div>
