@@ -1,11 +1,12 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   AlertCircle,
   ClipboardCheck,
   FlaskConical,
   Loader2,
+  Upload,
 } from "lucide-react";
 import { useParams, useRouter } from "next/navigation";
 import { toast } from "sonner";
@@ -77,6 +78,92 @@ function buildResultData(
   }
 
   return data;
+}
+
+function parseAndValidateJson(
+  raw: unknown,
+  et: ExamType,
+): { ok: true; state: ExameFormState } | { ok: false; errors: string[] } {
+  if (typeof raw !== "object" || raw === null || Array.isArray(raw)) {
+    return {
+      ok: false,
+      errors: [
+        "O JSON deve ser um objeto ({}), não um array ou valor primitivo.",
+      ],
+    };
+  }
+
+  const obj = raw as Record<string, unknown>;
+  const errors: string[] = [];
+  const parameters: Record<string, GroupForm> = {};
+  let genericValue = "";
+
+  if (et.groups && et.groups.length > 0) {
+    for (const group of et.groups) {
+      const key = group.groupName ?? "";
+
+      if (!(key in obj)) {
+        errors.push(`Grupo obrigatório ausente: "${key}"`);
+        continue;
+      }
+
+      const groupData = obj[key];
+      if (
+        typeof groupData !== "object" ||
+        groupData === null ||
+        Array.isArray(groupData)
+      ) {
+        errors.push(`O valor do grupo "${key}" deve ser um objeto.`);
+        continue;
+      }
+
+      const groupObj = groupData as Record<string, unknown>;
+      parameters[key] = {};
+
+      for (const param of group.parameters) {
+        if (!(param.name in groupObj)) {
+          errors.push(
+            `Parâmetro obrigatório ausente no grupo "${key}": "${param.name}"`,
+          );
+          continue;
+        }
+
+        const val = groupObj[param.name];
+        if (typeof val !== "string" && typeof val !== "number") {
+          errors.push(
+            `O parâmetro "${param.name}" no grupo "${key}" deve ser texto ou número (recebido: ${typeof val}).`,
+          );
+          continue;
+        }
+
+        parameters[key][param.name] = String(val);
+      }
+    }
+  } else {
+    if (!("resultData" in obj)) {
+      errors.push('Campo obrigatório ausente: "resultData".');
+    } else {
+      const val = obj.resultData;
+      if (typeof val !== "string" && typeof val !== "number") {
+        errors.push(
+          `"resultData" deve ser texto ou número (recebido: ${typeof val}).`,
+        );
+      } else {
+        genericValue = String(val);
+      }
+    }
+  }
+
+  if (errors.length > 0) return { ok: false, errors };
+
+  const rawObs = obj.observations;
+  const observations =
+    rawObs != null &&
+    (typeof rawObs === "string" || typeof rawObs === "number")
+      ? String(rawObs)
+      : "";
+
+  return { ok: true, state: { parameters, observations, genericValue } };
 }
 
 // ─── Status helpers ───────────────────────────────────────────────────────────
@@ -201,6 +288,11 @@ export default function CadastroResultadoPage() {
   const [loadError, setLoadError] = useState<string | null>(null);
   const [form, setForm] = useState<FormState>({});
   const [isSaving, setIsSaving] = useState(false);
+  const [importErrors, setImportErrors] = useState<Record<number, string[]>>(
+    {},
+  );
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const importTargetIdRef = useRef<number | null>(null);
 
   useEffect(() => {
     const sampleId = Number(id);
@@ -305,6 +397,75 @@ export default function CadastroResultadoPage() {
         </Card>
       </div>
     );
+  }
+
+  function handleImportClick(examTypeId: number) {
+    importTargetIdRef.current = examTypeId;
+    setImportErrors((prev) => ({ ...prev, [examTypeId]: [] }));
+    fileInputRef.current?.click();
+  }
+
+  function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    const targetId = importTargetIdRef.current;
+    e.target.value = "";
+
+    if (!file || targetId === null || !sample) return;
+
+    if (!file.name.endsWith(".json")) {
+      setImportErrors((prev) => ({
+        ...prev,
+        [targetId]: ["Apenas arquivos .json são aceitos."],
+      }));
+      return;
+    }
+
+    const examType = sample.researchProject.examTypes.find(
+      (et) => et.id === targetId,
+    );
+    if (!examType) return;
+
+    const reader = new FileReader();
+    reader.onload = (evt) => {
+      const text = evt.target?.result;
+      if (typeof text !== "string") {
+        setImportErrors((prev) => ({
+          ...prev,
+          [targetId]: ["Não foi possível ler o arquivo."],
+        }));
+        return;
+      }
+
+      let parsed: unknown;
+      try {
+        parsed = JSON.parse(text);
+      } catch {
+        setImportErrors((prev) => ({
+          ...prev,
+          [targetId]: [
+            "JSON mal formatado. Verifique a sintaxe do arquivo.",
+          ],
+        }));
+        return;
+      }
+
+      const result = parseAndValidateJson(parsed, examType);
+      if (!result.ok) {
+        setImportErrors((prev) => ({ ...prev, [targetId]: result.errors }));
+        return;
+      }
+
+      setForm((prev) => ({ ...prev, [targetId]: result.state }));
+      setImportErrors((prev) => ({ ...prev, [targetId]: [] }));
+      toast.success("JSON importado com sucesso. Revise os dados antes de salvar.");
+    };
+    reader.onerror = () => {
+      setImportErrors((prev) => ({
+        ...prev,
+        [targetId]: ["Erro ao ler o arquivo."],
+      }));
+    };
+    reader.readAsText(file);
   }
 
   function handleParamChange(
@@ -429,21 +590,56 @@ export default function CadastroResultadoPage() {
         </CardContent>
       </Card>
 
+      {/* Input oculto compartilhado para upload de JSON */}
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept=".json"
+        className="hidden"
+        onChange={handleFileChange}
+      />
+
       {/* Formulário por tipo de exame */}
       {examTypes.map((et) => {
         const etForm = form[et.id];
         if (!etForm) return null;
+        const etErrors = importErrors[et.id] ?? [];
 
         return (
           <Card key={et.id}>
             <CardHeader className="border-b">
-              <CardTitle>{et.name}</CardTitle>
-              <CardDescription>
-                Preencha os resultados obtidos na análise.
-              </CardDescription>
+              <div className="flex items-start justify-between gap-4">
+                <div>
+                  <CardTitle>{et.name}</CardTitle>
+                  <CardDescription>
+                    Preencha os resultados obtidos na análise.
+                  </CardDescription>
+                </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  type="button"
+                  onClick={() => handleImportClick(et.id)}
+                >
+                  <Upload className="mr-2 size-4" aria-hidden />
+                  Importar JSON
+                </Button>
+              </div>
             </CardHeader>
 
             <CardContent className="space-y-4 pt-4">
+              {etErrors.length > 0 && (
+                <div className="rounded-md border border-destructive/40 bg-destructive/10 p-3">
+                  <p className="mb-1 text-sm font-medium text-destructive">
+                    Erro na importação
+                  </p>
+                  <ul className="space-y-0.5 text-xs text-destructive">
+                    {etErrors.map((err, i) => (
+                      <li key={i}>• {err}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
               {et.groups && et.groups.length > 0 ? (
                 <>
                   {et.groups.map((group) => (
