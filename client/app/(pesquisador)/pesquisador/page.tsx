@@ -100,7 +100,7 @@ function ServicesSection() {
         className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_1px_1px,rgba(59,130,246,0.04)_1px,transparent_0)] bg-size-[32px_32px]"
       />
 
-      <div className="relative mx-auto w-full max-w-6xl px-4 py-16 sm:py-24">
+      <div className="relative mx-auto w-full max-w-6xl px-4 py-4 sm:py-12">
         {/* Section Header */}
         <div className="mx-auto max-w-2xl space-y-5 text-center">
           <span className="inline-flex items-center gap-1.5 rounded-full bg-blue-50 px-3 py-1 text-xs font-semibold uppercase tracking-widest text-blue-600 ring-1 ring-blue-100">
