@@ -8,14 +8,19 @@ export function ExameBadges({ exames }: { exames: string[] }) {
   return (
     <div className="flex flex-wrap gap-1.5">
       {visiveis.map((exame) => (
-        <Badge key={exame} variant="secondary" className="max-w-32 truncate text-xs font-normal" title={exame}>
+        <Badge
+          key={exame}
+          variant="secondary"
+          className="max-w-32 truncate border border-primary/20 bg-primary/8 text-xs font-normal text-primary/80"
+          title={exame}
+        >
           {exame}
         </Badge>
       ))}
       {restantes > 0 && (
         <Badge
           variant="outline"
-          className="border-dashed text-xs font-normal text-muted-foreground"
+          className="border-dashed border-border/60 text-xs font-normal text-muted-foreground"
         >
           +{restantes}
         </Badge>

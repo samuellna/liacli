@@ -15,20 +15,24 @@ import { AmostrasTabela } from "./_components/amostras-tabela";
 
 function PageHeader({ total }: { total: number }) {
   return (
-    <header className="space-y-2">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div className="space-y-1">
-          <h1 className="text-2xl font-semibold tracking-tight text-foreground">
-            Amostras
-          </h1>
-          <p className="text-sm text-muted-foreground">
-            Gerencie projetos de pesquisa, acompanhe exames e cadastre
-            resultados.
+    <header>
+      <div className="flex flex-wrap items-end justify-between gap-4">
+        <div className="space-y-1.5">
+          <div className="flex items-center gap-3">
+            <div className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-primary shadow-sm">
+              <FlaskConical className="size-5 text-primary-foreground" aria-hidden />
+            </div>
+            <h1 className="text-2xl font-bold tracking-tight text-foreground">
+              Amostras
+            </h1>
+          </div>
+          <p className="pl-13 text-sm text-muted-foreground">
+            Gerencie projetos de pesquisa, acompanhe exames e cadastre resultados.
           </p>
         </div>
-        <Badge variant="secondary" className="h-7 gap-1.5 px-3 text-xs">
+        <Badge className="h-7 gap-1.5 border-primary/30 bg-primary/8 px-3 text-xs text-primary">
           <FlaskConical className="size-3.5" aria-hidden />
-          {total} amostras
+          {total} {total === 1 ? "amostra" : "amostras"}
         </Badge>
       </div>
     </header>
@@ -38,38 +42,49 @@ function PageHeader({ total }: { total: number }) {
 function LoadingSkeleton() {
   return (
     <div className="space-y-6">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div className="space-y-2">
-          <Skeleton className="h-7 w-28" />
-          <Skeleton className="h-4 w-72" />
-        </div>
-        <Skeleton className="h-7 w-28 rounded-full" />
-      </div>
-      <Card>
-        <div className="border-b p-6">
-          <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+      <header>
+        <div className="flex flex-wrap items-end justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <Skeleton className="size-10 rounded-xl" />
             <div className="space-y-2">
-              <Skeleton className="h-5 w-44" />
-              <Skeleton className="h-4 w-64" />
+              <Skeleton className="h-6 w-28" />
+              <Skeleton className="h-3.5 w-80" />
+            </div>
+          </div>
+          <Skeleton className="h-7 w-32 rounded-full" />
+        </div>
+      </header>
+      <Card className="overflow-hidden border border-border/60 shadow-sm">
+        <div className="border-b bg-linear-to-r from-primary/5 via-background to-accent/5 p-6">
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+            <div className="space-y-2">
+              <Skeleton className="h-4 w-44" />
+              <Skeleton className="h-3.5 w-64" />
             </div>
             <div className="flex gap-2">
-              <Skeleton className="h-10 w-72" />
-              <Skeleton className="h-10 w-28" />
+              <Skeleton className="h-9 w-72 rounded-lg" />
+              <Skeleton className="h-9 w-28 rounded-lg" />
             </div>
           </div>
         </div>
-        <div className="divide-y divide-border">
-          {Array.from({ length: 4 }).map((_, i) => (
-            <div key={i} className="flex items-start gap-4 px-6 py-5">
-              <Skeleton className="mt-0.5 h-4 w-44" />
+        <div className="divide-y divide-border/60">
+          {Array.from({ length: 5 }).map((_, i) => (
+            <div
+              key={i}
+              className={[
+                "flex items-center gap-4 px-6 py-4",
+                i % 2 !== 0 ? "bg-muted/20" : "",
+              ].join(" ")}
+            >
+              <Skeleton className="h-3.5 w-32" />
               <div className="flex gap-1.5">
                 <Skeleton className="h-5 w-20 rounded-full" />
                 <Skeleton className="h-5 w-16 rounded-full" />
               </div>
-              <Skeleton className="mt-0.5 h-4 w-24" />
-              <Skeleton className="mt-0.5 h-4 flex-1" />
-              <Skeleton className="mt-0.5 h-5 w-20 rounded-full" />
-              <Skeleton className="mt-0.5 h-8 w-36 rounded-md" />
+              <Skeleton className="h-3.5 w-28" />
+              <Skeleton className="h-3.5 flex-1" />
+              <Skeleton className="h-6 w-24 rounded-full" />
+              <Skeleton className="h-8 w-36 rounded-lg" />
             </div>
           ))}
         </div>
@@ -106,10 +121,17 @@ export default function AmostrasPage() {
     return (
       <div className="space-y-6">
         <PageHeader total={0} />
-        <Card>
-          <CardContent className="flex flex-col items-center gap-3 py-16 text-center">
-            <AlertCircle className="size-10 text-destructive/50" aria-hidden />
-            <p className="text-sm font-medium text-foreground">{error}</p>
+        <Card className="border border-border/60 shadow-sm">
+          <CardContent className="flex flex-col items-center gap-4 py-20 text-center">
+            <div className="flex size-14 items-center justify-center rounded-full bg-destructive/10">
+              <AlertCircle className="size-6 text-destructive" aria-hidden />
+            </div>
+            <div className="space-y-1">
+              <p className="text-sm font-semibold text-foreground">{error}</p>
+              <p className="text-xs text-muted-foreground">
+                Verifique sua conexão e tente novamente.
+              </p>
+            </div>
             <Button variant="outline" size="sm" onClick={load}>
               Tentar novamente
             </Button>
