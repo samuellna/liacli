@@ -19,17 +19,17 @@ export const statusVariant: Record<
   "outline" | "secondary" | "default"
 > = {
   [ApprovalStatus.PENDING]: "outline",
-  [ApprovalStatus.APPROVED]: "default",
-  [ApprovalStatus.REJECTED]: "secondary",
+  [ApprovalStatus.APPROVED]: "outline",
+  [ApprovalStatus.REJECTED]: "outline",
 };
 
 export const statusClass: Record<ApprovalStatus, string> = {
   [ApprovalStatus.PENDING]:
-    "border-warning/40 bg-warning/15 text-warning-foreground dark:text-warning",
+    "border-warning/50 bg-warning/10 text-warning-foreground font-semibold dark:text-warning",
   [ApprovalStatus.APPROVED]:
-    "border-success/40 bg-success/15 text-success dark:text-success",
+    "border-success/50 bg-success/15 text-success font-semibold",
   [ApprovalStatus.REJECTED]:
-    "border-destructive/40 bg-destructive/15 text-destructive dark:text-destructive",
+    "border-destructive/50 bg-destructive/10 text-destructive font-semibold",
 };
 
 export function ordenarPorAgendamento(
