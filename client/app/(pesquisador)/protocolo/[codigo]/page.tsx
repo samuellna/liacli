@@ -1,7 +1,5 @@
-import Link from "next/link";
-import { ArrowLeft, FlaskConical, Search } from "lucide-react";
+import { Search } from "lucide-react";
 
-import { Button } from "@/components/ui/button";
 import {
   AgendamentoBadge,
   AnaliseBadge,
@@ -35,8 +33,6 @@ export default async function ConsultStatusPage({ params }: PageProps) {
 
   return (
     <div className="flex min-h-screen flex-col bg-background text-foreground">
-      <SiteHeader />
-
       <main className="flex-1">
         {result?.approvalStatus === "APPROVED" && (
           <>
@@ -49,6 +45,7 @@ export default async function ConsultStatusPage({ params }: PageProps) {
               )}
             />
             <StatusView data={result} />
+            <SiteFooter />
           </>
         )}
 
@@ -58,43 +55,33 @@ export default async function ConsultStatusPage({ params }: PageProps) {
               protocolo={result.protocol}
               agendamentoStatus={result.approvalStatus}
               analiseStatus={result.status}
-              ultimaAtualizacao="Agora mesmo"
+              ultimaAtualizacao={new Date(result.updatedAt).toLocaleString(
+                "pt-BR",
+              )}
             />
             <PendingNewView protocolo={result.protocol} />
+            <SiteFooter />
+          </>
+        )}
+
+        {result?.approvalStatus === "REJECTED" && (
+          <>
+            <HeroSection
+              protocolo={result.protocol}
+              agendamentoStatus={result.approvalStatus}
+              analiseStatus={result.status}
+              ultimaAtualizacao={new Date(result.updatedAt).toLocaleString(
+                "pt-BR",
+              )}
+            />
+            <StatusView data={result} />
+            <SiteFooter />
           </>
         )}
 
         {!result && <NotFound protocol={codigo} />}
       </main>
-
-      <SiteFooter />
     </div>
-  );
-}
-
-function SiteHeader() {
-  return (
-    <header className="sticky top-0 z-40 border-b border-border/60 bg-background/80 backdrop-blur supports-backdrop-filter:bg-background/60">
-      <div className="mx-auto flex h-16 w-full max-w-6xl items-center justify-between px-4 sm:px-6">
-        <Link
-          href="/"
-          className="flex items-center gap-2 rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-          aria-label="LIACLI — página inicial"
-        >
-          <span className="flex size-8 items-center justify-center rounded-lg bg-primary text-primary-foreground shadow-sm">
-            <FlaskConical className="size-4" aria-hidden />
-          </span>
-          <span className="text-sm font-semibold tracking-wide">LIACLI</span>
-        </Link>
-
-        <Button asChild variant="ghost" size="sm">
-          <Link href="/pesquisador">
-            <ArrowLeft className="size-4" aria-hidden />
-            Portal do pesquisador
-          </Link>
-        </Button>
-      </div>
-    </header>
   );
 }
 

@@ -371,7 +371,7 @@ function buildTimeline(sample: Sample): TimelineEvent[] {
         ? "Solicitação rejeitada"
         : "Agendamento aprovado",
       description: rejectedApproval
-        ? "A equipe LIACLI não pôde aprovar esta solicitação."
+        ? "A equipe LIACLI não pôde aprovar esta solicitação. Detalhes no e-mail cadastrado."
         : approved
           ? "A equipe LIACLI analisou e aprovou o agendamento."
           : "Aguardando análise pela equipe LIACLI.",

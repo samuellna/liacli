@@ -23,17 +23,19 @@ export function ServiceCard({
   ctaLabel,
 }: ServiceCardProps) {
   return (
-    <article className="group relative flex flex-col overflow-hidden rounded-2xl border border-border bg-card p-7 shadow-sm transition-all duration-300 hover:-translate-y-0.5 hover:border-accent/40 hover:shadow-lg">
+    <article className="group relative flex flex-col overflow-hidden rounded-2xl border border-border bg-card p-7 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-blue-200/80 hover:shadow-xl hover:shadow-blue-100/60">
+      {/* Soft corner glow revealed on hover */}
       <span
         aria-hidden
-        className="pointer-events-none absolute -top-16 -right-16 size-40 rounded-full bg-accent/10 opacity-0 blur-2xl transition-opacity duration-300 group-hover:opacity-100"
+        className="pointer-events-none absolute -right-16 -top-16 size-40 rounded-full bg-blue-400/10 opacity-0 blur-2xl transition-opacity duration-300 group-hover:opacity-100"
       />
 
+      {/* Icon + eyebrow */}
       <div className="relative flex items-center gap-4">
-        <span className="inline-flex size-12 items-center justify-center rounded-xl bg-primary/5 text-primary ring-1 ring-primary/10 transition-colors group-hover:bg-accent/10 group-hover:text-accent group-hover:ring-accent/20">
+        <span className="inline-flex size-12 shrink-0 items-center justify-center rounded-xl bg-linear-to-br from-blue-600 to-blue-400 text-white shadow-sm shadow-blue-200/60">
           <Icon className="size-6" aria-hidden />
         </span>
-        <span className="text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">
+        <span className="text-xs font-semibold uppercase tracking-[0.14em] text-blue-500/70">
           {eyebrow}
         </span>
       </div>
@@ -45,20 +47,26 @@ export function ServiceCard({
         {description}
       </p>
 
-      <ul className="relative mt-5 space-y-2">
+      <ul className="relative mt-5 space-y-2.5">
         {bullets.map((bullet) => (
           <li
             key={bullet}
-            className="flex items-start gap-2 text-sm text-foreground/80"
+            className="flex items-start gap-2.5 text-sm text-foreground/80"
           >
-            <Check className="mt-0.5 size-4 shrink-0 text-accent" aria-hidden />
+            <span className="mt-0.5 inline-flex size-4 shrink-0 items-center justify-center rounded-full bg-blue-50">
+              <Check className="size-2.5 text-blue-500" aria-hidden />
+            </span>
             <span>{bullet}</span>
           </li>
         ))}
       </ul>
 
       <div className="relative mt-7 flex flex-1 items-end">
-        <Button asChild size="lg" className="h-11 w-full sm:w-auto">
+        <Button
+          asChild
+          size="lg"
+          className="h-11 w-full sm:w-auto bg-linear-to-r from-blue-600 to-blue-500"
+        >
           <Link href={ctaHref}>
             {ctaLabel}
             <ArrowRight

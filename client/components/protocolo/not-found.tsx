@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 
 export function NotFound({ protocol }: { protocol: string }) {
   return (
-    <div className="flex min-h-[60vh] items-center justify-center px-4 py-16">
+    <div className="flex min-h-screen items-center justify-center px-4 py-16">
       <div className="w-full max-w-md space-y-6 text-center">
         <span className="mx-auto flex size-16 items-center justify-center rounded-full bg-muted text-muted-foreground">
           <SearchX className="size-8" aria-hidden />
@@ -40,9 +40,7 @@ export function NotFound({ protocol }: { protocol: string }) {
             </Link>
           </Button>
           <Button asChild variant="outline">
-            <Link href="/pesquisador/agendamento">
-              Realizar agendamento
-            </Link>
+            <Link href="/pesquisador/agendamento">Realizar agendamento</Link>
           </Button>
         </div>
       </div>

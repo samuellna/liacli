@@ -61,17 +61,17 @@ export function AgendamentoBadge({
     APPROVED: {
       icon: CheckCircle2,
       label: "Aprovado",
-      colorClass: "bg-success/10 text-success",
+      colorClass: "bg-muted text-success",
     },
     PENDING: {
       icon: Clock,
       label: "Pendente",
-      colorClass: "bg-warning/10 text-warning-foreground",
+      colorClass: "bg-muted text-warning-foreground",
     },
     REJECTED: {
       icon: XCircle,
       label: "Rejeitado",
-      colorClass: "bg-destructive/10 text-destructive",
+      colorClass: "bg-muted text-destructive",
     },
   };
 
@@ -105,17 +105,17 @@ export function AnaliseBadge({
     ANALYZING: {
       icon: Microscope,
       label: "Em análise",
-      colorClass: "bg-info/10 text-info",
+      colorClass: "bg-muted text-info",
     },
     DONE: {
       icon: FlaskConical,
       label: "Concluído",
-      colorClass: "bg-success/10 text-success",
+      colorClass: "bg-muted text-success",
     },
     REJECTED: {
       icon: XCircle,
       label: "Rejeitado",
-      colorClass: "bg-destructive/10 text-destructive",
+      colorClass: "bg-muted text-destructive",
     },
   };
 

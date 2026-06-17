@@ -31,18 +31,20 @@ export function ProtocolLookupCard() {
   return (
     <article
       id="consulta"
-      className="group relative flex flex-col overflow-hidden rounded-2xl border border-border bg-card p-7 shadow-sm transition-all duration-300 hover:-translate-y-0.5 hover:border-accent/40 hover:shadow-lg"
+      className="group relative flex flex-col overflow-hidden rounded-2xl border border-border bg-card p-7 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-blue-200/80 hover:shadow-xl hover:shadow-blue-100/60"
     >
+      {/* Corner glow on hover */}
       <span
         aria-hidden
-        className="pointer-events-none absolute -top-16 -right-16 size-40 rounded-full bg-info/10 opacity-0 blur-2xl transition-opacity duration-300 group-hover:opacity-100"
+        className="pointer-events-none absolute -right-24 -top-24 size-56 rounded-full bg-blue-400/15 opacity-0 blur-3xl transition-opacity duration-500 group-hover:opacity-100"
       />
 
+      {/* Icon + eyebrow */}
       <div className="relative flex items-center gap-4">
-        <span className="inline-flex size-12 items-center justify-center rounded-xl bg-primary/5 text-primary ring-1 ring-primary/10 transition-colors group-hover:bg-info/10 group-hover:text-info group-hover:ring-info/20">
+        <span className="inline-flex size-12 shrink-0 items-center justify-center rounded-xl bg-linear-to-br from-blue-600 to-blue-400 text-white shadow-lg shadow-blue-200/60">
           <Search className="size-6" aria-hidden />
         </span>
-        <span className="text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">
+        <span className="text-xs font-semibold uppercase tracking-[0.14em] text-blue-500/70">
           Acompanhamento
         </span>
       </div>
@@ -60,7 +62,7 @@ export function ProtocolLookupCard() {
         className="relative mt-5 space-y-2"
         noValidate
       >
-        <Label htmlFor="protocolo" className="text-sm font-medium">
+        <Label htmlFor="protocolo" className="text-sm text-muted-foreground">
           Código do protocolo
         </Label>
         <div className="flex flex-col gap-2 sm:flex-row">
@@ -79,9 +81,13 @@ export function ProtocolLookupCard() {
             }}
             aria-invalid={error ? true : undefined}
             aria-describedby={error ? "protocolo-erro" : "protocolo-ajuda"}
-            className="h-11 text-base tracking-[0.3em] uppercase placeholder:tracking-normal placeholder:normal-case sm:text-base"
+            className="h-11 border-blue-300 bg-white/8 text-base tracking-[0.3em] text-muted-foreground uppercase placeholder:tracking-normal placeholder:normal-case placeholder:text-slate-500 focus-visible:border-blue-400/50 focus-visible:ring-blue-400/20 sm:text-base"
           />
-          <Button type="submit" size="lg" className="h-11 sm:w-auto">
+          <Button
+            type="submit"
+            size="lg"
+            className="h-11 bg-linear-to-r from-blue-600 to-blue-500 text-white shadow-md shadow-blue-900/40 transition-all hover:from-blue-500 hover:to-blue-400 hover:shadow-lg hover:shadow-blue-800/50 sm:w-auto"
+          >
             Consultar
             <ArrowRight
               className="size-4 transition-transform group-hover:translate-x-0.5"
@@ -91,23 +97,19 @@ export function ProtocolLookupCard() {
         </div>
 
         {error ? (
-          <p
-            id="protocolo-erro"
-            role="alert"
-            className="text-xs text-destructive"
-          >
+          <p id="protocolo-erro" role="alert" className="text-xs text-red-400">
             {error}
           </p>
         ) : (
-          <p id="protocolo-ajuda" className="text-xs text-muted-foreground">
+          <p id="protocolo-ajuda" className="text-xs text-slate-500">
             O protocolo possui 7 caracteres (letras e números) e é enviado após
             o agendamento.
           </p>
         )}
       </form>
 
-      <p className="relative mt-5 inline-flex items-center gap-1.5 text-xs text-muted-foreground">
-        <ShieldCheck className="size-3.5 text-accent" aria-hidden />
+      <p className="relative mt-5 inline-flex items-center gap-1.5 text-xs text-slate-500">
+        <ShieldCheck className="size-3.5 text-blue-400" aria-hidden />
         Consulta segura, sem necessidade de login.
       </p>
     </article>
