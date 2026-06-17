@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import {
   AlertCircle,
+  ArrowLeft,
   ClipboardCheck,
   FlaskConical,
   Loader2,
@@ -32,15 +33,15 @@ import type { ExamType, ParameterGroups, Sample } from "@/api/types";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
-type GroupForm = Record<string, string>; // paramNome → value
+type GroupForm = Record<string, string>;
 
 type ExameFormState = {
-  parameters: Record<string, GroupForm>; // nomeGrupo → paramNome → value
+  parameters: Record<string, GroupForm>;
   observations: string;
   genericValue: string;
 };
 
-type FormState = Record<number, ExameFormState>; // examTypeId → state
+type FormState = Record<number, ExameFormState>;
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -158,8 +159,7 @@ function parseAndValidateJson(
 
   const rawObs = obj.observations;
   const observations =
-    rawObs != null &&
-    (typeof rawObs === "string" || typeof rawObs === "number")
+    rawObs != null && (typeof rawObs === "string" || typeof rawObs === "number")
       ? String(rawObs)
       : "";
 
@@ -191,6 +191,29 @@ const statusLabel: Partial<Record<SampleStatus, string>> = {
 
 // ─── Sub-components ───────────────────────────────────────────────────────────
 
+function InfoItem({
+  label,
+  value,
+  mono,
+}: {
+  label: string;
+  value: React.ReactNode;
+  mono?: boolean;
+}) {
+  return (
+    <div className="space-y-0.5">
+      <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+        {label}
+      </p>
+      <p
+        className={`text-sm font-medium text-foreground ${mono ? "font-mono" : ""}`}
+      >
+        {value ?? "—"}
+      </p>
+    </div>
+  );
+}
+
 function GroupSection({
   group,
   values,
@@ -201,20 +224,22 @@ function GroupSection({
   onChangeParam: (paramNome: string, value: string) => void;
 }) {
   return (
-    <div className="rounded-md border">
-      <div className="border-b bg-muted/40 px-4 py-2.5">
-        <p className="text-sm font-semibold">
+    <div className="overflow-hidden rounded-lg border border-border/60">
+      <div className="border-b bg-primary/5 px-4 py-2.5">
+        <p className="text-xs font-bold uppercase tracking-wider text-primary/70">
           {group.groupName || "Parâmetros"}
         </p>
       </div>
-      <div className="divide-y">
+      <div className="divide-y divide-border/50">
         {group.parameters.map((param) => (
           <div
             key={param.name}
-            className="grid grid-cols-1 items-start gap-2 px-4 py-3 sm:grid-cols-[1fr_auto_auto]"
+            className="grid grid-cols-1 items-center gap-3 px-4 py-3 transition-colors hover:bg-muted/20 sm:grid-cols-[1fr_auto_auto]"
           >
             <div>
-              <p className="text-sm font-medium">{param.name}</p>
+              <p className="text-sm font-medium text-foreground">
+                {param.name}
+              </p>
               {param.reference && (
                 <p className="text-xs text-muted-foreground">
                   Ref: {param.reference}
@@ -226,10 +251,10 @@ function GroupSection({
                 placeholder="—"
                 value={values[param.name] ?? ""}
                 onChange={(e) => onChangeParam(param.name, e.target.value)}
-                className="w-36"
+                className="w-36 border-border/60 bg-background/80 font-mono text-sm focus-visible:border-primary/50 focus-visible:ring-primary/20"
               />
               {param.unit && param.unit !== "—" && (
-                <span className="shrink-0 text-sm text-muted-foreground">
+                <span className="shrink-0 text-xs font-medium text-muted-foreground">
                   {param.unit}
                 </span>
               )}
@@ -244,16 +269,23 @@ function GroupSection({
 function PageSkeleton() {
   return (
     <div className="space-y-6">
-      <header className="space-y-1">
-        <Skeleton className="h-8 w-64" />
-        <Skeleton className="h-4 w-72" />
+      <header>
+        <div className="flex items-center gap-3">
+          <Skeleton className="size-9 rounded-lg" />
+          <div className="space-y-2">
+            <Skeleton className="h-6 w-56" />
+            <Skeleton className="h-3.5 w-72" />
+          </div>
+        </div>
       </header>
-      <Card>
-        <CardHeader className="border-b">
-          <Skeleton className="h-5 w-44" />
-          <Skeleton className="h-4 w-32" />
-        </CardHeader>
-        <CardContent className="grid gap-4 pt-6 md:grid-cols-2">
+      <Card className="overflow-hidden border border-border/60 shadow-sm">
+        <div className="border-b bg-primary/5 p-5">
+          <div className="space-y-1.5">
+            <Skeleton className="h-4 w-44" />
+            <Skeleton className="h-3.5 w-32" />
+          </div>
+        </div>
+        <CardContent className="grid gap-5 pt-6 md:grid-cols-2">
           {Array.from({ length: 6 }).map((_, i) => (
             <div key={i} className="space-y-1.5">
               <Skeleton className="h-3 w-24" />
@@ -262,14 +294,16 @@ function PageSkeleton() {
           ))}
         </CardContent>
       </Card>
-      <Card>
-        <CardHeader className="border-b">
-          <Skeleton className="h-5 w-32" />
-          <Skeleton className="h-4 w-48" />
-        </CardHeader>
-        <CardContent className="space-y-4 pt-4">
+      <Card className="overflow-hidden border border-border/60 shadow-sm">
+        <div className="border-b bg-primary/5 p-5">
+          <div className="space-y-1.5">
+            <Skeleton className="h-4 w-32" />
+            <Skeleton className="h-3.5 w-48" />
+          </div>
+        </div>
+        <CardContent className="space-y-4 pt-5">
           {Array.from({ length: 4 }).map((_, i) => (
-            <Skeleton key={i} className="h-14 w-full rounded-md" />
+            <Skeleton key={i} className="h-14 w-full rounded-lg" />
           ))}
         </CardContent>
       </Card>
@@ -316,18 +350,40 @@ export default function CadastroResultadoPage() {
   if (loadError || !sample) {
     return (
       <div className="space-y-6">
-        <header className="space-y-1">
-          <h1 className="flex items-center gap-2 text-2xl font-semibold">
-            <ClipboardCheck className="size-6" />
-            Cadastro de Resultados
-          </h1>
+        <header>
+          <div className="flex items-center gap-3">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => router.push("/amostras")}
+              aria-label="Voltar"
+              className="shrink-0"
+            >
+              <ArrowLeft className="size-4" />
+            </Button>
+            <div className="flex items-center gap-2">
+              <div className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-primary/10">
+                <ClipboardCheck className="size-4 text-primary" aria-hidden />
+              </div>
+              <h1 className="text-xl font-bold tracking-tight text-foreground">
+                Cadastro de Resultados
+              </h1>
+            </div>
+          </div>
         </header>
-        <Card>
-          <CardContent className="flex flex-col items-center gap-3 py-16 text-center">
-            <AlertCircle className="size-10 text-destructive/50" aria-hidden />
-            <p className="text-sm font-medium">
-              {loadError ?? "Amostra não encontrada."}
-            </p>
+        <Card className="border border-border/60 shadow-sm">
+          <CardContent className="flex flex-col items-center gap-4 py-20 text-center">
+            <div className="flex size-14 items-center justify-center rounded-full bg-destructive/10">
+              <AlertCircle className="size-6 text-destructive" aria-hidden />
+            </div>
+            <div className="space-y-1">
+              <p className="text-sm font-semibold text-foreground">
+                {loadError ?? "Amostra não encontrada."}
+              </p>
+              <p className="text-xs text-muted-foreground">
+                Verifique o identificador e tente novamente.
+              </p>
+            </div>
             <Button
               variant="outline"
               size="sm"
@@ -349,22 +405,41 @@ export default function CadastroResultadoPage() {
 
     return (
       <div className="space-y-6">
-        <header className="space-y-1">
-          <h1 className="flex items-center gap-2 text-2xl font-semibold">
-            <ClipboardCheck className="size-6" />
-            Cadastro de Resultados
-          </h1>
+        <header>
+          <div className="flex items-center gap-3">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => router.push("/amostras")}
+              aria-label="Voltar"
+              className="shrink-0"
+            >
+              <ArrowLeft className="size-4" />
+            </Button>
+            <div className="flex items-center gap-2">
+              <div className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-primary/10">
+                <ClipboardCheck className="size-4 text-primary" aria-hidden />
+              </div>
+              <h1 className="text-xl font-bold tracking-tight text-foreground">
+                Cadastro de Resultados
+              </h1>
+            </div>
+          </div>
         </header>
-        <Card>
-          <CardContent className="flex flex-col items-center gap-3 py-16 text-center">
-            <FlaskConical
-              className="size-10 text-muted-foreground/40"
-              aria-hidden
-            />
-            <p className="text-sm font-medium">{msg}</p>
-            <p className="font-mono text-xs text-muted-foreground">
-              {sample.protocol}
-            </p>
+        <Card className="border border-border/60 shadow-sm">
+          <CardContent className="flex flex-col items-center gap-4 py-20 text-center">
+            <div className="flex size-14 items-center justify-center rounded-full bg-muted/60">
+              <FlaskConical
+                className="size-6 text-muted-foreground/50"
+                aria-hidden
+              />
+            </div>
+            <div className="space-y-1">
+              <p className="text-sm font-semibold text-foreground">{msg}</p>
+              <p className="font-mono text-xs text-muted-foreground">
+                {sample.protocol}
+              </p>
+            </div>
             <Button
               variant="outline"
               size="sm"
@@ -381,17 +456,37 @@ export default function CadastroResultadoPage() {
   if (sample.status === SampleStatus.DONE) {
     return (
       <div className="space-y-6">
-        <header className="space-y-1">
-          <h1 className="text-2xl font-semibold">Cadastro de Resultados</h1>
-          <p className="text-sm text-muted-foreground">
-            Todos os resultados desta amostra já foram cadastrados.
-          </p>
+        <header>
+          <div className="flex items-center gap-3">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => router.push("/amostras")}
+              aria-label="Voltar"
+              className="shrink-0"
+            >
+              <ArrowLeft className="size-4" />
+            </Button>
+            <div>
+              <h1 className="text-xl font-bold tracking-tight text-foreground">
+                Cadastro de Resultados
+              </h1>
+              <p className="text-sm text-muted-foreground">
+                Todos os resultados desta amostra já foram cadastrados.
+              </p>
+            </div>
+          </div>
         </header>
-        <Card>
-          <CardContent className="py-8 text-center">
+        <Card className="border border-border/60 shadow-sm">
+          <CardContent className="flex flex-col items-center gap-3 py-12 text-center">
+            <div className="flex size-14 items-center justify-center rounded-full bg-success/10">
+              <ClipboardCheck className="size-6 text-success" aria-hidden />
+            </div>
             <p className="text-sm text-muted-foreground">
-              Nenhuma alteração pode ser realizada. Protocolo:
-              <span className="font-mono">{sample.protocol}</span>
+              Nenhuma alteração pode ser realizada. Protocolo:{" "}
+              <span className="font-mono font-semibold text-foreground">
+                {sample.protocol}
+              </span>
             </p>
           </CardContent>
         </Card>
@@ -442,9 +537,7 @@ export default function CadastroResultadoPage() {
       } catch {
         setImportErrors((prev) => ({
           ...prev,
-          [targetId]: [
-            "JSON mal formatado. Verifique a sintaxe do arquivo.",
-          ],
+          [targetId]: ["JSON mal formatado. Verifique a sintaxe do arquivo."],
         }));
         return;
       }
@@ -457,7 +550,9 @@ export default function CadastroResultadoPage() {
 
       setForm((prev) => ({ ...prev, [targetId]: result.state }));
       setImportErrors((prev) => ({ ...prev, [targetId]: [] }));
-      toast.success("JSON importado com sucesso. Revise os dados antes de salvar.");
+      toast.success(
+        "JSON importado com sucesso. Revise os dados antes de salvar.",
+      );
     };
     reader.onerror = () => {
       setImportErrors((prev) => ({
@@ -533,53 +628,70 @@ export default function CadastroResultadoPage() {
 
   return (
     <div className="space-y-6">
-      <header className="space-y-1">
-        <h1 className="flex items-center gap-2 text-2xl font-semibold">
-          <ClipboardCheck className="size-6" />
-          Cadastro de Resultados
-        </h1>
-        <p className="text-sm text-muted-foreground">
-          Registre os resultados dos exames da amostra.
-        </p>
+      {/* Header */}
+      <header>
+        <div className="flex items-center gap-3">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => router.push("/amostras")}
+            aria-label="Voltar"
+            className="shrink-0"
+          >
+            <ArrowLeft className="size-4" />
+          </Button>
+          <div className="flex items-center gap-3">
+            <div className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-primary shadow-sm">
+              <ClipboardCheck
+                className="size-5 text-primary-foreground"
+                aria-hidden
+              />
+            </div>
+            <div>
+              <h1 className="text-xl font-bold tracking-tight text-foreground">
+                Cadastro de Resultados
+              </h1>
+              <p className="text-sm text-muted-foreground">
+                Registre os resultados dos exames da amostra.
+              </p>
+            </div>
+          </div>
+        </div>
       </header>
 
       {/* Informações da Amostra */}
-      <Card>
-        <CardHeader className="border-b">
-          <CardTitle>Informações da Amostra</CardTitle>
-          <CardDescription>Dados gerais da solicitação.</CardDescription>
+      <Card className="overflow-hidden border border-border/60 shadow-sm py-0">
+        <CardHeader className="border-b bg-linear-to-r from-primary/5 via-background to-accent/5 py-4">
+          <CardTitle className="text-[11px] font-bold uppercase tracking-widest text-primary/70">
+            Informações da Amostra
+          </CardTitle>
+          <CardDescription className="text-xs">
+            Dados gerais da solicitação.
+          </CardDescription>
         </CardHeader>
-        <CardContent className="grid gap-4 pt-6 md:grid-cols-2">
-          <div>
-            <p className="text-sm text-muted-foreground">Protocolo</p>
-            <p className="font-mono font-medium">{sample.protocol}</p>
-          </div>
-          <div>
-            <p className="text-sm text-muted-foreground">Pesquisador</p>
-            <p className="font-medium">
-              {sample.researchProject.researcher.name}
-            </p>
-          </div>
-          <div>
-            <p className="text-sm text-muted-foreground">Projeto</p>
-            <p className="font-medium">{sample.researchProject.title}</p>
-          </div>
-          <div>
-            <p className="text-sm text-muted-foreground">Data do Agendamento</p>
-            <p className="font-medium">
-              {sample.scheduledAt
+        <CardContent className="grid gap-5 pt-6 md:grid-cols-2 lg:grid-cols-3 pb-4">
+          <InfoItem label="Protocolo" value={sample.protocol} mono />
+          <InfoItem
+            label="Pesquisador"
+            value={sample.researchProject.researcher.name}
+          />
+          <InfoItem
+            label="Data do Agendamento"
+            value={
+              sample.scheduledAt
                 ? new Date(sample.scheduledAt).toLocaleDateString("pt-BR")
-                : "—"}
+                : "—"
+            }
+          />
+          <InfoItem label="Projeto" value={sample.researchProject.title} />
+          <InfoItem
+            label="Animais nesta remessa"
+            value={sample.animalsInThisShipment}
+          />
+          <div className="space-y-0.5">
+            <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+              Status
             </p>
-          </div>
-          <div>
-            <p className="text-sm text-muted-foreground">
-              Animais nesta remessa
-            </p>
-            <p className="font-medium">{sample.animalsInThisShipment}</p>
-          </div>
-          <div>
-            <p className="text-sm text-muted-foreground">Status</p>
             <Badge
               variant="outline"
               className={statusClass[sample.status] ?? ""}
@@ -606,12 +718,17 @@ export default function CadastroResultadoPage() {
         const etErrors = importErrors[et.id] ?? [];
 
         return (
-          <Card key={et.id}>
-            <CardHeader className="border-b">
+          <Card
+            key={et.id}
+            className="overflow-hidden border border-border/60 shadow-sm py-0"
+          >
+            <CardHeader className="border-b bg-linear-to-r from-primary/5 via-background to-accent/5 py-4">
               <div className="flex items-start justify-between gap-4">
                 <div>
-                  <CardTitle>{et.name}</CardTitle>
-                  <CardDescription>
+                  <CardTitle className="text-base font-semibold text-foreground">
+                    {et.name}
+                  </CardTitle>
+                  <CardDescription className="text-xs">
                     Preencha os resultados obtidos na análise.
                   </CardDescription>
                 </div>
@@ -620,26 +737,33 @@ export default function CadastroResultadoPage() {
                   size="sm"
                   type="button"
                   onClick={() => handleImportClick(et.id)}
+                  className="shrink-0 gap-1.5 border-primary/25 bg-primary/5 text-xs font-semibold text-primary hover:border-primary/40 hover:bg-primary/10 hover:text-primary"
                 >
-                  <Upload className="mr-2 size-4" aria-hidden />
+                  <Upload className="size-3.5" aria-hidden />
                   Importar JSON
                 </Button>
               </div>
             </CardHeader>
 
-            <CardContent className="space-y-4 pt-4">
+            <CardContent className="space-y-4 pt-5 pb-4">
               {etErrors.length > 0 && (
-                <div className="rounded-md border border-destructive/40 bg-destructive/10 p-3">
-                  <p className="mb-1 text-sm font-medium text-destructive">
-                    Erro na importação
-                  </p>
-                  <ul className="space-y-0.5 text-xs text-destructive">
+                <div className="overflow-hidden rounded-lg border border-destructive/30 bg-destructive/5">
+                  <div className="border-b border-destructive/20 bg-destructive/10 px-4 py-2.5">
+                    <p className="text-xs font-bold uppercase tracking-wide text-destructive">
+                      Erro na importação
+                    </p>
+                  </div>
+                  <ul className="space-y-1 px-4 py-3 text-xs text-destructive">
                     {etErrors.map((err, i) => (
-                      <li key={i}>• {err}</li>
+                      <li key={i} className="flex items-start gap-1.5">
+                        <span className="mt-0.5 shrink-0">•</span>
+                        {err}
+                      </li>
                     ))}
                   </ul>
                 </div>
               )}
+
               {et.groups && et.groups.length > 0 ? (
                 <>
                   {et.groups.map((group) => (
@@ -658,9 +782,14 @@ export default function CadastroResultadoPage() {
                     />
                   ))}
                   <div className="space-y-1.5">
-                    <Label htmlFor={`obs-${et.id}`}>
+                    <Label
+                      htmlFor={`obs-${et.id}`}
+                      className="text-xs font-semibold text-foreground"
+                    >
                       Observações{" "}
-                      <span className="text-muted-foreground">(opcional)</span>
+                      <span className="font-normal text-muted-foreground">
+                        (opcional)
+                      </span>
                     </Label>
                     <Textarea
                       id={`obs-${et.id}`}
@@ -670,13 +799,19 @@ export default function CadastroResultadoPage() {
                         handleFieldChange(et.id, "observations", e.target.value)
                       }
                       rows={3}
+                      className="border-border/60 bg-background/80 text-sm focus-visible:border-primary/50 focus-visible:ring-primary/20"
                     />
                   </div>
                 </>
               ) : (
                 <>
                   <div className="space-y-1.5">
-                    <Label htmlFor={`val-${et.id}`}>Resultado</Label>
+                    <Label
+                      htmlFor={`val-${et.id}`}
+                      className="text-xs font-semibold text-foreground"
+                    >
+                      Resultado
+                    </Label>
                     <Input
                       id={`val-${et.id}`}
                       placeholder="Digite o resultado"
@@ -684,12 +819,18 @@ export default function CadastroResultadoPage() {
                       onChange={(e) =>
                         handleFieldChange(et.id, "genericValue", e.target.value)
                       }
+                      className="border-border/60 bg-background/80 focus-visible:border-primary/50 focus-visible:ring-primary/20"
                     />
                   </div>
                   <div className="space-y-1.5">
-                    <Label htmlFor={`obs-${et.id}`}>
+                    <Label
+                      htmlFor={`obs-${et.id}`}
+                      className="text-xs font-semibold text-foreground"
+                    >
                       Observações{" "}
-                      <span className="text-muted-foreground">(opcional)</span>
+                      <span className="font-normal text-muted-foreground">
+                        (opcional)
+                      </span>
                     </Label>
                     <Textarea
                       id={`obs-${et.id}`}
@@ -699,6 +840,7 @@ export default function CadastroResultadoPage() {
                         handleFieldChange(et.id, "observations", e.target.value)
                       }
                       rows={3}
+                      className="border-border/60 bg-background/80 text-sm focus-visible:border-primary/50 focus-visible:ring-primary/20"
                     />
                   </div>
                 </>
@@ -709,22 +851,30 @@ export default function CadastroResultadoPage() {
       })}
 
       {/* Ações */}
-      <div className="flex justify-end gap-3">
+      <div className="flex justify-end gap-3 border-t border-border/50 pt-6">
         <Button
           variant="outline"
           onClick={() => router.push("/amostras")}
           disabled={isSaving}
+          className="gap-2"
         >
           Cancelar
         </Button>
-        <Button onClick={salvarResultados} disabled={isSaving}>
+        <Button
+          onClick={salvarResultados}
+          disabled={isSaving}
+          className="gap-2"
+        >
           {isSaving ? (
             <>
-              <Loader2 className="mr-2 size-4 animate-spin" aria-hidden />
+              <Loader2 className="size-4 animate-spin" aria-hidden />
               Salvando...
             </>
           ) : (
-            "Salvar Resultados"
+            <>
+              <ClipboardCheck className="size-4" aria-hidden />
+              Salvar Resultados
+            </>
           )}
         </Button>
       </div>
