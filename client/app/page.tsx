@@ -102,39 +102,85 @@ export default function Home() {
                 variant="outline"
                 className="h-11 border-white/20 bg-white/5 px-5 text-sm font-semibold text-white backdrop-blur-sm hover:bg-white/10 hover:text-white"
               >
-                <Link href="/login?role=funcionario">Sou funcionário</Link>
+                <Link href="/login">Sou funcionário</Link>
               </Button>
             </div>
           </div>
         </section>
 
-        <section className="mx-auto flex min-h-screen w-full max-w-6xl items-center px-4 py-16 sm:px-6">
-          <div className="w-full">
-            <div className="mx-auto max-w-2xl space-y-3 text-center">
-              <h2 className="text-3xl font-semibold tracking-tight">
-                Sobre nós
+        <section
+          className="relative overflow-hidden bg-background py-24 sm:py-32"
+          id="servicos"
+        >
+          {/* Subtle blue top-fade and radial glow for section identity */}
+          <div
+            aria-hidden
+            className="pointer-events-none absolute inset-x-0 top-0 h-56 bg-linear-to-b from-blue-50/70 to-transparent"
+          />
+          <div
+            aria-hidden
+            className="pointer-events-none absolute left-1/2 top-0 size-140 -translate-x-1/2 -translate-y-1/3 rounded-full bg-blue-400/10 blur-3xl"
+          />
+
+          <div className="relative mx-auto max-w-6xl px-4 sm:px-6">
+            {/* Section header */}
+            <div className="mx-auto max-w-2xl space-y-4 text-center">
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-blue-50 px-3 py-1 text-xs font-semibold uppercase tracking-widest text-blue-600 ring-1 ring-blue-100">
+                Nossa Plataforma
+              </span>
+
+              <h2 className="text-4xl font-bold tracking-tight text-foreground sm:text-5xl">
+                Do pedido ao laudo,{" "}
+                <span className="bg-linear-to-r from-blue-600 to-blue-400 bg-clip-text text-transparent">
+                  tudo conectado
+                </span>
               </h2>
-              <p className="text-base text-muted-foreground">
+
+              <p className="mx-auto max-w-lg text-base leading-relaxed text-muted-foreground sm:text-lg">
                 Reduza retrabalho e ganhe rastreabilidade em todas as etapas do
                 processo analítico.
               </p>
             </div>
 
-            <ul className="mt-12 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-              {features.map((feature) => (
+            {/* Decorative divider */}
+            <div
+              aria-hidden
+              className="mx-auto mt-10 flex items-center justify-center gap-2"
+            >
+              <div className="h-px w-16 bg-linear-to-r from-transparent to-blue-300" />
+              <div className="size-1.5 rounded-full bg-blue-400" />
+              <div className="h-px w-16 bg-linear-to-l from-transparent to-blue-300" />
+            </div>
+
+            {/* Feature cards */}
+            <ul className="mt-14 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+              {features.map((feature, index) => (
                 <li
                   key={feature.title}
-                  className="group rounded-2xl border border-border bg-card p-6 shadow-sm transition-colors hover:border-accent/40"
+                  className="group relative flex flex-col rounded-2xl border border-border bg-card p-7 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-blue-200/80 hover:shadow-lg hover:shadow-blue-100/50"
                 >
-                  <span className="inline-flex size-10 items-center justify-center rounded-lg bg-accent/10 text-accent">
-                    <feature.icon className="size-5" aria-hidden />
+                  {/* Decorative index — purely ornamental */}
+                  <span
+                    aria-hidden
+                    className="absolute right-6 top-5 select-none text-4xl font-black tabular-nums leading-none text-slate-100"
+                  >
+                    {String(index + 1).padStart(2, "0")}
                   </span>
-                  <h3 className="mt-4 text-lg font-semibold text-foreground">
+
+                  {/* Icon with blue gradient */}
+                  <div className="inline-flex size-11 shrink-0 items-center justify-center rounded-xl bg-linear-to-br from-blue-600 to-blue-400 text-white shadow-sm shadow-blue-200/60">
+                    <feature.icon className="size-5" aria-hidden />
+                  </div>
+
+                  <h3 className="mt-5 pr-8 text-base font-semibold leading-snug text-foreground">
                     {feature.title}
                   </h3>
-                  <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
+                  <p className="mt-2 flex-1 text-sm leading-relaxed text-muted-foreground">
                     {feature.description}
                   </p>
+
+                  {/* Bottom accent line that expands on hover */}
+                  <div className="mt-6 h-px w-8 rounded-full bg-linear-to-r from-blue-500 to-blue-300 opacity-0 transition-all duration-500 group-hover:w-12 group-hover:opacity-100" />
                 </li>
               ))}
             </ul>
