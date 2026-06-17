@@ -1,16 +1,12 @@
 import Link from "next/link";
-import { FlaskConical, Sparkles, LogIn } from "lucide-react";
+import { FlaskConical, Sparkles } from "lucide-react";
 import { Button } from "../ui/button";
 
 interface SiteHeaderProps {
   profile?: "Pesquisador" | "Paciente";
-  hasLoginButton: boolean;
 }
 
-export function SiteHeader({
-  profile,
-  hasLoginButton = false,
-}: SiteHeaderProps) {
+export function SiteHeader({ profile }: SiteHeaderProps) {
   return (
     <header className="sticky top-0 z-40 border-b border-border/60 bg-background/80 backdrop-blur supports-backdrop-filter:bg-background/60">
       <div className="mx-auto flex h-16 w-full max-w-6xl items-center justify-between px-4 sm:px-6">
@@ -43,14 +39,6 @@ export function SiteHeader({
               <Sparkles className="size-3" aria-hidden />
               Perfil: {profile}
             </span>
-          )}
-          {hasLoginButton && (
-            <Button asChild variant="outline" size="sm">
-              <Link href="/login">
-                <LogIn className="size-4" aria-hidden />
-                Entrar
-              </Link>
-            </Button>
           )}
         </div>
       </div>

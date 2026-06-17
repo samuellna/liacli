@@ -16,97 +16,94 @@ import { SiteHeader } from "@/components/header";
 const features = [
   {
     icon: Microscope,
-    title: "Cadastro de amostras",
+    title: "Solicitação e agendamento simplificados",
     description:
-      "Registre amostras, vincule pesquisadores e acompanhe o protocolo do recebimento à liberação.",
+      "Pesquisadores enviam solicitações online e acompanham aprovações sem trocas de e-mail avulsas.",
   },
   {
     icon: Activity,
-    title: "Resultados em tempo real",
+    title: "Acompanhamento em tempo real por protocolo",
     description:
-      "Acompanhe o status de cada exame, com filtros e visão consolidada da operação.",
+      "Cada solicitação gera um protocolo único para rastrear todas as etapas, da submissão à conclusão da análise.",
   },
   {
     icon: FileCheck2,
-    title: "Laudos com rastreabilidade",
+    title: "Resultados gerados automaticamente",
     description:
-      "Emita e versione laudos clínicos com histórico completo e download seguro.",
+      "Ao concluir a análise, o laudo é gerado e disponibilizado para download direto no sistema.",
   },
 ];
 
 export default function Home() {
   return (
     <div className="flex min-h-screen flex-col bg-background text-foreground">
-      <SiteHeader hasLoginButton={true} />
+      <SiteHeader />
       <main className="flex-1">
-        <section className="relative min-h-screen overflow-hidden bg-sidebar text-sidebar-foreground">
+        <section className="relative min-h-screen overflow-hidden text-white">
+          {/* Background image */}
+          <Image
+            src="/labratory-image.jpeg"
+            alt=""
+            fill
+            sizes="100vw"
+            className="object-cover object-center"
+            priority
+            aria-hidden
+          />
+
+          {/* Blue overlay — two layers for depth and vignette */}
+          <div aria-hidden className="absolute inset-0 bg-blue-950/65" />
           <div
             aria-hidden
-            className="pointer-events-none absolute -top-40 -right-40 size-112 rounded-full bg-primary/30 blur-3xl"
+            className="absolute inset-0 bg-linear-to-t from-slate-950/80 via-blue-950/10 to-slate-950/40"
+          />
+
+          {/* Decorative glow accents */}
+          <div
+            aria-hidden
+            className="pointer-events-none absolute -top-40 -right-40 size-112 rounded-full bg-blue-400/10 blur-3xl"
           />
           <div
             aria-hidden
-            className="pointer-events-none absolute -bottom-40 -left-40 size-112 rounded-full bg-accent/20 blur-3xl"
+            className="pointer-events-none absolute -bottom-40 -left-40 size-112 rounded-full bg-blue-600/10 blur-3xl"
           />
-          <div className="relative mx-auto flex min-h-screen w-full max-w-6xl items-center px-4 sm:px-6">
-            <div className="grid w-full gap-12 lg:grid-cols-2 lg:items-center">
-              <div className="space-y-6 text-center lg:text-left">
-                <span className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs font-medium text-sidebar-foreground/80">
-                  <ShieldCheck className="size-3.5" aria-hidden />
-                  Sistema homologado para laboratórios clínicos
-                </span>
-                <h1 className="text-balance text-4xl font-semibold leading-tight tracking-tight sm:text-5xl">
-                  Gestão completa das suas análises clínicas
-                </h1>
-                <p className="mx-auto max-w-md text-pretty text-base text-sidebar-foreground/80 sm:text-lg lg:mx-0">
-                  Controle exames, acompanhe resultados e otimize o fluxo do seu
-                  laboratório com eficiência e segurança.
-                </p>
 
-                <div className="flex flex-wrap justify-center gap-3 lg:justify-start">
-                  <Button
-                    asChild
-                    size="lg"
-                    className="h-11 px-5 text-sm font-semibold"
-                  >
-                    <Link href="/pesquisador">
-                      Sou pesquisador
-                      <ArrowRight className="size-4" aria-hidden />
-                    </Link>
-                  </Button>
+          {/* Content */}
+          <div className="relative z-10 mx-auto flex min-h-screen w-full max-w-4xl flex-col items-center justify-center px-4 py-20 text-center sm:px-6">
+            <span className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs font-medium text-white/80 backdrop-blur-sm">
+              <ShieldCheck className="size-3.5" aria-hidden />
+              Sistema homologado para laboratórios clínicos
+            </span>
 
-                  <Button
-                    asChild
-                    size="lg"
-                    variant="outline"
-                    className="h-11 border-white/20 bg-white/5 px-5 text-sm font-semibold text-sidebar-foreground hover:bg-white/10 hover:text-sidebar-foreground"
-                  >
-                    <Link
-                      href="/login?role=funcionario"
-                      onClick={() => console.log("Fluxo do funcionário")}
-                    >
-                      Sou funcionário
-                    </Link>
-                  </Button>
-                </div>
-              </div>
+            <h1 className="mt-6 text-balance text-4xl font-semibold leading-tight tracking-tight sm:text-5xl lg:text-6xl">
+              Gestão completa das suas análises clínicas
+            </h1>
 
-              <div className="relative mx-auto w-full max-w-xl">
-                <div className="relative aspect-4/3 w-full overflow-hidden rounded-2xl border border-white/10 shadow-2xl">
-                  <Image
-                    src="/labratory-image.jpeg"
-                    alt="Equipe técnica trabalhando em laboratório de análises clínicas"
-                    fill
-                    sizes="(min-width: 1024px) 32rem, (min-width: 640px) 70vw, 90vw"
-                    className="object-cover"
-                    priority
-                  />
-                  <div
-                    aria-hidden
-                    className="absolute inset-0 bg-linear-to-t from-sidebar/80 via-sidebar/10 to-transparent"
-                  />
-                </div>
-              </div>
+            <p className="mt-4 max-w-xl text-pretty text-base text-white/75 sm:text-lg">
+              Controle exames, acompanhe resultados e otimize o fluxo do seu
+              laboratório com eficiência e segurança.
+            </p>
+
+            <div className="mt-8 flex flex-wrap justify-center gap-3">
+              <Button
+                asChild
+                size="lg"
+                className="h-11 px-5 text-sm font-semibold"
+              >
+                <Link href="/pesquisador">
+                  Sou pesquisador
+                  <ArrowRight className="size-4" aria-hidden />
+                </Link>
+              </Button>
+
+              <Button
+                asChild
+                size="lg"
+                variant="outline"
+                className="h-11 border-white/20 bg-white/5 px-5 text-sm font-semibold text-white backdrop-blur-sm hover:bg-white/10 hover:text-white"
+              >
+                <Link href="/login?role=funcionario">Sou funcionário</Link>
+              </Button>
             </div>
           </div>
         </section>
