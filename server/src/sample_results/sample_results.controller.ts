@@ -13,6 +13,8 @@ import type { Response } from 'express';
 import { SampleResultsService } from './sample_results.service';
 import { CreateSampleResultDto } from './dto/create-sample-result.dto';
 import { PdfService } from 'src/pdf/pdf.service';
+import { UseGuards } from '@nestjs/common';
+import { AuthGuard } from 'src/auth/auth.guard';
 
 @Controller('results')
 export class SampleResultsController {
@@ -22,6 +24,7 @@ export class SampleResultsController {
   ) {}
 
   @Post()
+  @UseGuards(AuthGuard)
   create(@Body() sampleResultDto: CreateSampleResultDto) {
     return this.resultService.create(
       sampleResultDto.sampleId,
@@ -69,16 +72,19 @@ export class SampleResultsController {
   }
 
   @Patch('validate-sample/:sampleId')
+  @UseGuards(AuthGuard)
   validateAllBySample(@Param('sampleId') sampleId: number) {
     return this.resultService.validateAllResultsBySample(sampleId);
   }
 
   @Patch('reject-sample/:sampleId')
+  @UseGuards(AuthGuard)
   rejectBySample(@Param('sampleId') sampleId: number) {
     return this.resultService.rejectSampleResults(sampleId);
   }
 
   @Patch(':id')
+  @UseGuards(AuthGuard)
   validate(@Param('id') id: number) {
     return this.resultService.validateResult(id);
   }

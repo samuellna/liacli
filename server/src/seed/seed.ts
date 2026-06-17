@@ -116,6 +116,255 @@ export async function runSeed(dataSource: DataSource) {
         },
       ],
     },
+    {
+      name: 'Uréia',
+      description:
+        'Dosagem de ureia sérica para avaliação da função renal e do metabolismo proteico.',
+      material: 'Sangue venoso (soro)',
+      observations:
+        'Coletar preferencialmente em jejum de 4 horas. Hemólise pode interferir no resultado.',
+      groups: [
+        {
+          groupName: 'Função Renal',
+          parameters: [
+            { name: 'Ureia', unit: 'mg/dL', reference: '15,0–45,0' },
+          ],
+        },
+      ],
+    },
+    {
+      name: 'Creatinina',
+      description:
+        'Dosagem de creatinina sérica para avaliação da filtração glomerular e da função renal.',
+      material: 'Sangue venoso (soro)',
+      observations:
+        'Atividade física intensa nas 24h anteriores pode elevar os níveis. Dieta hipoproteica pode reduzi-los.',
+      groups: [
+        {
+          groupName: 'Função Renal',
+          parameters: [
+            {
+              name: 'Creatinina',
+              unit: 'mg/dL',
+              reference: 'Homens: 0,7–1,3 | Mulheres: 0,5–1,1',
+            },
+          ],
+        },
+      ],
+    },
+    {
+      name: 'TGO',
+      description:
+        'Dosagem de aspartato aminotransferase (AST/TGO) para avaliação de lesão hepática, cardíaca ou muscular.',
+      material: 'Sangue venoso (soro)',
+      observations:
+        'Hemólise intensa pode elevar falsamente os valores. Evitar atividade física intensa nas 24h anteriores à coleta.',
+      groups: [
+        {
+          groupName: 'Função Hepática',
+          parameters: [
+            {
+              name: 'TGO (AST)',
+              unit: 'U/L',
+              reference: 'Homens: até 40 | Mulheres: até 32',
+            },
+          ],
+        },
+      ],
+    },
+    {
+      name: 'TGP',
+      description:
+        'Dosagem de alanina aminotransferase (ALT/TGP), marcador mais específico de lesão hepatocelular.',
+      material: 'Sangue venoso (soro)',
+      observations:
+        'Hemólise pode interferir no resultado. Coletar preferencialmente em jejum de 4 horas.',
+      groups: [
+        {
+          groupName: 'Função Hepática',
+          parameters: [
+            {
+              name: 'TGP (ALT)',
+              unit: 'U/L',
+              reference: 'Homens: até 40 | Mulheres: até 35',
+            },
+          ],
+        },
+      ],
+    },
+    {
+      name: 'TP',
+      description:
+        'Tempo de Protrombina — avalia a via extrínseca e comum da coagulação. Utilizado para monitoramento de anticoagulantes orais e rastreio de distúrbios hemorrágicos.',
+      material:
+        'Sangue venoso (plasma citratado — tubo de citrato de sódio 3,2%, tampa azul)',
+      observations:
+        'Homogeneizar o tubo suavemente por inversão (5–8 vezes) imediatamente após a coleta. Enviar ao laboratório em até 4 horas. Não utilizar heparina no mesmo tubo.',
+      groups: [
+        {
+          groupName: 'Coagulação',
+          parameters: [
+            {
+              name: 'Tempo de Protrombina',
+              unit: 'segundos',
+              reference: '11,0–13,0',
+            },
+            {
+              name: 'Atividade de Protrombina',
+              unit: '%',
+              reference: '70–100',
+            },
+            { name: 'RNI (INR)', unit: '—', reference: '0,8–1,2' },
+          ],
+        },
+      ],
+    },
+    {
+      name: 'TTPA',
+      description:
+        'Tempo de Tromboplastina Parcial Ativada — avalia a via intrínseca e comum da coagulação. Utilizado na investigação de distúrbios hemorrágicos e monitoramento de terapia com heparina não fracionada.',
+      material:
+        'Sangue venoso (plasma citratado — tubo de citrato de sódio 3,2%, tampa azul)',
+      observations:
+        'Homogeneizar o tubo suavemente por inversão imediatamente após a coleta. Enviar ao laboratório em até 4 horas. Heparina terapêutica pode prolongar o TTPA.',
+      groups: [
+        {
+          groupName: 'Coagulação',
+          parameters: [
+            {
+              name: 'TTPA',
+              unit: 'segundos',
+              reference: '25,0–35,0',
+            },
+            {
+              name: 'Relação TTPA (Paciente/Controle)',
+              unit: '—',
+              reference: '0,8–1,2',
+            },
+          ],
+        },
+      ],
+    },
+    {
+      name: 'Hemograma sem contagem diferencial (sem leitura de lâmina)',
+      description:
+        'Hemograma automatizado sem identificação diferencial dos leucócitos. Avalia a série vermelha, contagem total de leucócitos e plaquetas, sem discriminação das populações leucocitárias.',
+      material: 'Sangue total com EDTA (tubo de tampa lilás)',
+      observations:
+        'Homogeneizar o tubo suavemente por inversão (8–10 vezes) antes da análise. Não refrigerar. Processar em até 8 horas após a coleta.',
+      groups: [
+        {
+          groupName: 'Eritrograma',
+          parameters: [
+            {
+              name: 'Hemácias',
+              unit: 'Milhões/mm³',
+              reference: 'Homens: 4,50–6,10 | Mulheres: 4,00–5,40',
+            },
+            {
+              name: 'Hemoglobina',
+              unit: 'g/dL',
+              reference: 'Homens: 13,0–16,5 | Mulheres: 12,0–15,8',
+            },
+            {
+              name: 'Hematócrito',
+              unit: '%',
+              reference: 'Homens: 36,0–54,0 | Mulheres: 33,0–47,8',
+            },
+            { name: 'VCM', unit: 'fL', reference: '80,0–98,0' },
+            { name: 'HCM', unit: 'pg', reference: '26,8–32,9' },
+            { name: 'CHCM', unit: 'g/dL', reference: '30,0–36,5' },
+            { name: 'RDW', unit: '%', reference: '11,5–14,5' },
+          ],
+        },
+        {
+          groupName: 'Leucograma',
+          parameters: [
+            { name: 'Leucócitos', unit: '/mm³', reference: '3.600–11.000' },
+          ],
+        },
+        {
+          groupName: 'Plaquetas',
+          parameters: [
+            {
+              name: 'Plaquetas',
+              unit: '/mm³',
+              reference: '150.000–450.000',
+            },
+            {
+              name: 'VPM (Volume Plaquetário Médio)',
+              unit: 'fL',
+              reference: '7,5–12,5',
+            },
+          ],
+        },
+      ],
+    },
+    {
+      name: 'Hemograma com contagem diferencial (com leitura de lâmina)',
+      description:
+        'Hemograma completo com contagem diferencial dos leucócitos por leitura microscópica de lâmina. Identifica e quantifica individualmente cada população leucocitária.',
+      material: 'Sangue total com EDTA (tubo de tampa lilás)',
+      observations:
+        'Homogeneizar o tubo suavemente por inversão (8–10 vezes) antes da análise. Não refrigerar. Processar em até 8 horas. A leitura de lâmina permite identificar alterações morfológicas celulares não detectáveis pelo contador automático.',
+      groups: [
+        {
+          groupName: 'Eritrograma',
+          parameters: [
+            {
+              name: 'Hemácias',
+              unit: 'Milhões/mm³',
+              reference: 'Homens: 4,50–6,10 | Mulheres: 4,00–5,40',
+            },
+            {
+              name: 'Hemoglobina',
+              unit: 'g/dL',
+              reference: 'Homens: 13,0–16,5 | Mulheres: 12,0–15,8',
+            },
+            {
+              name: 'Hematócrito',
+              unit: '%',
+              reference: 'Homens: 36,0–54,0 | Mulheres: 33,0–47,8',
+            },
+            { name: 'VCM', unit: 'fL', reference: '80,0–98,0' },
+            { name: 'HCM', unit: 'pg', reference: '26,8–32,9' },
+            { name: 'CHCM', unit: 'g/dL', reference: '30,0–36,5' },
+            { name: 'RDW', unit: '%', reference: '11,5–14,5' },
+          ],
+        },
+        {
+          groupName: 'Leucograma',
+          parameters: [
+            { name: 'Leucócitos', unit: '/mm³', reference: '3.600–11.000' },
+            { name: 'Bastonetes', unit: '/mm³', reference: '0–550' },
+            {
+              name: 'Neutrófilos (Segmentados)',
+              unit: '/mm³',
+              reference: '1.480–7.700',
+            },
+            { name: 'Linfócitos', unit: '/mm³', reference: '740–5.500' },
+            { name: 'Monócitos', unit: '/mm³', reference: '37–1.100' },
+            { name: 'Eosinófilos', unit: '/mm³', reference: '0–550' },
+            { name: 'Basófilos', unit: '/mm³', reference: '0–220' },
+          ],
+        },
+        {
+          groupName: 'Plaquetas',
+          parameters: [
+            {
+              name: 'Plaquetas',
+              unit: '/mm³',
+              reference: '150.000–450.000',
+            },
+            {
+              name: 'VPM (Volume Plaquetário Médio)',
+              unit: 'fL',
+              reference: '7,5–12,5',
+            },
+          ],
+        },
+      ],
+    },
   ];
 
   const examTypes: ExamType[] = [];
@@ -130,7 +379,9 @@ export async function runSeed(dataSource: DataSource) {
       existing = { ...existing, groups: exam.groups };
     }
 
-    examTypes.push(existing);
+    if (existing) {
+      examTypes.push(existing);
+    }
   }
 
   const [hemograma, ecg, glicemia] = examTypes;
