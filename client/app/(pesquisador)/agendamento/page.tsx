@@ -1,13 +1,9 @@
-import Link from "next/link";
 import {
   AlertTriangle,
-  ArrowLeft,
   CalendarClock,
   FlaskConical,
   Users,
 } from "lucide-react";
-
-import { Button } from "@/components/ui/button";
 
 import { SchedulingForm } from "../../../components/agendamento/scheduling-form";
 
@@ -20,7 +16,6 @@ export const metadata = {
 export default function SchedulingPage() {
   return (
     <div className="flex min-h-screen flex-col bg-background text-foreground">
-      <SiteHeader />
       <main className="flex-1">
         <HeroSection />
         <section aria-label="Formulário de agendamento">
@@ -29,32 +24,6 @@ export default function SchedulingPage() {
       </main>
       <SiteFooter />
     </div>
-  );
-}
-
-function SiteHeader() {
-  return (
-    <header className="sticky top-0 z-40 border-b border-border/60 bg-background/80 backdrop-blur supports-backdrop-filter:bg-background/60">
-      <div className="mx-auto flex h-16 w-full max-w-6xl items-center justify-between px-4 sm:px-6">
-        <Link
-          href="/"
-          className="flex items-center gap-2 rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-          aria-label="LIACLI — página inicial"
-        >
-          <span className="flex size-8 items-center justify-center rounded-lg bg-primary text-primary-foreground shadow-sm">
-            <FlaskConical className="size-4" aria-hidden />
-          </span>
-          <span className="text-sm font-semibold tracking-wide">LIACLI</span>
-        </Link>
-
-        <Button asChild variant="ghost" size="sm">
-          <Link href="/pesquisador">
-            <ArrowLeft className="size-4" aria-hidden />
-            Portal do pesquisador
-          </Link>
-        </Button>
-      </div>
-    </header>
   );
 }
 
@@ -87,7 +56,6 @@ function HeroSection() {
         aria-hidden
         className="pointer-events-none absolute -bottom-20 -left-20 size-72 rounded-full bg-accent/15 blur-3xl"
       />
-
       <div className="relative mx-auto w-full max-w-6xl px-4 py-12 sm:px-6 lg:py-16">
         <div className="mx-auto max-w-3xl space-y-6 text-center">
           <span className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs font-medium text-sidebar-foreground/80">

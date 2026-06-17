@@ -4,10 +4,9 @@ import { useState } from "react";
 import { createResearcher, type CreateResearcherData } from "@/api/researchers";
 import { createProject } from "@/api/projects";
 import {
-  EXAM_OPTIONS,
+  OTHER_EXAM_ID,
   type SchedulingFormData,
 } from "@/app/(pesquisador)/agendamento/_lib/schema";
-import { findExamTypeByName } from "@/api/exams";
 import { createSample } from "@/api/samples";
 
 export type SubmitState =
@@ -33,21 +32,11 @@ export function useSchedulingSubmit() {
       };
       const researcher = await createResearcher(researcherPayload);
 
-      const examTypeIds = await Promise.all(
-        data.sample
-          .flatMap((s) => s.samples)
-          .map((examId) => {
-            const label =
-              EXAM_OPTIONS.find((o) => o.id === examId)?.label ?? examId;
-            return findExamTypeByName(label).then((exam) => {
-              if (!exam)
-                throw new Error(`Tipo de exame não encontrado: ${label}`);
-              return exam.id;
-            });
-          }),
-      );
+      const examTypeIds = data.sample
+        .flatMap((s) => s.samples)
+        .filter((examId) => examId !== OTHER_EXAM_ID)
+        .map((examId) => Number(examId));
 
-      console.log(examTypeIds);
       const project = await createProject({
         researcherId: researcher.id,
         title: data.title,

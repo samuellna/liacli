@@ -1,22 +1,6 @@
 import { z } from "zod";
 
-export const EXAM_OPTIONS = [
-  { id: "ureia", label: "Uréia" },
-  { id: "creatinina", label: "Creatinina" },
-  { id: "tgo", label: "TGO" },
-  { id: "tgp", label: "TGP" },
-  { id: "tp", label: "TP" },
-  { id: "ttpa", label: "TTPA" },
-  {
-    id: "hemograma_sem",
-    label: "Hemograma sem contagem diferencial (sem leitura de lâmina)",
-  },
-  {
-    id: "hemograma_com",
-    label: "Hemograma com contagem diferencial (com leitura de lâmina)",
-  },
-  { id: "outro", label: "Outro" },
-] as const;
+export const OTHER_EXAM_ID = "outro";
 
 export const LEVEL_OPTIONS = [
   { value: "SCIENTIFIC_INITIATION", label: "Iniciação científica" },

@@ -214,7 +214,7 @@ export class SamplesService {
             emails.indexOf(sample.researchProject.researcher.email)
           ],
       }))
-      .sort((a, b) => a.date.getTime() - b.date.getTime()); // Ordena por data
+      .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
 
     return response.slice(0, 5); // Retorna apenas os 5 primeiros resultados
   }
