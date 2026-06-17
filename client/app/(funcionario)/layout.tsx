@@ -1,19 +1,14 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
-import { onAuthStateChanged, type User } from "firebase/auth";
 
 import { AppSidebar } from "@/components/app-sidebar";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import {
   SidebarInset,
   SidebarProvider,
   SidebarTrigger,
 } from "@/components/ui/sidebar";
-import { auth } from "@/lib/firebase";
 
 const routeLabels: Record<string, string> = {
   "/dashboard": "Dashboard",
@@ -34,25 +29,6 @@ function BreadcrumbDinamico() {
   );
 }
 
-function UserAvatar() {
-  const [user, setUser] = useState<User | null>(null);
-
-  useEffect(() => {
-    return onAuthStateChanged(auth, setUser);
-  }, []);
-
-  const displayName = user?.displayName ?? user?.email ?? "Funcionário";
-  const initials = displayName.slice(0, 2).toUpperCase();
-
-  return (
-    <Avatar className="h-8 w-8">
-      <AvatarFallback className="bg-primary text-primary-foreground text-xs font-semibold">
-        {initials}
-      </AvatarFallback>
-    </Avatar>
-  );
-}
-
 export default function FuncionarioLayout({
   children,
 }: {
@@ -68,17 +44,6 @@ export default function FuncionarioLayout({
             <SidebarTrigger className="-ml-1" />
             <Separator orientation="vertical" className="h-5" />
             <BreadcrumbDinamico />
-          </div>
-
-          <div className="flex items-center gap-3">
-            <Badge
-              variant="outline"
-              className="gap-1.5 text-xs text-emerald-700 border-emerald-200 bg-emerald-50 dark:text-emerald-400 dark:border-emerald-800 dark:bg-emerald-950/40"
-            >
-              <span className="size-1.5 rounded-full bg-emerald-500 animate-pulse" aria-hidden />
-              Sistema online
-            </Badge>
-            <UserAvatar />
           </div>
         </header>
 

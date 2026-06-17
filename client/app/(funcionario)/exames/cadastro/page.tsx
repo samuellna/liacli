@@ -9,7 +9,17 @@ import {
 } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { ClipboardList, FlaskConical, Plus, Trash2, Save } from "lucide-react";
+import {
+  ClipboardList,
+  FlaskConical,
+  Plus,
+  Trash2,
+  Save,
+  ArrowLeft,
+  Beaker,
+  StickyNote,
+  Hash,
+} from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { createExamType } from "@/api/exams";
@@ -19,16 +29,15 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 
-// ESQUEMAS DE VALIDAÇÃO
+// ── Schemas ──────────────────────────────────────────────────────────────────
+
 const parametroSchema = z.object({
-  // Validação de cada parâmetro
-  name: z.string().min(1, "Informe o name do parâmetro."),
+  name: z.string().min(1, "Informe o nome do parâmetro."),
   unit: z.string().optional(),
   reference: z.string().optional(),
 });
 
 const grupoSchema = z.object({
-  // Validação de cada grupo de parâmetros
   groupName: z.string().optional(),
   parameters: z
     .array(parametroSchema)
@@ -36,7 +45,6 @@ const grupoSchema = z.object({
 });
 
 const formExameSchema = z.object({
-  // Validação geral do formulário de exame
   title: z.string().min(1, "O título do exame é obrigatório."),
   material: z.string().optional(),
   description: z.string().optional(),
@@ -46,8 +54,9 @@ const formExameSchema = z.object({
 
 type FormExame = z.infer<typeof formExameSchema>;
 
+// ── Field error ──────────────────────────────────────────────────────────────
+
 function FieldError({ message }: { message?: string }) {
-  // Componente simples para exibir mensagens de erro de validação
   if (!message) return null;
   return (
     <p role="alert" className="mt-1 text-xs text-destructive">
@@ -56,8 +65,9 @@ function FieldError({ message }: { message?: string }) {
   );
 }
 
+// ── Section wrapper ───────────────────────────────────────────────────────────
+
 type SectionProps = {
-  // Propriedades para cada seção do formulário
   step: number;
   icon: React.ElementType;
   title: string;
@@ -65,40 +75,31 @@ type SectionProps = {
   children: React.ReactNode;
 };
 
-function Section({
-  // Componente para estruturar cada seção do formulário com título, ícone e descrição
-  step,
-  icon: Icon,
-  title,
-  description,
-  children,
-}: SectionProps) {
+function Section({ step, icon: Icon, title, description, children }: SectionProps) {
   return (
-    <section className="space-y-5">
+    <section className="space-y-4">
       <div className="flex items-center gap-3">
-        <span className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-primary text-sm font-bold text-primary-foreground shadow-sm">
+        <span className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-linear-to-br from-primary to-primary/80 text-sm font-bold text-primary-foreground shadow-sm shadow-primary/25">
           {step}
         </span>
         <div>
           <div className="flex items-center gap-2">
-            <Icon className="size-4 text-accent" aria-hidden />
+            <Icon className="size-4 text-primary" aria-hidden />
             <h2 className="text-base font-semibold text-foreground">{title}</h2>
           </div>
           {description && (
-            <p className="mt-0.5 text-xs text-muted-foreground">
-              {description}
-            </p>
+            <p className="mt-0.5 text-xs text-muted-foreground">{description}</p>
           )}
         </div>
       </div>
-      <div className="rounded-2xl border border-border bg-card p-5 shadow-sm">
+      <div className="rounded-2xl border border-border/60 bg-card p-5 shadow-sm">
         {children}
       </div>
     </section>
   );
 }
 
-// BLOCO 1: INFORMAÇÕES GERAIS
+// ── Seção 1: Informações gerais ───────────────────────────────────────────────
 
 function InformacoesGeraisSection() {
   const {
@@ -110,65 +111,78 @@ function InformacoesGeraisSection() {
     <Section
       step={1}
       icon={ClipboardList}
-      title="Informações gerais do exame"
-      description="Dados de identificação e orientações gerais"
+      title="Informações gerais"
+      description="Dados de identificação e orientações do exame"
     >
-      <div className="grid gap-4 sm:grid-cols-2">
+      <div className="grid gap-5 sm:grid-cols-2">
         <div className="space-y-1.5 sm:col-span-2">
-          <Label htmlFor="title">
+          <Label htmlFor="title" className="text-sm font-semibold">
             Título do exame{" "}
             <span aria-hidden className="text-destructive">
               *
             </span>
           </Label>
           <Input
-            id="titulo"
+            id="title"
             placeholder="Ex.: Hemograma Completo"
             {...register("title")}
             aria-invalid={!!errors.title}
+            className="border-border/60 focus-visible:border-primary/60"
           />
           <FieldError message={errors.title?.message} />
         </div>
 
         <div className="space-y-1.5 sm:col-span-2">
-          <Label htmlFor="material">Material / Método</Label>
-          <Input
-            id="material"
-            placeholder="Ex.: Sangue total com EDTA"
-            {...register("material")}
-          />
+          <Label htmlFor="material" className="text-sm font-semibold">
+            Material / Método
+          </Label>
+          <div className="relative">
+            <Beaker className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              id="material"
+              placeholder="Ex.: Sangue total com EDTA"
+              {...register("material")}
+              className="border-border/60 pl-9 focus-visible:border-primary/60"
+            />
+          </div>
         </div>
 
         <div className="space-y-1.5 sm:col-span-2">
-          <Label htmlFor="description">Descrição</Label>
+          <Label htmlFor="description" className="text-sm font-semibold">
+            Descrição
+          </Label>
           <Textarea
             id="description"
-            placeholder="Análise completa das células sanguíneas."
+            placeholder="Análise completa das células sanguíneas..."
             rows={3}
-            className="resize-none"
+            className="resize-none border-border/60 focus-visible:border-primary/60"
             {...register("description")}
           />
         </div>
 
         <div className="space-y-1.5 sm:col-span-2">
-          <Label htmlFor="observations">Observações (Preparo)</Label>
-          <Textarea
-            id="observations"
-            placeholder="Ex.: Este exame exige jejum de 8 horas."
-            rows={2}
-            className="resize-none"
-            {...register("observations")}
-          />
+          <Label htmlFor="observations" className="text-sm font-semibold">
+            Observações de preparo
+          </Label>
+          <div className="relative">
+            <StickyNote className="pointer-events-none absolute left-3 top-3 size-4 text-muted-foreground" />
+            <Textarea
+              id="observations"
+              placeholder="Ex.: Jejum de 8 horas obrigatório."
+              rows={2}
+              className="resize-none border-border/60 pl-9 focus-visible:border-primary/60"
+              {...register("observations")}
+            />
+          </div>
         </div>
       </div>
     </Section>
   );
 }
 
-// BLOCO 2: GRUPOS E PARÂMETROS
+// ── Grupo item ────────────────────────────────────────────────────────────────
 
 function GrupoItem({
-  // Componente para cada grupo de parâmetros, permitindo adicionar/remover parâmetros e o próprio grupo
   groupIndex,
   onRemove,
   totalGroups,
@@ -191,22 +205,23 @@ function GrupoItem({
   const grupoErrors = errors.groups?.[groupIndex];
 
   return (
-    <div className="rounded-xl border border-border bg-card shadow-sm overflow-hidden mb-5 last:mb-0">
-      {/* Cabeçalho do Grupo */}
-      <div className="flex items-center justify-between bg-muted/30 p-3 border-b border-border">
-        <div className="flex-1 mr-4 max-w-sm">
-          <Input
-            placeholder="Nome do grupo (ex.: Eritrograma)"
-            className="bg-background"
-            {...register(`groups.${groupIndex}.groupName`)}
-          />
+    <div className="overflow-hidden rounded-xl border border-border/60 bg-card shadow-sm">
+      {/* Grupo header */}
+      <div className="flex items-center gap-3 border-b border-border/50 bg-muted/30 px-4 py-3">
+        <div className="flex size-6 shrink-0 items-center justify-center rounded-md bg-primary/12 text-[11px] font-bold text-primary">
+          {groupIndex + 1}
         </div>
+        <Input
+          placeholder="Nome do grupo (ex.: Eritrograma)"
+          className="h-8 flex-1 border-border/50 bg-background/80 text-sm focus-visible:border-primary/60"
+          {...register(`groups.${groupIndex}.groupName`)}
+        />
         {totalGroups > 1 && (
           <Button
             type="button"
             variant="ghost"
             size="icon"
-            className="text-muted-foreground hover:text-destructive shrink-0"
+            className="size-8 shrink-0 text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
             onClick={onRemove}
             title="Remover grupo"
           >
@@ -215,57 +230,67 @@ function GrupoItem({
         )}
       </div>
 
-      {/* Lista de Parâmetros */}
-      <div className="p-4 space-y-4">
+      {/* Parâmetros */}
+      <div className="space-y-3 p-4">
+        {/* Coluna headers */}
+        {fields.length > 0 && (
+          <div className="hidden grid-cols-[1fr_120px_160px_32px] gap-2 sm:grid">
+            <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground pl-1">
+              Parâmetro
+            </span>
+            <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground pl-1">
+              Unidade
+            </span>
+            <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground pl-1">
+              Referência
+            </span>
+          </div>
+        )}
+
         {fields.map((field, paramIndex) => (
           <div
             key={field.id}
-            className="flex flex-col sm:flex-row gap-3 items-start sm:items-start"
+            className="flex flex-col gap-2 sm:grid sm:grid-cols-[1fr_120px_160px_32px] sm:items-start"
           >
-            <div className="flex-2 w-full space-y-1.5">
+            <div className="space-y-1">
               <Input
                 placeholder="Nome do parâmetro (Ex.: Hemácias)"
-                {...register(
-                  `groups.${groupIndex}.parameters.${paramIndex}.name`,
-                )}
+                {...register(`groups.${groupIndex}.parameters.${paramIndex}.name`)}
                 aria-invalid={!!grupoErrors?.parameters?.[paramIndex]?.name}
+                className="border-border/50 focus-visible:border-primary/60"
               />
               <FieldError
                 message={grupoErrors?.parameters?.[paramIndex]?.name?.message}
               />
             </div>
-            <div className="flex-1 w-full space-y-1.5">
-              <Input
-                placeholder="Unidade (Ex.: g/dL)"
-                {...register(
-                  `groups.${groupIndex}.parameters.${paramIndex}.unit`,
-                )}
-              />
-            </div>
-            <div className="flex-1 w-full space-y-1.5">
-              <Input
-                placeholder="Referência (Ex.: 4,50 a 6,10)"
-                {...register(
-                  `groups.${groupIndex}.parameters.${paramIndex}.reference`,
-                )}
-              />
-            </div>
-            {fields.length > 1 && (
+            <Input
+              placeholder="g/dL"
+              {...register(`groups.${groupIndex}.parameters.${paramIndex}.unit`)}
+              className="border-border/50 focus-visible:border-primary/60"
+            />
+            <Input
+              placeholder="4,50 a 6,10"
+              {...register(`groups.${groupIndex}.parameters.${paramIndex}.reference`)}
+              className="border-border/50 focus-visible:border-primary/60"
+            />
+            {fields.length > 1 ? (
               <Button
                 type="button"
                 variant="ghost"
                 size="icon"
-                className="text-muted-foreground hover:text-destructive shrink-0 mt-0.5"
+                className="size-9 shrink-0 text-muted-foreground hover:bg-destructive/10 hover:text-destructive sm:mt-0"
                 onClick={() => remove(paramIndex)}
                 title="Remover parâmetro"
               >
-                <Trash2 className="size-4" />
+                <Trash2 className="size-3.5" />
               </Button>
+            ) : (
+              <div className="hidden size-9 sm:block" />
             )}
           </div>
         ))}
 
-        {typeof grupoErrors?.parameters?.root?.message === "string" && ( // Erro geral do array de parâmetros (ex.: nenhum parâmetro adicionado)
+        {typeof grupoErrors?.parameters?.root?.message === "string" && (
           <FieldError message={grupoErrors.parameters.root.message} />
         )}
 
@@ -273,16 +298,10 @@ function GrupoItem({
           type="button"
           variant="outline"
           size="sm"
-          className="w-full border-dashed mt-2"
-          onClick={() =>
-            append({
-              name: "",
-              unit: "",
-              reference: "",
-            })
-          }
+          className="mt-1 w-full border-dashed border-border/60 text-xs text-muted-foreground hover:border-primary/40 hover:text-primary"
+          onClick={() => append({ name: "", unit: "", reference: "" })}
         >
-          <Plus className="size-4 mr-2" aria-hidden />
+          <Hash className="size-3.5 mr-1.5" aria-hidden />
           Adicionar parâmetro
         </Button>
       </div>
@@ -290,8 +309,9 @@ function GrupoItem({
   );
 }
 
+// ── Seção 2: Grupos e parâmetros ──────────────────────────────────────────────
+
 function GruposSection() {
-  // Componente para a seção de grupos de parâmetros, permitindo adicionar múltiplos grupos
   const { control } = useFormContext<FormExame>();
   const { fields, append, remove } = useFieldArray({
     control,
@@ -303,34 +323,26 @@ function GruposSection() {
       step={2}
       icon={FlaskConical}
       title="Grupos de parâmetros"
-      description="Configure as seções e os parâmetros que serão medidos neste exame"
+      description="Configure as seções e os parâmetros que serão medidos"
     >
-      <div className="space-y-4">
-        <div className="space-y-0">
-          {fields.map((field, index) => (
-            <GrupoItem
-              key={field.id}
-              groupIndex={index}
-              totalGroups={fields.length}
-              onRemove={() => remove(index)}
-            />
-          ))}
-        </div>
+      <div className="space-y-3">
+        {fields.map((field, index) => (
+          <GrupoItem
+            key={field.id}
+            groupIndex={index}
+            totalGroups={fields.length}
+            onRemove={() => remove(index)}
+          />
+        ))}
 
         <Button
           type="button"
           variant="outline"
-          className="w-full border-dashed"
+          className="w-full border-dashed border-border/60 text-muted-foreground hover:border-primary/40 hover:text-primary"
           onClick={() =>
             append({
               groupName: "",
-              parameters: [
-                {
-                  name: "",
-                  unit: "",
-                  reference: "",
-                },
-              ],
+              parameters: [{ name: "", unit: "", reference: "" }],
             })
           }
         >
@@ -342,7 +354,7 @@ function GruposSection() {
   );
 }
 
-// PÁGINA PRINCIPAL
+// ── Página principal ──────────────────────────────────────────────────────────
 
 export default function CadastroExamePage() {
   const router = useRouter();
@@ -356,16 +368,7 @@ export default function CadastroExamePage() {
       description: "",
       observations: "",
       groups: [
-        {
-          groupName: "",
-          parameters: [
-            {
-              name: "",
-              unit: "",
-              reference: "",
-            },
-          ],
-        },
+        { groupName: "", parameters: [{ name: "", unit: "", reference: "" }] },
       ],
     },
   });
@@ -387,50 +390,73 @@ export default function CadastroExamePage() {
   }
 
   return (
-    <div className="min-h-screen ">
-      <div className="mx-auto w-full max-w-4xl px-4 py-10 sm:px-6">
-        <div className="mb-8">
-          <h1 className="text-2xl font-bold tracking-tight text-foreground">
-            Cadastro de Exame
-          </h1>
-          <p className="text-sm text-muted-foreground mt-1">
-            Configure a estrutura de um novo exame oferecido pelo laboratório.
-          </p>
-        </div>
+    <div className="mx-auto w-full max-w-4xl">
+      {/* ── Page header ──────────────────────────────────────────────────── */}
+      <div className="relative mb-8 overflow-hidden rounded-2xl border border-border/60 bg-linear-to-br from-primary/8 via-background to-accent/5 p-6 shadow-sm">
+        <div className="pointer-events-none absolute -right-8 -top-8 size-36 rounded-full bg-primary/5 blur-3xl" />
 
-        <FormProvider {...methods}>
-          <form
-            onSubmit={methods.handleSubmit(onSubmit)}
-            noValidate
-            className="space-y-8"
+        <div className="relative">
+          <Button
+            variant="ghost"
+            size="sm"
+            className="-ml-1.5 mb-3 gap-1.5 text-muted-foreground hover:text-foreground"
+            asChild
           >
-            <InformacoesGeraisSection />
-            <GruposSection />
+            <Link href="/exames">
+              <ArrowLeft className="size-4" />
+              Voltar para exames
+            </Link>
+          </Button>
 
-            {/* BLOCO 3: AÇÕES */}
-            <div className="flex flex-col gap-3 pt-4 sm:flex-row sm:justify-end border-t border-border mt-8">
-              <Button
-                type="button"
-                variant="outline"
-                size="lg"
-                className="h-12 px-8 text-sm font-semibold sm:w-auto"
-                asChild
-              >
-                <Link href="/exames">Cancelar</Link>
-              </Button>
-              <Button
-                type="submit"
-                size="lg"
-                disabled={isSubmitting}
-                className="h-12 px-8 text-sm font-semibold sm:w-auto"
-              >
-                <Save className="size-4 mr-2" aria-hidden />
-                {isSubmitting ? "Salvando..." : "Salvar exame"}
-              </Button>
+          <div className="flex items-center gap-4">
+            <div className="flex size-12 shrink-0 items-center justify-center rounded-xl bg-linear-to-br from-primary to-primary/80 shadow-md shadow-primary/25">
+              <FlaskConical className="size-6 text-primary-foreground" />
             </div>
-          </form>
-        </FormProvider>
+            <div>
+              <h1 className="text-2xl font-bold tracking-tight text-foreground">
+                Novo exame
+              </h1>
+              <p className="mt-0.5 text-sm text-muted-foreground">
+                Configure a estrutura de um novo exame do laboratório.
+              </p>
+            </div>
+          </div>
+        </div>
       </div>
+
+      {/* ── Formulário ──────────────────────────────────────────────────── */}
+      <FormProvider {...methods}>
+        <form
+          onSubmit={methods.handleSubmit(onSubmit)}
+          noValidate
+          className="space-y-6"
+        >
+          <InformacoesGeraisSection />
+          <GruposSection />
+
+          {/* ── Ações ────────────────────────────────────────────────── */}
+          <div className="flex flex-col-reverse gap-3 border-t border-border/50 pt-6 sm:flex-row sm:justify-end">
+            <Button
+              type="button"
+              variant="outline"
+              size="lg"
+              className="h-11 px-7 text-sm font-semibold"
+              asChild
+            >
+              <Link href="/exames">Cancelar</Link>
+            </Button>
+            <Button
+              type="submit"
+              size="lg"
+              disabled={isSubmitting}
+              className="h-11 gap-2 px-7 text-sm font-semibold shadow-sm"
+            >
+              <Save className="size-4" aria-hidden />
+              {isSubmitting ? "Salvando..." : "Salvar exame"}
+            </Button>
+          </div>
+        </form>
+      </FormProvider>
     </div>
   );
 }
