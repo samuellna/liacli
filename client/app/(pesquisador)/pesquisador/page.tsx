@@ -4,7 +4,6 @@ import { Button } from "@/components/ui/button";
 
 import { ProtocolLookupCard } from "@/components/protocol-lookup-card";
 import { ServiceCard } from "@/components/service-card";
-import { SiteHeader } from "@/components/header";
 
 export const metadata = {
   title: "Portal do pesquisador — LIACLI",
@@ -15,11 +14,9 @@ export const metadata = {
 export default function ResearcherHome() {
   return (
     <div className="flex min-h-screen flex-col bg-background text-foreground">
-      <SiteHeader profile="Pesquisador" hasLoginButton={false} />
       <main id="conteudo" className="flex-1">
         <HeroSection />
         <ServicesSection />
-        <TrustSection />
       </main>
       <SiteFooter />
     </div>
@@ -28,7 +25,7 @@ export default function ResearcherHome() {
 
 function HeroSection() {
   return (
-    <section className="relative overflow-hidden bg-sidebar text-sidebar-foreground">
+    <section className="relative overflow-hidden bg-sidebar min-h-screen text-sidebar-foreground">
       <div
         aria-hidden
         className="pointer-events-none absolute -top-40 -right-40 size-112 rounded-full bg-primary/30 blur-3xl"
@@ -42,7 +39,7 @@ function HeroSection() {
         className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_1px_1px,rgba(255,255,255,0.06)_1px,transparent_0)] bg-size-[24px_24px] opacity-50"
       />
 
-      <div className="relative mx-auto w-full max-w-6xl px-4 py-20 sm:px-6 lg:py-28">
+      <div className="relative z-10 mx-auto flex min-h-screen w-full max-w-4xl flex-col items-center justify-center px-4 py-20 text-center sm:px-6">
         <div className="mx-auto max-w-3xl space-y-6 text-center">
           <span className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs font-medium text-sidebar-foreground/80">
             <ShieldCheck className="size-3.5" aria-hidden />
@@ -92,104 +89,73 @@ function ServicesSection() {
     <section
       id="servicos"
       aria-labelledby="servicos-title"
-      className="mx-auto w-full max-w-6xl px-4 py-20 sm:px-6 lg:py-24"
+      className="relative overflow-hidden min-h-screen bg-background"
     >
-      <div className="mx-auto max-w-2xl space-y-3 text-center">
-        <span className="text-xs font-semibold uppercase tracking-[0.18em] text-accent">
-          Serviços disponíveis
-        </span>
-        <h2
-          id="servicos-title"
-          className="text-3xl font-semibold tracking-tight sm:text-4xl"
-        >
-          O que você pode fazer agora
-        </h2>
-        <p className="text-base text-muted-foreground">
-          Escolha um dos serviços abaixo para iniciar uma nova solicitação ou
-          acompanhar uma já em andamento.
-        </p>
-      </div>
+      <div
+        aria-hidden
+        className="pointer-events-none absolute left-1/2 top-0 size-152 -translate-x-1/2 -translate-y-1/3 rounded-full bg-blue-400/[0.07] blur-3xl"
+      />
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_1px_1px,rgba(59,130,246,0.04)_1px,transparent_0)] bg-size-[32px_32px]"
+      />
 
-      <div className="mt-12 flex gap-6">
-        <ServiceCard
-          icon={CalendarClock}
-          eyebrow="Nova solicitação"
-          title="Agendamento de amostras"
-          description="Cadastre os exames desejados, selecione data e horário e receba o protocolo da sua solicitação ao final do envio."
-          bullets={[
-            "Formulário guiado em poucos passos",
-            "Protocolo gerado automaticamente",
-            "Confirmação imediata da solicitação",
-          ]}
-          ctaHref="/agendamento"
-          ctaLabel="Agendar amostra"
-        />
-        <ProtocolLookupCard />
-      </div>
-    </section>
-  );
-}
+      <div className="relative mx-auto w-full max-w-6xl px-4 py-16 sm:py-24">
+        {/* Section Header */}
+        <div className="mx-auto max-w-2xl space-y-5 text-center">
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-blue-50 px-3 py-1 text-xs font-semibold uppercase tracking-widest text-blue-600 ring-1 ring-blue-100">
+            <span
+              aria-hidden
+              className="inline-block size-1.5 rounded-full bg-blue-500"
+            />
+            Serviços disponíveis
+          </span>
 
-const trustItems = [
-  {
-    title: "Rastreabilidade ponta a ponta",
-    description:
-      "Acompanhe cada amostra desde o agendamento até a liberação do laudo, com histórico completo de cada etapa.",
-  },
-  {
-    title: "Segurança e conformidade",
-    description:
-      "Dados protegidos e fluxos validados de acordo com os requisitos da rotina laboratorial e da pesquisa clínica.",
-  },
-  {
-    title: "Experiência pensada para você",
-    description:
-      "Interface clara e objetiva, focada no que importa para o pesquisador no dia a dia.",
-  },
-];
-
-function TrustSection() {
-  return (
-    <section
-      id="confianca"
-      aria-labelledby="confianca-title"
-      className="border-t border-border bg-muted/40"
-    >
-      <div className="mx-auto w-full max-w-6xl px-4 py-20 sm:px-6 lg:py-24">
-        <div className="mx-auto max-w-2xl space-y-3 text-center">
           <h2
-            id="confianca-title"
-            className="text-3xl font-semibold tracking-tight sm:text-4xl"
+            id="servicos-title"
+            className="text-balance text-3xl font-bold tracking-tight text-foreground sm:text-4xl lg:text-5xl"
           >
-            Construído para a rotina da pesquisa clínica
+            O que você pode{" "}
+            <span className="bg-linear-to-r from-blue-600 to-blue-400 bg-clip-text text-transparent">
+              fazer agora
+            </span>
           </h2>
-          <p className="text-base text-muted-foreground">
-            Uma plataforma desenhada para reduzir retrabalho e dar visibilidade
-            ao processo analítico.
+
+          <p className="mx-auto max-w-lg text-pretty text-base leading-relaxed text-muted-foreground sm:text-lg">
+            Escolha um dos serviços abaixo para iniciar uma nova solicitação ou
+            acompanhar uma já em andamento.
           </p>
         </div>
 
-        <ul className="mt-12 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-          {trustItems.map((item) => (
-            <li
-              key={item.title}
-              className="rounded-2xl border border-border bg-card p-6 shadow-sm"
-            >
-              <span
-                aria-hidden
-                className="inline-flex size-10 items-center justify-center rounded-lg bg-accent/10 text-accent"
-              >
-                <ShieldCheck className="size-5" />
-              </span>
-              <h3 className="mt-4 text-lg font-semibold text-foreground">
-                {item.title}
-              </h3>
-              <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
-                {item.description}
-              </p>
-            </li>
-          ))}
-        </ul>
+        {/* Decorative divider */}
+        <div
+          aria-hidden
+          className="mx-auto mt-10 flex items-center justify-center gap-2"
+        >
+          <div className="h-px w-20 bg-linear-to-r from-transparent to-blue-300" />
+          <div className="size-1.5 rounded-full bg-blue-400" />
+          <div className="size-1 rounded-full bg-blue-200" />
+          <div className="size-1.5 rounded-full bg-blue-400" />
+          <div className="h-px w-20 bg-linear-to-l from-transparent to-blue-300" />
+        </div>
+
+        {/* Cards grid */}
+        <div className="mt-14 grid gap-6 sm:grid-cols-2">
+          <ServiceCard
+            icon={CalendarClock}
+            eyebrow="Nova solicitação"
+            title="Agendamento de amostras"
+            description="Cadastre os exames desejados, selecione data e horário e receba o protocolo da sua solicitação ao final do envio."
+            bullets={[
+              "Formulário guiado em poucos passos",
+              "Protocolo gerado automaticamente",
+              "Confirmação imediata da solicitação",
+            ]}
+            ctaHref="/agendamento"
+            ctaLabel="Agendar amostra"
+          />
+          <ProtocolLookupCard />
+        </div>
       </div>
     </section>
   );

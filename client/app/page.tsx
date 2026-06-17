@@ -11,7 +11,6 @@ import {
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
-import { SiteHeader } from "@/components/header";
 
 const features = [
   {
@@ -37,10 +36,8 @@ const features = [
 export default function Home() {
   return (
     <div className="flex min-h-screen flex-col bg-background text-foreground">
-      <SiteHeader />
       <main className="flex-1">
         <section className="relative min-h-screen overflow-hidden text-white">
-          {/* Background image */}
           <Image
             src="/labratory-image.jpeg"
             alt=""
@@ -109,7 +106,7 @@ export default function Home() {
         </section>
 
         <section
-          className="relative overflow-hidden bg-background py-24 sm:py-32"
+          className="relative overflow-hidden bg-background min-h-screen py-16 sm:py-24"
           id="servicos"
         >
           {/* Subtle blue top-fade and radial glow for section identity */}
