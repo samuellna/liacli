@@ -266,7 +266,7 @@ function SamplesSection({ amostras }: { amostras: Sample }) {
 /* ── Report section ──────────────────────────────────────────────── */
 
 function ReportSection({ resultId }: { resultId: number }) {
-  const base = process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:3001";
+  const base = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3001";
   const pdfUrl = `${base}/results/${resultId}/pdf`;
 
   return (

@@ -14,7 +14,6 @@ import {
   RefreshCw,
 } from "lucide-react";
 import Link from "next/link";
-
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -269,7 +268,7 @@ export default function ExamesPage() {
                         <FlaskConical className="size-5 text-primary" />
                       </div>
                       <div className="min-w-0 pt-0.5">
-                        <h3 className="line-clamp-2 text-sm font-bold leading-snug text-foreground transition-colors duration-150 group-hover:text-primary">
+                        <h3 className="line-clamp-2 text-sm font-bold leading-snug text-foreground transition-colors duration-150 group-hover:text-primary truncate">
                           {exame.name}
                         </h3>
                         {exame.material && (

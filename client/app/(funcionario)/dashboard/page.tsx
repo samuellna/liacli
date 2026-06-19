@@ -1,3 +1,5 @@
+export const dynamic = "force-dynamic";
+
 import DashboardClient from "./DashboardClient";
 import { fetchDashboard } from "@/api/dashboard";
 
@@ -38,7 +40,8 @@ async function getDashboardData(): Promise<DashboardData> {
       aguardandoAmostras: approvedPendingCollection,
       emAnaliseLab: inAnalysis,
       concluidasMes: finished,
-      totalMes: inAnalysis + pendingApproval + approvedPendingCollection + finished,
+      totalMes:
+        inAnalysis + pendingApproval + approvedPendingCollection + finished,
     },
     solicitacoesPendentes: raw.pendingApproval.slice(0, 5).map((s) => ({
       protocolo: s.protocol,
