@@ -1,5 +1,4 @@
-import api from "./axios";
-
+import axios from "axios";
 export interface BackendDashboardData {
   samples: {
     inAnalysis: number;
@@ -17,7 +16,12 @@ export interface BackendDashboardData {
 
 export async function fetchDashboard(): Promise<BackendDashboardData> {
   try {
-    const data = await api.get<BackendDashboardData>("/");
+    const baseURL =
+      typeof window === "undefined"
+        ? process.env.API_URL // server-side: usa rede interna do Docker
+        : process.env.NEXT_PUBLIC_API_URL; // client-side: usa pelo browser
+
+    const data = await axios.get<BackendDashboardData>("/", { baseURL });
     return data.data;
   } catch (error) {
     console.error("Error fetching dashboard data:", error);

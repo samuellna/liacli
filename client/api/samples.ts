@@ -1,3 +1,4 @@
+import axios from "axios";
 import api from "./axios";
 import type { Sample } from "./types";
 
@@ -26,7 +27,14 @@ export async function findSampleById(id: number): Promise<Sample> {
 export async function findSampleByProtocol(
   protocol: string,
 ): Promise<Sample | null> {
-  const response = await api.get<Sample>(`/samples/protocol/${protocol}`);
+  const baseURL =
+    typeof window === "undefined"
+      ? process.env.API_URL // server-side: usa rede interna do Docker
+      : process.env.NEXT_PUBLIC_API_URL; // client-side: usa pelo browser
+
+  const response = await axios.get<Sample>(`/samples/protocol/${protocol}`, {
+    baseURL,
+  });
   return response.data;
 }
 
