@@ -21,7 +21,7 @@ interface ProcessedGroup {
 interface ProcessedResult {
   examTypeName: string;
   validated: boolean;
-  grupos: ProcessedGroup[];
+  groups: ProcessedGroup[];
   observations: string;
 }
 
@@ -79,7 +79,7 @@ export class PdfService {
     const project = sample.researchProject;
 
     const processedResults: ProcessedResult[] = results.map((result) => {
-      const grupos = this.processGroups(
+      const groups = this.processGroups(
         result.examType.groups ?? [],
         result.resultData as Record<string, Record<string, string>>,
       );
@@ -87,7 +87,7 @@ export class PdfService {
       return {
         examTypeName: result.examType.name,
         validated: result.validated,
-        grupos,
+        groups,
         observations: result.observations ?? '',
       };
     });
@@ -139,9 +139,9 @@ export class PdfService {
 
   private async renderPdf(html: string): Promise<Buffer> {
     const { default: puppeteer } = await import('puppeteer');
-
     const browser = await puppeteer.launch({
       headless: true,
+      executablePath: process.env.PUPPETEER_EXECUTABLE_PATH,
       args: ['--no-sandbox', '--disable-setuid-sandbox'],
     });
 

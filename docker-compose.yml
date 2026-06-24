@@ -11,7 +11,10 @@ services:
     restart: unless-stopped
 
   client:
-    build: ./client
+    build:
+      context: ./client
+      args:
+        NEXT_PUBLIC_BASE_PATH: /liacli
     container_name: liacli-client
     expose:
       - "3000"

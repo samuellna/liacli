@@ -240,7 +240,7 @@ export class SampleResultsService {
         pesquisadorNome: researcher.name,
         protocolo: sample.protocol,
         pdfBuffer,
-        pdfFileName: `laudo-${sample.protocol}.pdf`,
+        pdfFileName: `resultado-${researcher.name.split(' ')[0]}-${sample.protocol}.pdf`,
       });
     }
 
