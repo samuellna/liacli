@@ -38,16 +38,12 @@ export default function Home() {
     <div className="flex min-h-screen flex-col bg-background text-foreground">
       <main className="flex-1">
         <section className="relative min-h-screen overflow-hidden text-white">
-          <Image
-            src="/labratory-image.jpeg"
+          <img
+            src={`${process.env.NEXT_PUBLIC_BASE_PATH ?? ""}/labratory-image.jpeg`}
             alt=""
-            fill
-            sizes="100vw"
-            className="object-cover object-center"
-            priority
             aria-hidden
+            className="absolute inset-0 h-full w-full object-cover object-center"
           />
-
           {/* Blue overlay — two layers for depth and vignette */}
           <div aria-hidden className="absolute inset-0 bg-blue-950/65" />
           <div

@@ -19,11 +19,11 @@ export function middleware(request: NextRequest) {
   const isLoginRoute = pathname.startsWith("/login");
 
   if (isProtected && !token) {
-    return NextResponse.redirect(new URL("/login", request.url));
+    return NextResponse.redirect(new URL("/liacli/login", request.url));
   }
 
   if (isLoginRoute && token) {
-    return NextResponse.redirect(new URL("/dashboard", request.url));
+    return NextResponse.redirect(new URL("/liacli/dashboard", request.url));
   }
 
   return NextResponse.next();
