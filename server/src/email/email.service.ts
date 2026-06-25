@@ -6,6 +6,7 @@ import {
   buildApprovalEmailHtml,
   buildRejectionEmailHtml,
   buildResultEmailHtml,
+  buildSchedulingRequestEmailHtml,
 } from './email.templates';
 
 @Injectable()
@@ -52,6 +53,39 @@ export class EmailService {
     } catch (error) {
       this.logger.error(
         `Falha ao enviar email de aprovação para ${params.toEmail}: ${String(error)}`,
+      );
+    }
+  }
+
+  async sendSchedulingRequestEmail(params: {
+    toEmail: string;
+    pesquisadorNome: string;
+    protocolo: string;
+    dataAgendada: Date;
+  }): Promise<void> {
+    const dataFormatada = params.dataAgendada.toLocaleDateString('pt-BR', {
+      weekday: 'long',
+      day: 'numeric',
+      month: 'long',
+      year: 'numeric',
+    });
+
+    const html = buildSchedulingRequestEmailHtml({
+      pesquisadorNome: params.pesquisadorNome,
+      protocolo: params.protocolo,
+      dataAgendada: dataFormatada,
+    });
+
+    try {
+      await this.transporter.sendMail({
+        from: this.configService.get<string>('MAIL_FROM'),
+        to: params.toEmail,
+        subject: `LIACLI - Solicitação de Agendamento Recebida`,
+        html,
+      });
+    } catch (error) {
+      this.logger.error(
+        `Falha ao enviar email de solicitação de agendamento para ${params.toEmail}: ${String(error)}`,
       );
     }
   }

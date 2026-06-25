@@ -58,6 +58,66 @@ export function buildApprovalEmailHtml(params: {
 </html>`;
 }
 
+export function buildSchedulingRequestEmailHtml(params: {
+  pesquisadorNome: string;
+  protocolo: string;
+  dataAgendada: string;
+}): string {
+  return `<!DOCTYPE html>
+<html lang="pt-BR">
+<head><meta charset="UTF-8"><title>Solicitação de Agendamento Recebida</title></head>
+<body style="margin:0;padding:0;background-color:#f4f4f4;font-family:Arial,Helvetica,sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:#f4f4f4;">
+    <tr>
+      <td align="center" style="padding:30px 0;">
+        <table width="600" cellpadding="0" cellspacing="0" border="0" style="background-color:#ffffff;border-radius:4px;overflow:hidden;">
+          <tr><td style="background-color:#2a6496;height:4px;line-height:4px;">&nbsp;</td></tr>
+          <tr>
+            <td style="padding:28px 40px 20px 40px;">
+              <p style="margin:0;font-size:20px;font-weight:bold;color:#1a3a5c;">LIACLI</p>
+              <p style="margin:4px 0 0 0;font-size:12px;color:#666666;">Laboratórios Integrados de Análises Clínicas</p>
+            </td>
+          </tr>
+          <tr><td style="border-top:1px solid #e0e0e0;"></td></tr>
+          <tr>
+            <td style="padding:32px 40px;">
+              <h1 style="margin:0 0 20px 0;font-size:22px;color:#1a3a5c;">Solicitação de Agendamento Recebida</h1>
+              <p style="margin:0 0 16px 0;font-size:15px;color:#2d2d2d;">Olá, ${params.pesquisadorNome},</p>
+              <p style="margin:0 0 24px 0;font-size:15px;color:#2d2d2d;">Recebemos sua solicitação de agendamento. Em breve, nossa equipe irá analisá-la e você receberá um novo email informando se ela foi aprovada ou não.</p>
+              <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:#eaf3fb;border-radius:4px;">
+                <tr>
+                  <td style="padding:20px 24px;">
+                    <table width="100%" cellpadding="0" cellspacing="6" border="0">
+                      <tr>
+                        <td style="font-size:14px;color:#666666;width:140px;">Protocolo:</td>
+                        <td style="font-size:14px;font-weight:bold;color:#1a3a5c;">${params.protocolo}</td>
+                      </tr>
+                      <tr>
+                        <td style="font-size:14px;color:#666666;">Data solicitada:</td>
+                        <td style="font-size:14px;color:#2d2d2d;">${params.dataAgendada}</td>
+                      </tr>
+                    </table>
+                  </td>
+                </tr>
+              </table>
+              <p style="margin:24px 0 0 0;font-size:14px;color:#2d2d2d;">Guarde o número de protocolo acima. Ele será necessário para acompanhar o status da sua solicitação.</p>
+            </td>
+          </tr>
+          <tr><td style="border-top:1px solid #e0e0e0;"></td></tr>
+          <tr>
+            <td style="padding:20px 40px;background-color:#f9f9f9;">
+              <p style="margin:0;font-size:12px;color:#999999;">LIACLI – Laboratórios Integrados de Análises Clínicas | UFPE</p>
+              <p style="margin:4px 0 0 0;font-size:12px;color:#999999;">Este é um email automático. Por favor, não responda.</p>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>`;
+}
+
 export function buildResultEmailHtml(params: {
   pesquisadorNome: string;
   protocolo: string;

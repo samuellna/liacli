@@ -59,6 +59,7 @@ describe('SamplesService', () => {
   const mockEmailService = {
     sendApprovalEmail: jest.fn(),
     sendRejectionEmail: jest.fn(),
+    sendSchedulingRequestEmail: jest.fn(),
   };
 
   beforeEach(async () => {

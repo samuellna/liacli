@@ -117,8 +117,9 @@ export class SamplesService {
       approvalStatus: ApprovalStatus.PENDING,
     });
 
+    let savedSample: Sample;
     try {
-      return await this.sampleRepository.save(newSample);
+      savedSample = await this.sampleRepository.save(newSample);
     } catch (error) {
       // Protege contra a condição de corrida: dois pesquisadores podem passar
       // pela verificação acima antes que qualquer um deles seja persistido.
@@ -131,6 +132,15 @@ export class SamplesService {
       }
       throw error;
     }
+
+    await this.emailService.sendSchedulingRequestEmail({
+      toEmail: researchProject.researcher.email,
+      pesquisadorNome: researchProject.researcher.name,
+      protocolo: savedSample.protocol,
+      dataAgendada: savedSample.scheduledAt,
+    });
+
+    return savedSample;
   }
 
   async findActiveScheduledDates(): Promise<string[]> {
