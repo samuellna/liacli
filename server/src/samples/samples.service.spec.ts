@@ -2,7 +2,11 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
 
-import { BadRequestException, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  ConflictException,
+  NotFoundException,
+} from '@nestjs/common';
 
 import { SamplesService } from './samples.service';
 
@@ -11,7 +15,9 @@ import { ApprovalStatus, Sample, SampleStatus } from './samples.entity';
 import { ExamType } from 'src/exam_types/exam_types.entity';
 import { Researchers } from 'src/researchers/researchers.entity';
 import { Employees } from 'src/employees/employees.entity';
-import { Repository } from 'typeorm';
+import { ResearchProject } from 'src/researcher_projects/researcher_projects.entity';
+import { EmailService } from 'src/email/email.service';
+import { Not, Repository } from 'typeorm';
 
 jest.mock('src/utils/generate_protocol', () => ({
   generateProtocol: jest.fn(() => 'PROTO-123'),
@@ -21,14 +27,14 @@ describe('SamplesService', () => {
   let service: SamplesService;
 
   let sampleRepository: jest.Mocked<Repository<Sample>>;
-  let examTypeRepository: jest.Mocked<Repository<ExamType>>;
-  let researcherRepository: jest.Mocked<Repository<Researchers>>;
   let employeeRepository: jest.Mocked<Repository<Employees>>;
+  let researchProjectRepository: jest.Mocked<Repository<ResearchProject>>;
 
   const mockSampleRepository = {
     find: jest.fn(),
     findOne: jest.fn(),
     findOneBy: jest.fn(),
+    exists: jest.fn(),
     create: jest.fn(),
     save: jest.fn(),
     delete: jest.fn(),
@@ -44,6 +50,15 @@ describe('SamplesService', () => {
 
   const mockEmployeeRepository = {
     findOneBy: jest.fn(),
+  };
+
+  const mockResearchProjectRepository = {
+    findOne: jest.fn(),
+  };
+
+  const mockEmailService = {
+    sendApprovalEmail: jest.fn(),
+    sendRejectionEmail: jest.fn(),
   };
 
   beforeEach(async () => {
@@ -70,6 +85,16 @@ describe('SamplesService', () => {
           provide: getRepositoryToken(Employees),
           useValue: mockEmployeeRepository,
         },
+
+        {
+          provide: getRepositoryToken(ResearchProject),
+          useValue: mockResearchProjectRepository,
+        },
+
+        {
+          provide: EmailService,
+          useValue: mockEmailService,
+        },
       ],
     }).compile();
 
@@ -77,11 +102,9 @@ describe('SamplesService', () => {
 
     sampleRepository = module.get(getRepositoryToken(Sample));
 
-    examTypeRepository = module.get(getRepositoryToken(ExamType));
-
-    researcherRepository = module.get(getRepositoryToken(Researchers));
-
     employeeRepository = module.get(getRepositoryToken(Employees));
+
+    researchProjectRepository = module.get(getRepositoryToken(ResearchProject));
   });
 
   afterEach(() => {
@@ -122,6 +145,12 @@ describe('SamplesService', () => {
 
       expect(sampleRepository.findOne).toHaveBeenCalledWith({
         where: { id: 1 },
+        relations: [
+          'researchProject',
+          'researchProject.researcher',
+          'researchProject.examTypes',
+          'approvedBy',
+        ],
       });
     });
   });
@@ -143,7 +172,13 @@ describe('SamplesService', () => {
         where: {
           protocol: 'PROTO-123',
         },
-        relations: ['examType'],
+        relations: [
+          'researchProject',
+          'researchProject.researcher',
+          'researchProject.examTypes',
+          'approvedBy',
+          'results',
+        ],
       });
     });
 
@@ -157,33 +192,29 @@ describe('SamplesService', () => {
   });
 
   describe('create', () => {
-    it('should create a sample', async () => {
-      const dto = {
-        examTypeId: 1,
-        researcherId: 1,
-        scheduledAt: '2026-05-12T10:00:00.000Z',
-      };
+    const dto = {
+      researchProjectId: 1,
+      animalsInThisShipment: 5,
+      scheduledAt: '2026-05-12',
+    };
 
-      const examType = {
-        id: 1,
-        name: 'Blood Test',
-      };
+    const researchProject = {
+      id: 1,
+      researcher: { id: 1, name: 'Samuel' },
+    };
 
-      const researcher = {
-        id: 1,
-        name: 'Samuel',
-      };
-
+    it('should create a sample when the date is free', async () => {
       const createdSample = {
         id: 1,
         protocol: 'PROTO-123',
-        examType,
-        researcher: researcher,
+        researchProject,
       };
 
-      examTypeRepository.findOne.mockResolvedValue(examType as ExamType);
+      researchProjectRepository.findOne.mockResolvedValue(
+        researchProject as ResearchProject,
+      );
 
-      researcherRepository.findOne.mockResolvedValue(researcher as Researchers);
+      sampleRepository.exists.mockResolvedValue(false);
 
       sampleRepository.create.mockReturnValue(createdSample as Sample);
 
@@ -193,55 +224,92 @@ describe('SamplesService', () => {
 
       expect(result).toEqual(createdSample);
 
-      expect(examTypeRepository.findOne).toHaveBeenCalledWith({
-        where: { id: dto.examTypeId },
-      });
-
-      expect(researcherRepository.findOne).toHaveBeenCalledWith({
+      expect(sampleRepository.exists).toHaveBeenCalledWith({
         where: {
-          id: dto.researcherId,
+          scheduledAt: new Date(dto.scheduledAt),
+          approvalStatus: Not(ApprovalStatus.REJECTED),
         },
       });
-
-      expect(sampleRepository.create).toHaveBeenCalled();
 
       expect(sampleRepository.save).toHaveBeenCalledWith(createdSample);
     });
 
-    it('should throw if exam type not found', async () => {
-      examTypeRepository.findOne.mockResolvedValue(null);
+    it('should throw if research project not found', async () => {
+      researchProjectRepository.findOne.mockResolvedValue(null);
 
-      await expect(
-        service.create({
-          examTypeId: 1,
-          researcherId: 1,
-          scheduledAt: '2026-05-12T10:00:00.000Z',
-        }),
-      ).rejects.toThrow(NotFoundException);
+      await expect(service.create(dto)).rejects.toThrow(NotFoundException);
     });
 
-    it('should throw if researcher not found', async () => {
-      examTypeRepository.findOne.mockResolvedValue({
-        id: 1,
+    it('should throw a conflict if the date already has an active sample', async () => {
+      researchProjectRepository.findOne.mockResolvedValue(
+        researchProject as ResearchProject,
+      );
+
+      sampleRepository.exists.mockResolvedValue(true);
+
+      await expect(service.create(dto)).rejects.toThrow(ConflictException);
+
+      expect(sampleRepository.create).not.toHaveBeenCalled();
+      expect(sampleRepository.save).not.toHaveBeenCalled();
+    });
+
+    it('should throw a conflict if a concurrent request wins the race at the database level', async () => {
+      researchProjectRepository.findOne.mockResolvedValue(
+        researchProject as ResearchProject,
+      );
+
+      sampleRepository.exists.mockResolvedValue(false);
+
+      sampleRepository.create.mockReturnValue({} as Sample);
+
+      sampleRepository.save.mockRejectedValue({ code: '23505' });
+
+      await expect(service.create(dto)).rejects.toThrow(ConflictException);
+    });
+
+    it('should rethrow unrelated database errors', async () => {
+      researchProjectRepository.findOne.mockResolvedValue(
+        researchProject as ResearchProject,
+      );
+
+      sampleRepository.exists.mockResolvedValue(false);
+
+      sampleRepository.create.mockReturnValue({} as Sample);
+
+      const unrelatedError = new Error('connection lost');
+      sampleRepository.save.mockRejectedValue(unrelatedError);
+
+      await expect(service.create(dto)).rejects.toThrow(unrelatedError);
+    });
+  });
+
+  describe('findActiveScheduledDates', () => {
+    it('should return distinct dates of non-rejected samples', async () => {
+      sampleRepository.find.mockResolvedValue([
+        { scheduledAt: new Date('2026-05-12T00:00:00.000Z') },
+        { scheduledAt: new Date('2026-05-12T00:00:00.000Z') },
+        { scheduledAt: new Date('2026-05-19T00:00:00.000Z') },
+      ] as Sample[]);
+
+      const result = await service.findActiveScheduledDates();
+
+      expect(result).toEqual(['2026-05-12', '2026-05-19']);
+
+      expect(sampleRepository.find).toHaveBeenCalledWith({
+        where: { approvalStatus: Not(ApprovalStatus.REJECTED) },
+        select: ['scheduledAt'],
       });
-
-      researcherRepository.findOne.mockResolvedValue(null);
-
-      await expect(
-        service.create({
-          examTypeId: 1,
-          researcherId: 1,
-          scheduledAt: '2026-05-12T10:00:00.000Z',
-        }),
-      ).rejects.toThrow(NotFoundException);
     });
   });
 
   describe('approveSample', () => {
+    const researcher = { id: 1, name: 'Samuel', email: 'samuel@lab.com' };
+
     it('should approve sample', async () => {
       const sample = {
         id: 1,
         approvalStatus: ApprovalStatus.PENDING,
+        researchProject: { researcher },
       };
 
       const employee = {
@@ -255,7 +323,7 @@ describe('SamplesService', () => {
         approvedBy: employee,
       };
 
-      sampleRepository.findOneBy.mockResolvedValue(sample as Sample);
+      sampleRepository.findOne.mockResolvedValue(sample as Sample);
 
       employeeRepository.findOneBy.mockResolvedValue(employee as Employees);
 
@@ -272,13 +340,14 @@ describe('SamplesService', () => {
       const sample = {
         id: 1,
         approvalStatus: ApprovalStatus.PENDING,
+        researchProject: { researcher },
       };
 
       const employee = {
         id: 1,
       };
 
-      sampleRepository.findOneBy.mockResolvedValue(sample as Sample);
+      sampleRepository.findOne.mockResolvedValue(sample as Sample);
 
       employeeRepository.findOneBy.mockResolvedValue(employee as Employees);
 
@@ -293,7 +362,7 @@ describe('SamplesService', () => {
     });
 
     it('should throw if sample not found', async () => {
-      sampleRepository.findOneBy.mockResolvedValue(null);
+      sampleRepository.findOne.mockResolvedValue(null);
 
       await expect(service.approveSample(1, true, 1)).rejects.toThrow(
         NotFoundException,
@@ -301,10 +370,11 @@ describe('SamplesService', () => {
     });
 
     it('should throw if sample already evaluated', async () => {
-      sampleRepository.findOneBy.mockResolvedValue({
+      sampleRepository.findOne.mockResolvedValue({
         id: 1,
         approvalStatus: ApprovalStatus.APPROVED,
-      });
+        researchProject: { researcher },
+      } as Sample);
 
       await expect(service.approveSample(1, true, 1)).rejects.toThrow(
         BadRequestException,
@@ -312,10 +382,11 @@ describe('SamplesService', () => {
     });
 
     it('should throw if employee not found', async () => {
-      sampleRepository.findOneBy.mockResolvedValue({
+      sampleRepository.findOne.mockResolvedValue({
         id: 1,
         approvalStatus: ApprovalStatus.PENDING,
-      });
+        researchProject: { researcher },
+      } as Sample);
 
       employeeRepository.findOneBy.mockResolvedValue(null);
 

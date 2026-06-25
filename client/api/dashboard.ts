@@ -20,6 +20,7 @@ export async function fetchDashboard(): Promise<BackendDashboardData> {
       typeof window === "undefined"
         ? process.env.API_URL // server-side: usa rede interna do Docker
         : process.env.NEXT_PUBLIC_API_URL; // client-side: usa pelo browser
+    console.log("Fetching dashboard data from:", baseURL);
 
     const data = await axios.get<BackendDashboardData>("/", { baseURL });
     return data.data;

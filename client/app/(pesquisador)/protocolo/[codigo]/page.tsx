@@ -1,5 +1,6 @@
 import { Search } from "lucide-react";
 
+import { BackLink } from "@/components/back-link";
 import {
   AgendamentoBadge,
   AnaliseBadge,
@@ -108,6 +109,13 @@ function HeroSection({
       />
 
       <div className="relative mx-auto w-full max-w-6xl px-4 py-10 sm:px-6">
+        <BackLink
+          href="/pesquisador"
+          className="mb-4 text-sidebar-foreground/70 hover:text-sidebar-foreground"
+        >
+          Voltar ao portal
+        </BackLink>
+
         <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
           <div className="space-y-3">
             <span className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs font-medium text-sidebar-foreground/80">

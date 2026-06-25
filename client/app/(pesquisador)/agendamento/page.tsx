@@ -5,6 +5,7 @@ import {
   Users,
 } from "lucide-react";
 
+import { BackLink } from "@/components/back-link";
 import { SchedulingForm } from "../../../components/agendamento/scheduling-form";
 
 export const metadata = {
@@ -56,7 +57,15 @@ function HeroSection() {
         aria-hidden
         className="pointer-events-none absolute -bottom-20 -left-20 size-72 rounded-full bg-accent/15 blur-3xl"
       />
+
       <div className="relative mx-auto w-full max-w-6xl px-4 py-12 sm:px-6 lg:py-16">
+        <BackLink
+          href="/pesquisador"
+          className="mb-6 text-sidebar-foreground/70 hover:text-sidebar-foreground"
+        >
+          Voltar ao portal
+        </BackLink>
+
         <div className="mx-auto max-w-3xl space-y-6 text-center">
           <span className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs font-medium text-sidebar-foreground/80">
             <FlaskConical className="size-3.5" aria-hidden />

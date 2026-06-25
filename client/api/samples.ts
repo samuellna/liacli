@@ -19,6 +19,11 @@ export async function findAllSamples(): Promise<Sample[]> {
   return response.data;
 }
 
+export async function findActiveScheduledDates(): Promise<string[]> {
+  const response = await api.get<string[]>("/samples/scheduled-dates");
+  return response.data;
+}
+
 export async function findSampleById(id: number): Promise<Sample> {
   const response = await api.get<Sample>(`/samples/${id}`);
   return response.data;

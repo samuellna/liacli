@@ -1,5 +1,6 @@
 "use client";
 
+import NextLink from "next/link";
 import {
   Controller,
   FormProvider,
@@ -16,13 +17,13 @@ import {
   CheckCircle2,
   ClipboardList,
   FlaskConical,
-  Link,
   Loader2,
   Send,
   StickyNote,
   User,
 } from "lucide-react";
 
+import { BackLink } from "@/components/back-link";
 import { Button } from "@/components/ui/button";
 import {
   DEFAULT_VALUES,
@@ -405,10 +406,10 @@ function SuccessCard({
 
         <div className="flex flex-col gap-2 sm:flex-row">
           <Button asChild size="lg" className="flex-1">
-            <Link href={`/protocolo/${protocol}`}>
+            <NextLink href={`/protocolo/${protocol}`}>
               Acompanhar agendamento
               <ArrowRight className="size-4" aria-hidden />
-            </Link>
+            </NextLink>
           </Button>
           <Button
             type="button"
@@ -420,6 +421,10 @@ function SuccessCard({
             Novo agendamento
           </Button>
         </div>
+
+        <BackLink href="/pesquisador" className="justify-center">
+          Voltar ao portal
+        </BackLink>
       </div>
     </div>
   );

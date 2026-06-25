@@ -23,6 +23,12 @@ export class SamplesController {
     return await this.samplesService.findAll();
   }
 
+  @Get('scheduled-dates')
+  @HttpCode(HttpStatus.OK)
+  async findScheduledDates() {
+    return await this.samplesService.findActiveScheduledDates();
+  }
+
   @Get(':id')
   @HttpCode(HttpStatus.OK)
   async findOne(@Param('id') id: number) {

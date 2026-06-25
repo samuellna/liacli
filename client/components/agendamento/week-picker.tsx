@@ -1,13 +1,19 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { useFormContext, Controller } from "react-hook-form";
 import {
+  AlertCircle,
   AlertTriangle,
   CalendarClock,
   CheckCircle2,
+  Loader2,
+  RefreshCw,
   XCircle,
 } from "lucide-react";
 
+import { Button } from "@/components/ui/button";
+import { findActiveScheduledDates } from "@/api/samples";
 import type { SchedulingFormData } from "../../app/(pesquisador)/agendamento/_lib/schema";
 import {
   getUpcomingWeeks,
@@ -107,7 +113,32 @@ export function WeekPicker() {
     formState: { errors },
   } = useFormContext<SchedulingFormData>();
 
-  const weeks = getUpcomingWeeks(10);
+  const [busyDates, setBusyDates] = useState<string[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
+
+  async function loadAvailability() {
+    setLoadError(null);
+    setIsLoading(true);
+    try {
+      const dates = await findActiveScheduledDates();
+      setBusyDates(dates);
+    } catch (err) {
+      setLoadError(
+        err instanceof Error
+          ? err.message
+          : "Erro ao carregar disponibilidade de semanas.",
+      );
+    } finally {
+      setIsLoading(false);
+    }
+  }
+
+  useEffect(() => {
+    loadAvailability();
+  }, []);
+
+  const weeks = getUpcomingWeeks(10, busyDates);
 
   return (
     <div className="space-y-4">
@@ -124,29 +155,57 @@ export function WeekPicker() {
         </p>
       </div>
 
-      <Controller
-        control={control}
-        name="preferredDate"
-        render={({ field }) => (
-          <div
-            role="radiogroup"
-            aria-label="Selecione uma semana disponível"
-            aria-required="true"
-            className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5"
+      {isLoading && (
+        <div className="flex items-center gap-2 rounded-lg border border-border p-3 text-sm text-muted-foreground">
+          <Loader2 className="size-4 animate-spin" aria-hidden />
+          Carregando disponibilidade…
+        </div>
+      )}
+
+      {!isLoading && loadError && (
+        <div className="flex items-center justify-between gap-3 rounded-lg border border-destructive/30 bg-destructive/5 p-3 text-sm">
+          <span className="flex items-center gap-2 text-destructive">
+            <AlertCircle className="size-4 shrink-0" aria-hidden />
+            {loadError}
+          </span>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={loadAvailability}
+            className="gap-1.5"
           >
-            {weeks.map((week) => (
-              <WeekCard
-                key={week.id}
-                week={week}
-                selected={field.value === week.id}
-                onClick={() =>
-                  week.status === "available" && field.onChange(week.id)
-                }
-              />
-            ))}
-          </div>
-        )}
-      />
+            <RefreshCw className="size-3.5" aria-hidden />
+            Tentar novamente
+          </Button>
+        </div>
+      )}
+
+      {!isLoading && !loadError && (
+        <Controller
+          control={control}
+          name="preferredDate"
+          render={({ field }) => (
+            <div
+              role="radiogroup"
+              aria-label="Selecione uma semana disponível"
+              aria-required="true"
+              className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5"
+            >
+              {weeks.map((week) => (
+                <WeekCard
+                  key={week.id}
+                  week={week}
+                  selected={field.value === week.id}
+                  onClick={() =>
+                    week.status === "available" && field.onChange(week.id)
+                  }
+                />
+              ))}
+            </div>
+          )}
+        />
+      )}
 
       {errors.preferredDate && (
         <p role="alert" className="text-xs text-destructive">

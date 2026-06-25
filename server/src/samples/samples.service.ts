@@ -1,10 +1,11 @@
 import {
   BadRequestException,
+  ConflictException,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Not, Repository } from 'typeorm';
 import { ApprovalStatus, Sample, SampleStatus } from './samples.entity';
 import { CreateSampleDto } from './dto/create-sample.dto';
 import { ResearchProject } from 'src/researcher_projects/researcher_projects.entity';
@@ -95,16 +96,51 @@ export class SamplesService {
       throw new NotFoundException('ResearchProject not found');
     }
 
+    const scheduledAt = new Date(dto.scheduledAt);
+
+    const isAlreadyScheduled = await this.sampleRepository.exists({
+      where: { scheduledAt, approvalStatus: Not(ApprovalStatus.REJECTED) },
+    });
+
+    if (isAlreadyScheduled) {
+      throw new ConflictException(
+        'Este horário não está mais disponível. Selecione outra data.',
+      );
+    }
+
     const newSample = this.sampleRepository.create({
       researchProject,
       animalsInThisShipment: dto.animalsInThisShipment,
       protocol: await this.generateUniqueProtocol(),
       status: SampleStatus.PENDING,
-      scheduledAt: new Date(dto.scheduledAt),
+      scheduledAt,
       approvalStatus: ApprovalStatus.PENDING,
     });
 
-    return this.sampleRepository.save(newSample);
+    try {
+      return await this.sampleRepository.save(newSample);
+    } catch (error) {
+      // Protege contra a condição de corrida: dois pesquisadores podem passar
+      // pela verificação acima antes que qualquer um deles seja persistido.
+      // O índice único parcial no banco garante que apenas o primeiro INSERT
+      // seja aceito.
+      if ((error as { code?: string }).code === '23505') {
+        throw new ConflictException(
+          'Este horário não está mais disponível. Selecione outra data.',
+        );
+      }
+      throw error;
+    }
+  }
+
+  async findActiveScheduledDates(): Promise<string[]> {
+    const samples = await this.sampleRepository.find({
+      where: { approvalStatus: Not(ApprovalStatus.REJECTED) },
+      select: ['scheduledAt'],
+    });
+
+    const dates = samples.map((s) => s.scheduledAt.toISOString().slice(0, 10));
+    return [...new Set(dates)];
   }
 
   async approveSample(

@@ -2,6 +2,7 @@ import { ArrowRight, CalendarClock, ShieldCheck } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 
+import { BackLink } from "@/components/back-link";
 import { ProtocolLookupCard } from "@/components/protocol-lookup-card";
 import { ServiceCard } from "@/components/service-card";
 
@@ -40,6 +41,13 @@ function HeroSection() {
       />
 
       <div className="relative z-10 mx-auto flex min-h-screen w-full max-w-4xl flex-col items-center justify-center px-4 py-20 text-center sm:px-6">
+        <BackLink
+          href="/"
+          className="mb-6 text-sidebar-foreground/70 hover:text-sidebar-foreground"
+        >
+          Voltar para o início
+        </BackLink>
+
         <div className="mx-auto max-w-3xl space-y-6 text-center">
           <span className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs font-medium text-sidebar-foreground/80">
             <ShieldCheck className="size-3.5" aria-hidden />

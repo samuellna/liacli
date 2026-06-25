@@ -25,7 +25,7 @@ export class AppController {
   ) {}
 
   @Get('')
-  async getHello(): Promise<DashboardData> {
+  async getDashboardData(): Promise<DashboardData> {
     const amountInAnalysis = await this.samplesService.findAmountInAnalysis();
     const amountPendingApproval =
       await this.samplesService.findAmountPendingApproval();

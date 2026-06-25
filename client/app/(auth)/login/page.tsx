@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { BackLink } from "@/components/back-link";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -174,6 +175,10 @@ export default function LoginPage() {
 
         {/* Glass card */}
         <div className="relative w-full max-w-sm">
+          <BackLink href="/" className="mb-4">
+            Voltar para o início
+          </BackLink>
+
           <div className="rounded-2xl border border-blue-100/80 bg-white/75 p-8 shadow-2xl shadow-blue-100/40 backdrop-blur-xl">
             {/* Card header */}
             <header className="mb-8 space-y-4">

@@ -40,21 +40,11 @@ function ptBrMedium(date: Date): string {
   });
 }
 
-function buildBusySet(): Set<string> {
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  const monday = getMondayOfWeek(today);
-  const busy = new Set<string>();
-  for (const offset of [2, 5]) {
-    const m = addWeeks(monday, offset);
-    busy.add(toIsoDate(m));
-  }
-  return busy;
-}
-
-const BUSY_WEEKS = buildBusySet();
-
-export function getUpcomingWeeks(count = 10): SchedulingWeek[] {
+export function getUpcomingWeeks(
+  count = 10,
+  busyDates: Iterable<string> = [],
+): SchedulingWeek[] {
+  const busy = new Set(busyDates);
   const today = new Date();
   today.setHours(0, 0, 0, 0);
   const currentMonday = getMondayOfWeek(today);
@@ -67,7 +57,7 @@ export function getUpcomingWeeks(count = 10): SchedulingWeek[] {
 
     const id = toIsoDate(monday);
     const isExpired = today > wednesday;
-    const isBusy = BUSY_WEEKS.has(id);
+    const isBusy = busy.has(id);
 
     const status: WeekStatus = isExpired
       ? "expired"

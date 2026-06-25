@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import axios from "axios";
 import { createResearcher, type CreateResearcherData } from "@/api/researchers";
 import { createProject } from "@/api/projects";
 import {
@@ -57,8 +58,12 @@ export function useSchedulingSubmit() {
 
       setState({ status: "success", protocol: sample.protocol });
     } catch (err) {
+      const backendMessage = axios.isAxiosError<{ message?: string }>(err)
+        ? err.response?.data?.message
+        : undefined;
       const message =
-        err instanceof Error ? err.message : "Erro ao enviar agendamento.";
+        backendMessage ??
+        (err instanceof Error ? err.message : "Erro ao enviar agendamento.");
       setState({ status: "error", message });
     }
   }

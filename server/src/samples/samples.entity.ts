@@ -5,6 +5,7 @@ import {
   Column,
   CreateDateColumn,
   Entity,
+  Index,
   ManyToOne,
   OneToMany,
   PrimaryGeneratedColumn,
@@ -25,7 +26,14 @@ export enum ApprovalStatus {
   REJECTED = 'REJECTED',
 }
 
+// Garante, a nível de banco, que um mesmo horário não possa ter dois
+// agendamentos ativos simultaneamente (pendentes ou aprovados). Agendamentos
+// rejeitados não contam, liberando o horário para outros pesquisadores.
 @Entity({ name: 'samples' })
+@Index('UQ_samples_active_scheduled_at', ['scheduledAt'], {
+  unique: true,
+  where: `"approvalStatus" != 'REJECTED'`,
+})
 export class Sample {
   @PrimaryGeneratedColumn('increment')
   id: number;

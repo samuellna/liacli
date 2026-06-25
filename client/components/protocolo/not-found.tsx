@@ -40,7 +40,7 @@ export function NotFound({ protocol }: { protocol: string }) {
             </Link>
           </Button>
           <Button asChild variant="outline">
-            <Link href="/pesquisador/agendamento">Realizar agendamento</Link>
+            <Link href="/agendamento">Realizar agendamento</Link>
           </Button>
         </div>
       </div>
