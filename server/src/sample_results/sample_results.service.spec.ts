@@ -14,23 +14,41 @@ import {
 } from 'src/samples/samples.entity';
 
 import { SampleResult } from './sample_results.entity';
+import { ExamType } from 'src/exam_types/exam_types.entity';
+import { PdfService } from 'src/pdf/pdf.service';
+import { EmailService } from 'src/email/email.service';
 
 describe('SampleResultsService', () => {
   let service: SampleResultsService;
 
   let sampleRepository: jest.Mocked<Repository<Sample>>;
   let sampleResultRepository: jest.Mocked<Repository<SampleResult>>;
+  let examTypeRepository: jest.Mocked<Repository<ExamType>>;
 
   const mockSampleRepository = {
     findOneBy: jest.fn(),
     findOne: jest.fn(),
+    update: jest.fn(),
     save: jest.fn(),
   };
 
   const mockSampleResultRepository = {
+    find: jest.fn(),
     findOne: jest.fn(),
     create: jest.fn(),
     save: jest.fn(),
+  };
+
+  const mockExamTypeRepository = {
+    findOneBy: jest.fn(),
+  };
+
+  const mockPdfService = {
+    generateResultPdf: jest.fn(),
+  };
+
+  const mockEmailService = {
+    sendResultEmail: jest.fn(),
   };
 
   beforeEach(async () => {
@@ -45,6 +63,18 @@ describe('SampleResultsService', () => {
           provide: getRepositoryToken(SampleResult),
           useValue: mockSampleResultRepository,
         },
+        {
+          provide: getRepositoryToken(ExamType),
+          useValue: mockExamTypeRepository,
+        },
+        {
+          provide: PdfService,
+          useValue: mockPdfService,
+        },
+        {
+          provide: EmailService,
+          useValue: mockEmailService,
+        },
       ],
     }).compile();
 
@@ -53,6 +83,8 @@ describe('SampleResultsService', () => {
     sampleRepository = module.get(getRepositoryToken(Sample));
 
     sampleResultRepository = module.get(getRepositoryToken(SampleResult));
+
+    examTypeRepository = module.get(getRepositoryToken(ExamType));
   });
 
   afterEach(() => {
@@ -60,28 +92,42 @@ describe('SampleResultsService', () => {
   });
 
   describe('create', () => {
+    const sampleId = 1;
+    const examTypeId = 10;
+    const resultData: Record<string, any> = { glucose: 95 };
+    const examType = { id: examTypeId, name: 'Glicose' };
+
+    const baseSample = {
+      id: sampleId,
+      protocol: 'ABC123',
+      approvalStatus: ApprovalStatus.APPROVED,
+      status: SampleStatus.PENDING,
+      researchProject: {
+        examTypes: [examType],
+      },
+      results: [],
+    };
+
     it('should create a sample result', async () => {
-      const sample = {
-        id: 1,
-        protocol: 'ABC123',
-        approvalStatus: ApprovalStatus.APPROVED,
-        status: SampleStatus.PENDING,
-      };
-
-      const resultData: Record<string, any> = {
-        glucose: 95,
-      };
-
       const createdResult = {
         id: 1,
-        sample,
+        sample: { id: sampleId },
+        examType: { id: examTypeId },
         resultData,
-        createdAt: new Date(),
+        observations: null,
       };
 
-      sampleRepository.findOneBy.mockResolvedValue(sample as Sample);
+      const fetchedResult = {
+        ...createdResult,
+        sample: baseSample,
+        examType,
+      };
 
-      sampleResultRepository.findOne.mockResolvedValue(null);
+      sampleRepository.findOne.mockResolvedValue(
+        baseSample as unknown as Sample,
+      );
+
+      examTypeRepository.findOneBy.mockResolvedValue(examType as ExamType);
 
       sampleResultRepository.create.mockReturnValue(
         createdResult as SampleResult,
@@ -91,119 +137,142 @@ describe('SampleResultsService', () => {
         createdResult as SampleResult,
       );
 
-      const result = await service.create(1, resultData);
+      sampleResultRepository.findOne.mockResolvedValue(
+        fetchedResult as unknown as SampleResult,
+      );
 
-      expect(result).toEqual(createdResult);
+      const result = await service.create(sampleId, examTypeId, resultData);
 
-      expect(sampleRepository.findOneBy).toHaveBeenCalledWith({
-        id: 1,
+      expect(result).toEqual(fetchedResult);
+
+      expect(sampleRepository.findOne).toHaveBeenCalledWith({
+        where: { id: sampleId },
+        relations: [
+          'researchProject',
+          'researchProject.examTypes',
+          'results',
+          'results.examType',
+        ],
       });
 
-      expect(sampleResultRepository.findOne).toHaveBeenCalledWith({
-        where: {
-          sample: {
-            id: 1,
-          },
-        },
+      expect(examTypeRepository.findOneBy).toHaveBeenCalledWith({
+        id: examTypeId,
       });
 
-      expect(sampleResultRepository.create).toHaveBeenCalled();
-
-      expect(sampleRepository.save).toHaveBeenCalled();
+      expect(sampleResultRepository.create).toHaveBeenCalledWith({
+        sample: { id: sampleId },
+        examType: { id: examTypeId },
+        resultData,
+        observations: null,
+      });
 
       expect(sampleResultRepository.save).toHaveBeenCalledWith(createdResult);
 
-      expect(sample.status).toBe(SampleStatus.DONE);
+      expect(sampleRepository.update).toHaveBeenCalledWith(sampleId, {
+        status: SampleStatus.DONE,
+      });
+
+      expect(sampleResultRepository.findOne).toHaveBeenCalledWith({
+        where: { id: createdResult.id },
+        relations: ['sample', 'examType'],
+      });
     });
 
     it('should throw NotFoundException if sample does not exist', async () => {
-      sampleRepository.findOneBy.mockResolvedValue(null);
+      sampleRepository.findOne.mockResolvedValue(null);
 
       await expect(
-        service.create(1, {
-          glucose: 95,
-        }),
+        service.create(sampleId, examTypeId, resultData),
       ).rejects.toThrow(NotFoundException);
     });
 
     it('should throw BadRequestException if sample is not approved', async () => {
-      const sample = {
-        id: 1,
-        approvalStatus: ApprovalStatus.REJECTED,
-      };
-
-      sampleRepository.findOneBy.mockResolvedValue(sample as Sample);
+      sampleRepository.findOne.mockResolvedValue({
+        ...baseSample,
+        approvalStatus: ApprovalStatus.PENDING,
+      } as unknown as Sample);
 
       await expect(
-        service.create(1, {
-          glucose: 95,
-        }),
+        service.create(sampleId, examTypeId, resultData),
+      ).rejects.toThrow(BadRequestException);
+    });
+
+    it('should throw NotFoundException if exam type does not exist', async () => {
+      sampleRepository.findOne.mockResolvedValue(
+        baseSample as unknown as Sample,
+      );
+
+      examTypeRepository.findOneBy.mockResolvedValue(null);
+
+      await expect(
+        service.create(sampleId, examTypeId, resultData),
+      ).rejects.toThrow(NotFoundException);
+    });
+
+    it('should throw BadRequestException if exam type does not belong to the sample project', async () => {
+      sampleRepository.findOne.mockResolvedValue({
+        ...baseSample,
+        researchProject: { examTypes: [] },
+      } as unknown as Sample);
+
+      examTypeRepository.findOneBy.mockResolvedValue(examType as ExamType);
+
+      await expect(
+        service.create(sampleId, examTypeId, resultData),
       ).rejects.toThrow(BadRequestException);
     });
 
     it('should throw BadRequestException if result already exists', async () => {
-      const sample = {
-        id: 1,
-        approvalStatus: ApprovalStatus.APPROVED,
-      };
+      sampleRepository.findOne.mockResolvedValue({
+        ...baseSample,
+        results: [{ examType: { id: examTypeId } }],
+      } as unknown as Sample);
 
-      sampleRepository.findOneBy.mockResolvedValue(sample as Sample);
-
-      sampleResultRepository.findOne.mockResolvedValue({
-        id: 1,
-      });
+      examTypeRepository.findOneBy.mockResolvedValue(examType as ExamType);
 
       await expect(
-        service.create(1, {
-          glucose: 95,
-        }),
+        service.create(sampleId, examTypeId, resultData),
       ).rejects.toThrow(BadRequestException);
     });
   });
 
   describe('findByProtocol', () => {
-    it('should return a sample result by protocol', async () => {
+    it('should return sample results by protocol', async () => {
       const sample = {
         id: 1,
         protocol: 'ABC123',
       };
 
-      const resultData: Record<string, any> = {
-        glucose: 95,
-      };
-
-      const sampleResult = {
-        id: 1,
-        sample,
-        resultData,
-      };
+      const results = [
+        {
+          id: 1,
+          sample,
+          examType: { id: 10 },
+          resultData: { glucose: 95 },
+        },
+      ];
 
       sampleRepository.findOne.mockResolvedValue(sample as Sample);
 
-      sampleResultRepository.findOne.mockResolvedValue(
-        sampleResult as SampleResult,
+      sampleResultRepository.find.mockResolvedValue(
+        results as unknown as SampleResult[],
       );
 
       const result = await service.findByProtocol('ABC123');
 
-      expect(result).toEqual(sampleResult);
+      expect(result).toEqual(results);
 
       expect(sampleRepository.findOne).toHaveBeenCalledWith({
-        where: {
-          protocol: 'ABC123',
-        },
+        where: { protocol: 'ABC123' },
       });
 
-      expect(sampleResultRepository.findOne).toHaveBeenCalledWith({
-        where: {
-          sample: {
-            id: sample.id,
-          },
-        },
+      expect(sampleResultRepository.find).toHaveBeenCalledWith({
+        where: { sample: { id: sample.id } },
         relations: [
+          'examType',
           'sample',
-          'sample.examType',
-          'sample.researcher',
+          'sample.researchProject',
+          'sample.researchProject.researcher',
           'sample.approvedBy',
         ],
       });
@@ -217,15 +286,13 @@ describe('SampleResultsService', () => {
       );
     });
 
-    it('should throw NotFoundException if result is not found', async () => {
-      const sample = {
+    it('should throw NotFoundException if no results are found', async () => {
+      sampleRepository.findOne.mockResolvedValue({
         id: 1,
         protocol: 'ABC123',
-      };
+      } as Sample);
 
-      sampleRepository.findOne.mockResolvedValue(sample as Sample);
-
-      sampleResultRepository.findOne.mockResolvedValue(null);
+      sampleResultRepository.find.mockResolvedValue([]);
 
       await expect(service.findByProtocol('ABC123')).rejects.toThrow(
         NotFoundException,

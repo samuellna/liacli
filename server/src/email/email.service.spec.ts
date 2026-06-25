@@ -57,7 +57,7 @@ describe('EmailService', () => {
       expect(mockSendMail).toHaveBeenCalledTimes(1);
       const call = mockSendMail.mock.calls[0][0] as Record<string, unknown>;
       expect(call.to).toBe('pesquisador@ufpe.br');
-      expect(call.subject).toContain('PROTO-123');
+      expect(call.subject).toBe('LIACLI - Confirmação de Agendamento');
       expect(call.html).toContain('Agendamento Confirmado');
       expect(call.html).toContain('Samuel');
       expect(call.html).toContain('PROTO-123');
@@ -93,7 +93,7 @@ describe('EmailService', () => {
       expect(mockSendMail).toHaveBeenCalledTimes(1);
       const call = mockSendMail.mock.calls[0][0] as Record<string, unknown>;
       expect(call.to).toBe('pesquisador@ufpe.br');
-      expect(call.subject).toContain('PROTO-123');
+      expect(call.subject).toBe('LIACLI - Laudo Disponível');
       expect(call.html).toContain('Laudo Disponível');
       expect(call.html).toContain('Samuel');
       const attachments = call.attachments as Array<Record<string, unknown>>;

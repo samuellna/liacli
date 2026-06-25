@@ -1,3 +1,5 @@
+import { CheckCircle, Clock, XCircle } from "lucide-react";
+
 import { ApprovalStatus } from "@/api/types";
 import type { Sample } from "@/api/types";
 import type { SolicitacaoRow } from "./types";
@@ -40,6 +42,33 @@ export function ordenarPorAgendamento(
     if (!b.dataAgendamento) return -1;
     return a.dataAgendamento.getTime() - b.dataAgendamento.getTime();
   });
+}
+
+export const StatusIcon: Record<
+  ApprovalStatus,
+  React.ComponentType<{ className?: string }>
+> = {
+  [ApprovalStatus.PENDING]: Clock,
+  [ApprovalStatus.APPROVED]: CheckCircle,
+  [ApprovalStatus.REJECTED]: XCircle,
+};
+
+export const researchLevelLabel: Record<string, string> = {
+  SCIENTIFIC_INITIATION: "Iniciação Científica",
+  MASTERS: "Mestrado",
+  DOCTORATE: "Doutorado",
+  POST_DOCTORATE: "Pós-Doutorado",
+};
+
+const dateFormatter = new Intl.DateTimeFormat("pt-BR", {
+  day: "2-digit",
+  month: "2-digit",
+  year: "numeric",
+});
+
+export function formatarData(date: Date | string | null | undefined): string {
+  if (!date) return "—";
+  return dateFormatter.format(new Date(date));
 }
 
 export function toSolicitacaoRow(sample: Sample): SolicitacaoRow {

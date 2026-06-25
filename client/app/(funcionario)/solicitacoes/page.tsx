@@ -4,15 +4,12 @@ import { useEffect, useMemo, useState } from "react";
 import {
   AlertCircle,
   ChevronDown,
-  CheckCircle,
-  Clock,
   Eye,
   FileText,
   ListFilter,
-  Loader2,
   RefreshCw,
-  XCircle,
 } from "lucide-react";
+import Link from "next/link";
 import { toast } from "sonner";
 
 import { Badge } from "@/components/ui/badge";
@@ -25,15 +22,6 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import {
-  Dialog,
-  DialogClose,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import {
   DropdownMenu,
   DropdownMenuCheckboxItem,
   DropdownMenuContent,
@@ -41,7 +29,6 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   Table,
@@ -51,12 +38,12 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Textarea } from "@/components/ui/textarea";
 
 import { ApprovalStatus } from "@/api/types";
 import { findAllSamples, approveSample } from "@/api/samples";
 import { findAllEmployees } from "@/api/employees";
 
+import { ModalAtualizar } from "./_components/modal-atualizar";
 import {
   toSolicitacaoRow,
   ordenarPorAgendamento,
@@ -64,32 +51,10 @@ import {
   statusRotulo,
   statusVariant,
   statusClass,
+  StatusIcon,
+  formatarData,
 } from "./_lib/helpers";
 import type { SolicitacaoRow } from "./_lib/types";
-
-// ─── Status icon map ──────────────────────────────────────────────────────────
-
-const StatusIcon: Record<
-  ApprovalStatus,
-  React.ComponentType<{ className?: string }>
-> = {
-  [ApprovalStatus.PENDING]: Clock,
-  [ApprovalStatus.APPROVED]: CheckCircle,
-  [ApprovalStatus.REJECTED]: XCircle,
-};
-
-// ─── Date formatting ──────────────────────────────────────────────────────────
-
-const dateFormatter = new Intl.DateTimeFormat("pt-BR", {
-  day: "2-digit",
-  month: "2-digit",
-  year: "numeric",
-});
-
-function formatarData(date: Date | null): string {
-  if (!date) return "—";
-  return dateFormatter.format(date);
-}
 
 // ─── Skeleton de carregamento ─────────────────────────────────────────────────
 
@@ -128,346 +93,6 @@ function TabelaSkeleton() {
   );
 }
 
-// ─── InfoRow para modais ──────────────────────────────────────────────────────
-
-function InfoRow({ label, value }: { label: string; value: React.ReactNode }) {
-  return (
-    <div className="grid grid-cols-[130px_1fr] gap-3 text-sm">
-      <dt className="pt-0.5 text-muted-foreground">{label}</dt>
-      <dd className="font-medium text-foreground">{value}</dd>
-    </div>
-  );
-}
-
-// ─── Modal de Detalhes ────────────────────────────────────────────────────────
-
-function ModalDetalhes({
-  solicitacao,
-  open,
-  onOpenChange,
-}: {
-  solicitacao: SolicitacaoRow | null;
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-}) {
-  if (!solicitacao) return null;
-
-  const Icon = StatusIcon[solicitacao.approvalStatus];
-
-  return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-xl overflow-hidden p-0">
-        {/* Header com gradiente */}
-        <div className="border-b bg-linear-to-br from-primary/8 via-primary/5 to-accent/5 px-6 py-5">
-          <DialogHeader>
-            <DialogTitle className="text-base font-bold tracking-tight">
-              Detalhes da Solicitação
-            </DialogTitle>
-            <DialogDescription className="mt-0.5 font-normal">
-              Protocolo{" "}
-              <span className="font-mono font-bold text-foreground">
-                {solicitacao.protocolo}
-              </span>
-            </DialogDescription>
-          </DialogHeader>
-          <div className="mt-3">
-            <Badge
-              variant={statusVariant[solicitacao.approvalStatus]}
-              className={statusClass[solicitacao.approvalStatus]}
-            >
-              <Icon className="size-3.5" aria-hidden />
-              {statusRotulo[solicitacao.approvalStatus]}
-            </Badge>
-          </div>
-        </div>
-
-        {/* Conteúdo rolável */}
-        <div className="max-h-[60vh] space-y-4 overflow-y-auto px-6 py-5">
-          <section className="space-y-2.5">
-            <h3 className="text-[10px] font-bold uppercase tracking-widest text-primary/60">
-              Pesquisador
-            </h3>
-            <dl className="space-y-2.5 rounded-xl border border-border/60 bg-muted/25 px-4 py-3.5">
-              <InfoRow label="Nome" value={solicitacao.pesquisador} />
-              <InfoRow label="E-mail" value={solicitacao.pesquisadorEmail} />
-              <InfoRow
-                label="Instituição"
-                value={solicitacao.pesquisadorInstituicao}
-              />
-            </dl>
-          </section>
-
-          <section className="space-y-2.5">
-            <h3 className="text-[10px] font-bold uppercase tracking-widest text-primary/60">
-              Projeto de Pesquisa
-            </h3>
-            <div className="rounded-xl border border-border/60 bg-muted/25 px-4 py-3.5 text-sm font-medium text-foreground">
-              {solicitacao.projetoPesquisa}
-            </div>
-          </section>
-
-          <section className="space-y-2.5">
-            <h3 className="text-[10px] font-bold uppercase tracking-widest text-primary/60">
-              Exames Solicitados
-            </h3>
-            <div className="flex items-center gap-3 rounded-xl border border-border/60 bg-muted/25 px-4 py-3.5">
-              <div className="flex size-9 shrink-0 items-center justify-center rounded-full bg-primary/10">
-                <FileText className="size-4 text-primary" aria-hidden />
-              </div>
-              <div>
-                <p className="text-sm font-bold text-foreground">
-                  {solicitacao.numExames}{" "}
-                  {solicitacao.numExames === 1 ? "exame" : "exames"}
-                </p>
-                <p className="text-xs text-muted-foreground">
-                  associados ao projeto de pesquisa
-                </p>
-              </div>
-            </div>
-          </section>
-
-          <section className="space-y-2.5">
-            <h3 className="text-[10px] font-bold uppercase tracking-widest text-primary/60">
-              Datas
-            </h3>
-            <dl className="space-y-2.5 rounded-xl border border-border/60 bg-muted/25 px-4 py-3.5">
-              <InfoRow
-                label="Solicitação em"
-                value={formatarData(solicitacao.createdAt)}
-              />
-              <InfoRow
-                label="Agendamento"
-                value={
-                  <span className="font-mono font-bold tabular-nums">
-                    {formatarData(solicitacao.dataAgendamento)}
-                  </span>
-                }
-              />
-            </dl>
-          </section>
-
-          {solicitacao.approvalStatus !== ApprovalStatus.PENDING && (
-            <section className="space-y-2.5">
-              <h3 className="text-[10px] font-bold uppercase tracking-widest text-primary/60">
-                Avaliação
-              </h3>
-              <dl className="space-y-2.5 rounded-xl border border-border/60 bg-muted/25 px-4 py-3.5">
-                {solicitacao.avaliadoPor && (
-                  <InfoRow
-                    label="Avaliado por"
-                    value={solicitacao.avaliadoPor}
-                  />
-                )}
-                {solicitacao.avaliadoEm && (
-                  <InfoRow
-                    label="Avaliado em"
-                    value={formatarData(solicitacao.avaliadoEm)}
-                  />
-                )}
-              </dl>
-            </section>
-          )}
-        </div>
-
-        {/* Rodapé */}
-        <div className="border-t bg-muted/20 px-6 py-4">
-          <DialogFooter>
-            <DialogClose asChild>
-              <Button variant="outline" className="w-full sm:w-auto">
-                Fechar
-              </Button>
-            </DialogClose>
-          </DialogFooter>
-        </div>
-      </DialogContent>
-    </Dialog>
-  );
-}
-
-// ─── Modal de Atualização ─────────────────────────────────────────────────────
-
-function ModalAtualizar({
-  solicitacao,
-  open,
-  onOpenChange,
-  onConfirmar,
-}: {
-  solicitacao: SolicitacaoRow | null;
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-  onConfirmar: (
-    id: number,
-    aprovado: boolean,
-    observacao: string,
-  ) => Promise<void>;
-}) {
-  const [decisao, setDecisao] = useState<"APROVAR" | "REPROVAR" | null>(null);
-  const [observacao, setObservacao] = useState("");
-  const [isPending, setIsPending] = useState(false);
-
-  function handleClose(value: boolean) {
-    if (!value && !isPending) {
-      setDecisao(null);
-      setObservacao("");
-    }
-    onOpenChange(value);
-  }
-
-  async function handleConfirmar() {
-    if (!solicitacao || decisao === null) return;
-    setIsPending(true);
-    try {
-      await onConfirmar(solicitacao.id, decisao === "APROVAR", observacao);
-      setDecisao(null);
-      setObservacao("");
-    } catch {
-      // erro já tratado com toast em onConfirmar
-    } finally {
-      setIsPending(false);
-    }
-  }
-
-  if (!solicitacao) return null;
-
-  const podeConfirmar = decisao !== null && !isPending;
-
-  return (
-    <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="max-w-md overflow-hidden p-0">
-        {/* Header com gradiente */}
-        <div className="border-b bg-linear-to-br from-primary/8 via-primary/5 to-accent/5 px-6 py-5">
-          <DialogHeader>
-            <DialogTitle className="text-base font-bold tracking-tight">
-              Avaliar Solicitação
-            </DialogTitle>
-            <DialogDescription className="mt-0.5">
-              <span className="font-mono font-bold text-foreground">
-                {solicitacao.protocolo}
-              </span>{" "}
-              — {solicitacao.pesquisador}
-            </DialogDescription>
-          </DialogHeader>
-        </div>
-
-        <div className="space-y-5 px-6 py-5">
-          <div className="space-y-2.5">
-            <Label className="text-sm font-bold text-foreground">Decisão</Label>
-            <div className="grid grid-cols-2 gap-3">
-              <button
-                type="button"
-                onClick={() => setDecisao("APROVAR")}
-                disabled={isPending}
-                className={[
-                  "group flex flex-col items-center gap-2.5 rounded-xl border-2 px-4 py-4 text-sm font-semibold transition-all duration-200 disabled:cursor-not-allowed disabled:opacity-50",
-                  decisao === "APROVAR"
-                    ? "border-success bg-success/10 text-success shadow-sm"
-                    : "border-border bg-background text-muted-foreground hover:border-success/50 hover:bg-success/5 hover:text-success",
-                ].join(" ")}
-              >
-                <CheckCircle
-                  className={[
-                    "size-7 transition-transform duration-200",
-                    decisao === "APROVAR"
-                      ? "scale-110"
-                      : "group-hover:scale-105",
-                  ].join(" ")}
-                  aria-hidden
-                />
-                Aprovar
-              </button>
-              <button
-                type="button"
-                onClick={() => setDecisao("REPROVAR")}
-                disabled={isPending}
-                className={[
-                  "group flex flex-col items-center gap-2.5 rounded-xl border-2 px-4 py-4 text-sm font-semibold transition-all duration-200 disabled:cursor-not-allowed disabled:opacity-50",
-                  decisao === "REPROVAR"
-                    ? "border-destructive bg-destructive/10 text-destructive shadow-sm"
-                    : "border-border bg-background text-muted-foreground hover:border-destructive/50 hover:bg-destructive/5 hover:text-destructive",
-                ].join(" ")}
-              >
-                <XCircle
-                  className={[
-                    "size-7 transition-transform duration-200",
-                    decisao === "REPROVAR"
-                      ? "scale-110"
-                      : "group-hover:scale-105",
-                  ].join(" ")}
-                  aria-hidden
-                />
-                Reprovar
-              </button>
-            </div>
-          </div>
-
-          <div className="space-y-2">
-            <Label
-              htmlFor="observacao"
-              className="text-sm font-bold text-foreground"
-            >
-              Observação / Justificativa
-              <span className="ml-1.5 text-xs font-normal text-muted-foreground">
-                (opcional)
-              </span>
-            </Label>
-            <Textarea
-              id="observacao"
-              placeholder="Adicione uma observação ou justificativa para a decisão..."
-              value={observacao}
-              onChange={(e) => setObservacao(e.target.value)}
-              disabled={isPending}
-              className="resize-none"
-              rows={3}
-            />
-          </div>
-        </div>
-
-        {/* Rodapé */}
-        <div className="border-t bg-muted/20 px-6 py-4">
-          <DialogFooter>
-            <DialogClose asChild>
-              <Button variant="outline" disabled={isPending}>
-                Cancelar
-              </Button>
-            </DialogClose>
-            <Button
-              onClick={handleConfirmar}
-              disabled={!podeConfirmar}
-              className={
-                decisao === "REPROVAR"
-                  ? "bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                  : decisao === "APROVAR"
-                    ? "bg-success text-success-foreground hover:bg-success/90"
-                    : ""
-              }
-              aria-busy={isPending}
-            >
-              {isPending ? (
-                <>
-                  <Loader2 className="size-4 animate-spin" aria-hidden />
-                  Processando...
-                </>
-              ) : decisao === "APROVAR" ? (
-                <>
-                  <CheckCircle className="size-4" aria-hidden />
-                  Confirmar aprovação
-                </>
-              ) : decisao === "REPROVAR" ? (
-                <>
-                  <XCircle className="size-4" aria-hidden />
-                  Confirmar reprovação
-                </>
-              ) : (
-                "Confirmar"
-              )}
-            </Button>
-          </DialogFooter>
-        </div>
-      </DialogContent>
-    </Dialog>
-  );
-}
-
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
 export default function SolicitacoesPage() {
@@ -480,11 +105,6 @@ export default function SolicitacoesPage() {
   const [statusSelecionados, setStatusSelecionados] = useState<
     Set<ApprovalStatus>
   >(new Set([ApprovalStatus.PENDING]));
-
-  const [modalDetalhes, setModalDetalhes] = useState<{
-    aberto: boolean;
-    solicitacao: SolicitacaoRow | null;
-  }>({ aberto: false, solicitacao: null });
 
   const [modalAtualizar, setModalAtualizar] = useState<{
     aberto: boolean;
@@ -528,10 +148,6 @@ export default function SolicitacoesPage() {
       else next.add(status);
       return next;
     });
-  }
-
-  function abrirDetalhes(solicitacao: SolicitacaoRow) {
-    setModalDetalhes({ aberto: true, solicitacao });
   }
 
   function abrirAtualizar(solicitacao: SolicitacaoRow) {
@@ -891,11 +507,13 @@ export default function SolicitacoesPage() {
                           <Button
                             size="sm"
                             variant="ghost"
-                            onClick={() => abrirDetalhes(s)}
+                            asChild
                             className="h-8 gap-1.5 text-xs text-muted-foreground hover:bg-muted hover:text-foreground"
                           >
-                            <Eye className="size-3" aria-hidden />
-                            Detalhes
+                            <Link href={`/solicitacoes/${s.id}`}>
+                              <Eye className="size-3" aria-hidden />
+                              Detalhes
+                            </Link>
                           </Button>
                         </div>
                       </TableCell>
@@ -907,14 +525,6 @@ export default function SolicitacoesPage() {
           </Table>
         </CardContent>
       </Card>
-
-      <ModalDetalhes
-        solicitacao={modalDetalhes.solicitacao}
-        open={modalDetalhes.aberto}
-        onOpenChange={(aberto) =>
-          setModalDetalhes((prev) => ({ ...prev, aberto }))
-        }
-      />
 
       <ModalAtualizar
         solicitacao={modalAtualizar.solicitacao}

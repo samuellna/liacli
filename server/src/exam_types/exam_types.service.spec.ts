@@ -130,7 +130,10 @@ describe('ExamTypesService', () => {
 
       const result = await service.update(1, dto);
 
-      expect(repository.update).toHaveBeenCalledWith(1, dto);
+      expect(repository.update).toHaveBeenCalledWith(1, {
+        ...dto,
+        updatedAt: expect.any(Date),
+      });
 
       expect(repository.findOneBy).toHaveBeenCalledWith({
         id: 1,

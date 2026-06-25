@@ -6,11 +6,11 @@ import { Repository } from 'typeorm';
 import { EmployeesService } from './employees.service';
 import { Employees } from './employees.entity';
 
-import admin from '../auth/admin';
+import * as admin from 'firebase-admin';
 
 const mockCreateUser = jest.fn();
 
-jest.mock('../auth/admin', () => ({
+jest.mock('firebase-admin', () => ({
   auth: () => ({
     createUser: mockCreateUser,
   }),
@@ -36,6 +36,10 @@ describe('EmployeesService', () => {
         {
           provide: getRepositoryToken(Employees),
           useValue: mockEmployeesRepository,
+        },
+        {
+          provide: 'FIREBASE_ADMIN',
+          useValue: admin,
         },
       ],
     }).compile();

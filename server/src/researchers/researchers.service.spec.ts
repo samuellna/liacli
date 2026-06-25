@@ -4,7 +4,7 @@ import { getRepositoryToken } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 
 import { ResearchersService } from './researchers.service';
-import { Researchers } from './researchers.entity';
+import { ResearchLevel, Researchers } from './researchers.entity';
 
 describe('ResearchersService', () => {
   let service: ResearchersService;
@@ -13,6 +13,7 @@ describe('ResearchersService', () => {
   const mockResearchersRepository = {
     find: jest.fn(),
     findOneBy: jest.fn(),
+    create: jest.fn(),
     save: jest.fn(),
     update: jest.fn(),
     delete: jest.fn(),
@@ -100,6 +101,9 @@ describe('ResearchersService', () => {
         name: 'Samuel',
         email: 'samuel@email.com',
         institution: 'UFPE',
+        phone: '81999999999',
+        advisorName: 'Prof. Ana',
+        level: ResearchLevel.MASTERS,
       };
 
       const createdResearcher = {
@@ -108,13 +112,24 @@ describe('ResearchersService', () => {
         createdAt: new Date().toISOString(),
       };
 
+      repository.create.mockReturnValue(createdResearcher as Researchers);
+
       repository.save.mockResolvedValue(createdResearcher as Researchers);
 
       const result = await service.create(dto);
 
       expect(result).toEqual(createdResearcher);
 
-      expect(repository.save).toHaveBeenCalledWith(dto);
+      expect(repository.create).toHaveBeenCalledWith({
+        name: dto.name,
+        email: dto.email,
+        institution: dto.institution,
+        phone: dto.phone,
+        advisorName: dto.advisorName,
+        level: dto.level,
+      });
+
+      expect(repository.save).toHaveBeenCalledWith(createdResearcher);
     });
   });
 
