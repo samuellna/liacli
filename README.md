@@ -6,6 +6,12 @@ O sistema busca substituir processos manuais e descentralizados, trazendo mais e
 
 ---
 
+## Vídeo de Demonstração do Projeto
+
+[Demonstração do Projeto da Equipe 1 de Desenvolvimento de Software (2026.1) - LIACLI](https://youtu.be/DY5uXPsTj-4)
+
+---
+
 ## Estrutura do Projeto
 
 O projeto está dividido em duas aplicações principais:
@@ -24,18 +30,18 @@ Responsável pela interface do sistema.
 
 ### Funcionalidades principais:
 
-* Formulário de solicitação de análises (para pesquisadores)
-* Painel interno para funcionários
-* Visualização de solicitações
-* Registro de resultados de forma simplificada
-* Visualização de resultados por solicitação
+- Formulário de solicitação de análises (para pesquisadores)
+- Painel interno para funcionários
+- Visualização de solicitações
+- Registro de resultados de forma simplificada
+- Visualização de resultados por solicitação
 
 ### Objetivo:
 
 Fornecer uma interface simples e intuitiva para:
 
-* entrada de dados (pesquisadores)
-* operação interna do laboratório (funcionários)
+- entrada de dados (pesquisadores)
+- operação interna do laboratório (funcionários)
 
 ---
 
@@ -45,12 +51,12 @@ Responsável pela lógica de negócio e persistência dos dados.
 
 ### Funcionalidades principais:
 
-* API para criação de solicitações de análise
-* Gerenciamento de solicitações (status, listagem)
-* Registro e armazenamento de amostras
-* Registro de resultados laboratoriais
-* Geração de dados para laudos
-* Controle de acesso para funcionários
+- API para criação de solicitações de análise
+- Gerenciamento de solicitações (status, listagem)
+- Registro e armazenamento de amostras
+- Registro de resultados laboratoriais
+- Geração de dados para laudos
+- Controle de acesso para funcionários
 
 ### Objetivo:
 
@@ -62,16 +68,16 @@ Centralizar regras de negócio, garantir integridade dos dados e permitir a comu
 
 O sistema foi projetado para resolver problemas atuais do LIACLI, como:
 
-* uso de múltiplas ferramentas (WhatsApp, papel, planilhas)
-* retrabalho na transcrição de dados
-* dificuldade de organização e rastreabilidade
+- uso de múltiplas ferramentas (WhatsApp, papel, planilhas)
+- retrabalho na transcrição de dados
+- dificuldade de organização e rastreabilidade
 
 Com a solução proposta, espera-se:
 
-* reduzir erros
-* otimizar tempo da equipe
-* centralizar informações
-* melhorar o controle das análises realizadas
+- reduzir erros
+- otimizar tempo da equipe
+- centralizar informações
+- melhorar o controle das análises realizadas
 
 ---
 
