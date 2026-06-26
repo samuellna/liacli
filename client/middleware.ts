@@ -11,6 +11,7 @@ const protectedRoutes = [
 
 export function middleware(request: NextRequest) {
   const token = request.cookies.get("token")?.value;
+  const basePath = process.env.NEXT_PUBLIC_BASE_PATH || "";
   const { pathname } = request.nextUrl;
 
   const isProtected = protectedRoutes.some((route) =>
@@ -19,11 +20,11 @@ export function middleware(request: NextRequest) {
   const isLoginRoute = pathname.startsWith("/login");
 
   if (isProtected && !token) {
-    return NextResponse.redirect(new URL("/liacli/login", request.url));
+    return NextResponse.redirect(new URL(`${basePath}/login`, request.url));
   }
 
   if (isLoginRoute && token) {
-    return NextResponse.redirect(new URL("/liacli/dashboard", request.url));
+    return NextResponse.redirect(new URL(`${basePath}/dashboard`, request.url));
   }
 
   return NextResponse.next();
