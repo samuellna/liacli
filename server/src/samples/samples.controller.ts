@@ -23,7 +23,7 @@ export class SamplesController {
     return await this.samplesService.findAll();
   }
 
-  @Get('scheduled-dates')
+  @Get('scheduled/active')
   @HttpCode(HttpStatus.OK)
   async findScheduledDates() {
     return await this.samplesService.findActiveScheduledDates();

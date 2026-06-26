@@ -20,7 +20,7 @@ export async function findAllSamples(): Promise<Sample[]> {
 }
 
 export async function findActiveScheduledDates(): Promise<string[]> {
-  const response = await api.get<string[]>("/samples/scheduled-dates");
+  const response = await api.get<string[]>("/samples/scheduled/active");
   return response.data;
 }
 
