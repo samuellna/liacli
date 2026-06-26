@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+import { redirect, usePathname } from "next/navigation";
 import { onAuthStateChanged, type User } from "firebase/auth";
 import {
   LayoutDashboard,
@@ -140,7 +140,6 @@ function SidebarDivider() {
 
 export function AppSidebar() {
   const pathname = usePathname();
-  const router = useRouter();
   const [user, setUser] = useState<User | null>(null);
 
   useEffect(() => {
@@ -153,7 +152,7 @@ export function AppSidebar() {
   async function handleSignOut() {
     await signOut(auth);
     document.cookie = "token=; path=/; max-age=0";
-    router.push("/login");
+    redirect("/");
   }
 
   return (
